@@ -17,9 +17,9 @@ import PatientView from "./components/patient/PatientView.jsx";
 import PatientWelcome from "./components/patient/PatientWelcome.jsx";
 
 const STEPS = [
-  ["regimen", "Patient and drops"],
-  ["schedule", "Calendar"],
-  ["rx", "Prescription"],
+  ["regimen", "Patient and drops", "Drops"],
+  ["schedule", "Calendar", "Calendar"],
+  ["rx", "Prescription", "Rx"],
 ];
 const TITLES = { regimen: "Patient and drops", schedule: "Calendar", rx: "Prescription", formulary: "Formulary" };
 const BLANK_PATIENT = { name: "", dob: "", hcn: "", address: "" };
@@ -238,7 +238,7 @@ function ClinicianApp() {
       </a>
       <Header>
         <nav className="steps" aria-label="Steps">
-          {STEPS.map(([key, label], i) => (
+          {STEPS.map(([key, label, short], i) => (
             <button
               key={key}
               className={`step ${tab === key ? "active" : ""}`}
@@ -246,7 +246,8 @@ function ClinicianApp() {
               disabled={i > 0 && !entries.length}
               onClick={() => go(key)}
             >
-              <span className="step-num">{i + 1}</span> {label}
+              <span className="step-num">{i + 1}</span> <span className="long">{label}</span>
+              <span className="short">{short}</span>
             </button>
           ))}
           <button className={`step plain ${tab === "formulary" ? "active" : ""}`} aria-current={tab === "formulary" ? "page" : undefined} onClick={() => go("formulary")}>

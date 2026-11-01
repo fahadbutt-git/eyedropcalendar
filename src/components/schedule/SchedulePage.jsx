@@ -6,11 +6,15 @@ import { encodeRegimen, patientLink } from "../../lib/share.js";
 import { isClockTime } from "../../lib/times.js";
 import { Field, Icon, chipStyle, printSheets } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
+import { useFit } from "../useFit.js";
 import { buildPages } from "./layout.js";
 import Legend from "./Legend.jsx";
 import CalendarGrid from "./CalendarGrid.jsx";
 import DailyChart, { chartPages } from "./DailyChart.jsx";
 import Checklist from "./Checklist.jsx";
+
+// Letter landscape, less the print margins, in CSS pixels.
+const SHEET_WIDTH = 990;
 
 export const PAGE_TYPES = [
   ["calendar", "Month calendar", "A tick box for each dose on a calendar page"],
@@ -166,6 +170,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
     [entries, formulary, s.start, s.wake, s.bed]
   );
   const qr = useQrCode(link, s.qr);
+  const [fitRef, scale] = useFit(SHEET_WIDTH);
 
   if (!entries.length)
     return (
@@ -230,10 +235,11 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
         print={() => printSheets("schedule")}
         go={go}
       />
-      <div className={`sched-print ${size}`}>
+      <div className={`sched-print ${size}`} ref={fitRef}>
         <div className="no-print">
           <Warnings warnings={warnings} compact />
         </div>
+        <div className="sheet-fit" style={{ "--fit": scale }}>
         {s.pages.calendar &&
           cal.pages.map((p, i) => (
             <section className="sheet" key={`cal-${p.title}`}>
@@ -259,6 +265,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
             <Checklist items={items} start={start} days={span.days} />
           </section>
         )}
+        </div>
       </div>
     </div>
   );

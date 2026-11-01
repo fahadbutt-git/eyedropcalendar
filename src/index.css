@@ -62,6 +62,7 @@ a:hover { color: var(--ink); }
 .step:disabled { color: #767676; cursor: not-allowed; }
 .step-num { font-family: var(--mono); font-weight: 600; }
 .step.plain { text-decoration: underline; text-underline-offset: 4px; }
+.step .short { display: none; }
 .site-foot { border-top: 3px solid var(--rule); margin-top: 40px; }
 .site-foot-inner { max-width: 1240px; margin: 0 auto; padding: 22px 24px 30px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; font-size: 0.875rem; line-height: 1.6; color: var(--ink-2); }
 
@@ -79,6 +80,11 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.015em; line-height
 .field-label { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
 .field-label em { font-style: normal; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--ink-3); }
 .field-hint { font-size: 0.8rem; color: var(--ink-3); }
+/* iPhone Safari gives date and time fields a built-in minimum width and
+   centres their text; these rules make them behave like other fields. */
+input[type="date"], input[type="time"] { -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%; text-align: left; }
+input::-webkit-date-and-time-value { text-align: left; margin: 0; }
+input, select, textarea, button { max-width: 100%; }
 .input, .select, .textarea { width: 100%; border: 1px solid var(--ink); border-radius: 2px; background: #fff; padding: 8px 10px; min-height: 44px; font-size: 1rem; }
 .input:focus-visible, .select:focus-visible, .textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 .input[aria-invalid="true"], .input.invalid { border: 2px solid var(--maroon); }
@@ -214,6 +220,10 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .sched-aside { display: grid; gap: 18px; padding-right: 24px; border-right: 1px solid var(--ink); }
 .link-box { display: grid; gap: 8px; border-top: 1px solid var(--ink); padding-top: 16px; }
 .sched-print { display: grid; gap: 24px; min-width: 0; }
+/* Printed pages are previewed at their real width, scaled to fit. */
+.sheet-fit { zoom: var(--fit, 1); display: grid; gap: 24px; justify-content: start; }
+.sched-print .sheet { width: 990px; }
+.rx-print .rx-sheet { width: 816px; max-width: none; }
 .rx-print { min-width: 0; display: grid; gap: 24px; align-content: start; }
 .rx-prescriber { max-width: 8.5in; width: 100%; }
 .ph { color: #767676; font-weight: 400; font-style: italic; }
@@ -377,12 +387,9 @@ dialog.modal .card-b { display: grid; gap: 14px; }
   .sched-layout, .rx-layout { grid-template-columns: minmax(0, 1fr); }
   .sched-aside { border-right: 0; padding-right: 0; border-bottom: 3px solid var(--rule); padding-bottom: 20px; }
   .patient-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sheet { overflow-x: auto; }
-  .cal-wrap { overflow-x: auto; }
-  .cal, .chart { min-width: 760px; }
 }
 @media screen and (max-width: 640px) {
+  html, body { overflow-x: clip; }
   .drop-head { flex-direction: column; align-items: flex-start; }
   .choice-row { width: 100%; }
   .rx-prescriber .card-b { grid-template-columns: minmax(0, 1fr); }
@@ -391,6 +398,8 @@ dialog.modal .card-b { display: grid; gap: 14px; }
   .brand { padding: 12px 0 0; width: 100%; }
   .steps { gap: 0 14px; }
   .step { font-size: 0.9rem; }
+  .step .long { display: none; }
+  .step .short { display: inline; }
   .patient-form { grid-template-columns: minmax(0, 1fr); }
   .drop, .add-drop { grid-template-columns: 1.6rem minmax(0, 1fr); }
   .drop-actions { margin-left: 0; }
@@ -398,12 +407,6 @@ dialog.modal .card-b { display: grid; gap: 14px; }
   .drop-fields > * { flex: 1 1 100%; }
   .choice-row label { flex: 1; }
   .choice-row span { justify-content: center; padding: 8px 6px; }
-  .sheet { padding: 16px; }
-  .sheet-h { flex-direction: column; align-items: flex-start; }
-  .who { text-align: left; }
-  .legend { grid-template-columns: minmax(0, 1fr); }
-  .rx-sheet { padding: 20px; min-height: 0; }
-  .rx-pt { grid-template-columns: minmax(0, 1fr); }
   .site-foot-inner { padding: 20px 16px 28px; }
 }
 
@@ -432,6 +435,8 @@ dialog.modal .card-b { display: grid; gap: 14px; }
   .cal td, .sched-print.large .cal td { height: auto; }
   .cal tbody tr { height: var(--row-h, auto); }
   .cal, .chart { min-width: 0; }
+  .sheet-fit { zoom: 1; display: block; }
+  .sched-print .sheet, .rx-print .rx-sheet { width: auto; }
   .cal-wrap { padding-bottom: 4px; }
   .rx-sheet { page: rx; border: 0; padding: 0; min-height: 10in; max-width: none; }
   body.print-rx .sched-print, body.print-schedule .rx-print { display: none !important; }
