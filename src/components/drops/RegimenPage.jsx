@@ -5,6 +5,8 @@ import DropRow, { freshPlan } from "./DropRow.jsx";
 import MedPicker from "./MedPicker.jsx";
 import { Field } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
+import Cautions from "../Cautions.jsx";
+import { cautionsFor } from "../../data/cautions.js";
 
 function PatientForm({ patient, setPatient }) {
   const bind = (key) => ({ value: patient[key], onChange: (e) => setPatient({ ...patient, [key]: e.target.value }) });
@@ -89,6 +91,7 @@ export default function RegimenPage({ patient, setPatient, drops, setDrops, form
       </section>
 
       <Warnings warnings={warnings} />
+      <Cautions cautions={cautionsFor(list, formulary)} />
 
       <div className="actionbar">
         <span>{list.length ? `${list.length} drop${list.length > 1 ? "s" : ""}` : "Add at least one drop to continue"}</span>

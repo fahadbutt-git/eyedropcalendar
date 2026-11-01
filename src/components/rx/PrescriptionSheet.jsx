@@ -9,7 +9,7 @@ const Line = ({ label, children, wide }) => (
 );
 
 // The printable prescription. Optional details appear only when entered.
-export default function PrescriptionSheet({ items, prescriber, patient, date, notes, start }) {
+export default function PrescriptionSheet({ items, prescriber, patient, date, notes, start, signature }) {
   const startDate = start ? parseISO(start) : null;
   return (
     <article className="rx-sheet">
@@ -72,7 +72,13 @@ export default function PrescriptionSheet({ items, prescriber, patient, date, no
         <div className="small muted">
           {items.length} item{items.length === 1 ? "" : "s"} prescribed
         </div>
-        <div className="sig-line">Signature{prescriber.name && ` · ${prescriber.name}`}</div>
+        <div className="sig-block">
+          {signature && <img className="sig-img" src={signature} alt="Prescriber signature" />}
+          <div className="sig-line">
+            {signature ? "Electronically signed" : "Signature"}
+            {prescriber.name && ` · ${prescriber.name}`}
+          </div>
+        </div>
       </footer>
     </article>
   );

@@ -241,3 +241,8 @@ test("change notes name the day a drop changes or stops", () => {
   const notes = changeNotes(e, new Date(2026, 10, 2), 1, 8, { thisWeek: false });
   assert.deepEqual(notes, ["From Mon Nov 9: Pred Forte 3 times a day", "Vigamox: last dose Sun Nov 8"]);
 });
+
+test("a warning that applies to both eyes is shown once", () => {
+  const w = dropWarnings([s({ brand: "Azarga", eye: "OU" }), s({ brand: "Simbrinza", eye: "OU" })], SEED_FORMULARY, DRUG_CLASSES);
+  assert.deepEqual(w, ["Azarga and Simbrinza both contain a carbonic anhydrase inhibitor (both eyes)."]);
+});

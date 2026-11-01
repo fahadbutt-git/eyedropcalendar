@@ -71,5 +71,18 @@ export function dropWarnings(drops, formulary, classNames, { dob = "", today = n
       all.push(`${d.brand}: a taper step goes up in frequency. Check the steps.`);
     if (d.mode === "taper" && totalDays(d) > 120) all.push(`${d.brand}: the taper lasts ${totalDays(d)} days.`);
   }
-  return [...new Set(all)];
+  return mergeEyes([...new Set(all)]);
+}
+
+// The same warning for each eye reads once, as "both eyes".
+function mergeEyes(list) {
+  const key = (w) => w.replace(/(the )?(right|left) eye/, "{eye}");
+  const out = [];
+  for (const w of list) {
+    const k = key(w);
+    const twin = w.includes("right eye") && list.find((x) => x !== w && x.includes("left eye") && key(x) === k);
+    if (twin) out.push(k.replace("{eye}", "both eyes"));
+    else if (!(w.includes("left eye") && list.some((x) => x !== w && x.includes("right eye") && key(x) === k))) out.push(w);
+  }
+  return out;
 }

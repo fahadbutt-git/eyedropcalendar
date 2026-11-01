@@ -40,7 +40,7 @@ function useQrCode(text, enabled) {
 
 // Start date and dose times only change when the new value is complete and
 // valid, so clearing a field can never break the page.
-function Settings({ s, setSettings, span, sheetCount, link, print, go }) {
+function Settings({ s, setSettings, span, sheetCount, count, link, print, go }) {
   const [copied, setCopied] = useState(false);
   const [times, setTimes] = useState({ wake: s.wake, bed: s.bed });
   const [startText, setStartText] = useState(s.start);
@@ -94,6 +94,11 @@ function Settings({ s, setSettings, span, sheetCount, link, print, go }) {
           </label>
         ))}
         <p className="hint">Ask the patient which they find easiest. Any mix can be printed.</p>
+        {count > 4 && s.pages.calendar && !s.pages.chart && (
+          <p className="hint">
+            <b>{count} drops</b> make a busy month calendar. The daily chart is easier to read.
+          </p>
+        )}
       </fieldset>
       <label className="check">
         <input type="checkbox" checked={s.large} onChange={(e) => set({ large: e.target.checked })} />
@@ -205,6 +210,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
         setSettings={setSettings}
         span={span}
         sheetCount={sheetCount}
+        count={entries.length}
         link={link}
         print={() => printSheets("schedule")}
         go={go}

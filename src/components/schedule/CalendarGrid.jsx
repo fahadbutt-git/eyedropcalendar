@@ -21,12 +21,13 @@ function DayCell({ label, dayIndex, items }) {
               <Chip n={index + 1} style={chip} /> <span className="sr-only">{entry.brand}</span> Stop
             </div>
           );
-        const change = dayIndex === 0 ? null : !prev ? "start" : prev !== n ? `${n < prev ? "↓" : "↑"}${n}x` : null;
+        const change = dayIndex === 0 ? null : !prev ? "Start" : prev !== n ? `Now ${n}x` : null;
         return (
           <div className="dose" key={index}>
             <Chip n={index + 1} style={chip} />
-            <span className="sr-only">{entry.brand}</span>
-            <span className="eye">{EYES[entry.eye].short}</span>
+            <span className="sr-only">
+              {entry.brand}, {EYES[entry.eye].long}
+            </span>
             <Boxes n={n} />
             {change && <span className="change">{change}</span>}
           </div>

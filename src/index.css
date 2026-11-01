@@ -54,7 +54,7 @@ a:hover { color: var(--ink); }
 .step-num { font-family: var(--mono); font-weight: 600; }
 .step.plain { text-decoration: underline; text-underline-offset: 4px; }
 .site-foot { border-top: 3px solid var(--rule); margin-top: 40px; }
-.site-foot-inner { max-width: 1240px; margin: 0 auto; padding: 22px 24px 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px 48px; font-size: 0.875rem; line-height: 1.6; color: var(--ink-2); }
+.site-foot-inner { max-width: 1240px; margin: 0 auto; padding: 22px 24px 30px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; font-size: 0.875rem; line-height: 1.6; color: var(--ink-2); }
 
 main { flex: 1; width: 100%; max-width: 1240px; margin: 0 auto; padding: 28px 24px 0; }
 .page { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); }
@@ -79,6 +79,8 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.015em; line-height
 .num { width: 4.5rem; text-align: center; font-family: var(--mono); }
 .num-wrap { display: inline-flex; flex-direction: column; gap: 2px; }
 .num-error { font-size: 0.75rem; color: var(--maroon); font-weight: 600; }
+.prefixed { display: flex; align-items: stretch; }
+.prefixed .prefix { display: flex; align-items: center; padding: 0 10px; border: 1px solid var(--ink); border-right: 0; background: var(--paper); font-weight: 600; }
 .static { display: flex; align-items: center; min-height: 44px; color: var(--ink-3); }
 .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 
@@ -120,6 +122,13 @@ h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.015em; line-height
 .notice.warn { border: 2px solid var(--maroon); background: var(--maroon-bg); }
 .notice.warn b { color: var(--maroon); }
 .notice.info { background: var(--paper); }
+.notice.caution { border: 2px solid #8a6d00; background: #fff6d6; }
+.notice.caution summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; min-height: 32px; }
+.notice.caution summary .hint { display: inline; color: var(--ink-2); }
+.notice.caution dl { display: grid; gap: 10px; margin: 8px 0; }
+.notice.caution dt { font-weight: 700; }
+.notice.caution dt span { font-weight: 400; }
+.notice.caution dd { max-width: 95ch; }
 .notice ul { padding-left: 20px; margin-top: 4px; }
 .notice.small { font-size: 0.9rem; }
 
@@ -224,10 +233,9 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .cal td.inactive .dnum { color: #5c5c5c; }
 .cal .dnum { font-weight: 800; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; line-height: 1.3; }
 .cal .flag { font-size: 0.65rem; font-weight: 800; color: #fff; background: var(--ink); padding: 0 5px; text-transform: uppercase; letter-spacing: 0.06em; }
-.cal .dose { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 5px; font-size: 0.75rem; line-height: 1.15; margin-top: 3px; }
-.cal .dose .chip { width: 16px; height: 16px; font-size: 0.65rem; border-radius: 2px; }
-.cal .dose .eye { font-size: 0.7rem; font-weight: 700; width: 2.1rem; }
-.cal .change { font-size: 0.7rem; font-weight: 800; }
+.cal .dose { display: grid; grid-template-columns: 18px minmax(0, 1fr); align-items: center; column-gap: 6px; font-size: 0.75rem; line-height: 1.15; margin-top: 4px; }
+.cal .dose .chip { width: 18px; height: 18px; font-size: 0.65rem; border-radius: 2px; }
+.cal .change { grid-column: 2; font-size: 0.65rem; font-weight: 700; color: var(--ink-2); }
 .cal .stop { font-size: 0.75rem; font-weight: 800; color: var(--maroon); }
 .boxes { display: inline-flex; flex-wrap: wrap; gap: 3px; vertical-align: middle; }
 .boxes i { width: 13px; height: 13px; border: 1.5px solid var(--ink); display: inline-block; background: #fff; }
@@ -270,9 +278,8 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .sched-print.large .cal th { font-size: 1rem; padding: 8px; }
 .sched-print.large .cal td { border-width: 2px; height: 160px; }
 .sched-print.large .cal .dnum { font-size: 1.4rem; }
-.sched-print.large .cal .dose { font-size: 1rem; gap: 4px 6px; margin-top: 6px; }
-.sched-print.large .cal .dose .chip { width: 24px; height: 24px; font-size: 0.9rem; }
-.sched-print.large .cal .dose .eye { font-size: 0.9rem; width: auto; }
+.sched-print.large .cal .dose { font-size: 1rem; grid-template-columns: 26px minmax(0, 1fr); column-gap: 8px; margin-top: 6px; }
+.sched-print.large .cal .dose .chip { width: 26px; height: 26px; font-size: 0.9rem; }
 .sched-print.large .boxes { gap: 4px; }
 .sched-print.large .boxes i { width: 22px; height: 22px; border-width: 2px; }
 .sched-print.large .chart tbody tr { height: 56px; }
@@ -305,6 +312,11 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .rx-item .meta { display: flex; gap: 24px; flex-wrap: wrap; font-size: 0.8rem; }
 .rx-notes { margin-top: 12px; }
 .rx-foot { margin-top: auto; padding-top: 28px; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
+.sig-block { display: grid; gap: 2px; justify-items: start; }
+.sig-img { height: 56px; width: auto; max-width: 280px; }
+.sig-pad, .sig-saved { display: grid; gap: 8px; }
+.sig-pad canvas { width: 100%; aspect-ratio: 480 / 150; border: 1px dashed var(--ink); background: #fff; touch-action: none; cursor: crosshair; }
+.sig-saved img { max-width: 100%; height: 80px; border: 1px solid var(--line-2); background: #fff; }
 .sig-line { width: 280px; border-top: 1.5px solid var(--ink); padding-top: 5px; font-size: 0.75rem; }
 
 /* ── Patient phone view ────────────────────────────────────────────── */

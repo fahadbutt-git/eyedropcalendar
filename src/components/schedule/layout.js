@@ -4,8 +4,8 @@ import { MONTHS, addDays, fmtShort } from "../../lib/dates.js";
 // Height budget in CSS pixels (7.75 in of printable height at 96 px per inch).
 const PAGE = 745;
 const SIZES = {
-  standard: { header: 84, thead: 32, compactRow: 26, fullRow: 66, cols: 3, dayLabel: 28, dose: 21, perLine: 5, instructions: 210, maxWeeks: 5 },
-  large: { header: 98, thead: 42, compactRow: 36, fullRow: 92, cols: 2, dayLabel: 42, dose: 32, perLine: 3, instructions: 400, maxWeeks: 2 },
+  standard: { header: 84, thead: 32, compactRow: 26, fullRow: 66, cols: 3, dayLabel: 28, dose: 21, perLine: 7, instructions: 210, maxWeeks: 5 },
+  large: { header: 98, thead: 42, compactRow: 36, fullRow: 92, cols: 2, dayLabel: 42, dose: 32, perLine: 4, instructions: 400, maxWeeks: 2 },
 };
 
 function monthWeeks(year, month) {
