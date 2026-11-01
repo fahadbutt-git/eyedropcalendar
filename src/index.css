@@ -177,11 +177,12 @@ details.more[open] summary { margin-bottom: 8px; }
 /* ── Tables (formulary) ────────────────────────────────────────────── */
 table.t { width: 100%; border-collapse: collapse; }
 table.t th { text-align: left; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 10px 12px; border-bottom: 2px solid var(--ink); white-space: nowrap; }
-table.t td { padding: 10px 12px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
-table.t td.codes, table.t td.capcol, table.t td.actions { white-space: nowrap; }
+table.t { font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+table.t td { padding: 10px 12px; border-bottom: 1px solid var(--line-2); vertical-align: top; color: var(--ink); }
+table.t td b { font-weight: 700; }
+table.t td.actions { white-space: nowrap; padding-top: 4px; padding-bottom: 4px; }
 table.t td.actions .row { flex-wrap: nowrap; justify-content: flex-end; gap: 6px; }
-table.t td.codes .hint { display: inline; }
-table.t .cls { font-size: 0.9rem; color: var(--ink-2); }
+table.t .cap-name { font-size: inherit; }
 th.sort button { all: unset; cursor: pointer; padding: 6px 0; }
 th.sort button:focus-visible { outline: 3px solid var(--focus); }
 td.strong { font-weight: 700; }
