@@ -3,6 +3,7 @@ import { newSlot } from "../../lib/regimen.js";
 import { MAX_DROPS } from "../../lib/validate.js";
 import DropRow, { freshPlan } from "./DropRow.jsx";
 import MedPicker from "./MedPicker.jsx";
+import OpenPlan from "./OpenPlan.jsx";
 import { Field } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
 import Cautions from "../Cautions.jsx";
@@ -31,7 +32,7 @@ function PatientForm({ patient, setPatient }) {
   );
 }
 
-export default function RegimenPage({ patient, setPatient, drops, setDrops, formulary, startDate, warnings, go, reset }) {
+export default function RegimenPage({ patient, setPatient, drops, setDrops, formulary, startDate, warnings, go, reset, openPlan }) {
   const list = drops.filter((d) => d.brand);
   const update = (i, patch) => setDrops(list.map((d, j) => (j === i ? { ...d, ...patch } : d)));
   const remove = (i) => setDrops(list.filter((_, j) => j !== i));
@@ -50,6 +51,8 @@ export default function RegimenPage({ patient, setPatient, drops, setDrops, form
         </button>
       </div>
       <p className="page-note">Patient details stay in this browser tab and are never sent anywhere. Press New patient before the next person.</p>
+
+      <OpenPlan formulary={formulary} hasDrops={list.length > 0} onOpen={openPlan} />
 
       <PatientForm patient={patient} setPatient={setPatient} />
 

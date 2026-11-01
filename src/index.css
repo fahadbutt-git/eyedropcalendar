@@ -157,6 +157,10 @@ details.more[open] summary { margin-bottom: 8px; }
 .cta-row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 
 /* ── Patient and drops ─────────────────────────────────────────────── */
+.open-plan { margin-bottom: 18px; padding: 10px 14px; border: 1px solid var(--line-2); }
+.open-plan-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.open-plan-form .field { flex: 1 1 280px; min-width: 0; }
+.open-plan .small, .open-plan .notice { margin-top: 8px; }
 .patient-form { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.3fr) minmax(0, 2fr); gap: 16px 20px; padding-bottom: 22px; border-bottom: 1px solid var(--ink); }
 .drops-section { display: grid; gap: 0; }
 .drops { list-style: none; }
@@ -441,3 +445,8 @@ dialog.modal .card-b { display: grid; gap: 14px; }
   body.print-rx .sched-print, body.print-schedule .rx-print { display: none !important; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+.remove-alarms { margin-top: 10px; }
+.remove-alarms h3 { margin-top: 8px; font-weight: 600; }
+.remove-alarms ol { padding-left: 1.3em; display: grid; gap: 4px; }
+.idle-notice { margin-bottom: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }

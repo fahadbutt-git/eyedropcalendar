@@ -14,6 +14,22 @@ const HOW = {
   other: "Open the file to add the alarms to your calendar app.",
 };
 
+// Alarms are easiest to remove when they sit in their own calendar, which
+// can then be deleted in one step when the drops change.
+const REMOVE = {
+  ios: [
+    "Before adding the file: open Calendar, tap Calendars, then Add Calendar, and name it Eye drops.",
+    "When you tap Add All, choose the Eye drops calendar.",
+    "To remove every alarm later: tap Calendars, tap the i next to Eye drops, then Delete Calendar.",
+  ],
+  android: [
+    "Before adding the file: on calendar.google.com, open Settings, choose Add calendar, then Create new calendar, and name it Eye drops.",
+    "When you import the file, choose the Eye drops calendar.",
+    "To remove every alarm later: in Settings, choose the Eye drops calendar, then Remove calendar and Delete.",
+  ],
+};
+const REMOVE_ONE = "Without a separate calendar, open each alarm (they start with \"Time for\" or \"Eye drop reminder\") and delete it. For a repeating alarm, choose Delete all future events.";
+
 // In the phone app: real notifications. In a browser: calendar alarms.
 export default function Reminders({ plan: shared, id, code }) {
   const [on, setOn] = usePersistentState(`edt.alarms.${id}`, false);
@@ -78,9 +94,25 @@ export default function Reminders({ plan: shared, id, code }) {
           </button>
           {saved && (
             <p className="pt-note" role="status">
-              The calendar file is saved. {HOW[platform()]} If your drops change, delete the old &quot;Eye drops&quot; alarms first.
+              The calendar file is saved. {HOW[platform()]} If your drops change, remove the old alarms first (see below).
             </p>
           )}
+          <details className="more remove-alarms">
+            <summary>How to remove old alarms</summary>
+            {Object.entries(REMOVE)
+              .sort(([a]) => (a === platform() ? -1 : 0))
+              .map(([key, steps]) => (
+                <div key={key}>
+                  <h3 className="small">{key === "ios" ? "iPhone" : "Android"}</h3>
+                  <ol className="small">
+                    {steps.map((t) => (
+                      <li key={t}>{t}</li>
+                    ))}
+                  </ol>
+                </div>
+              ))}
+            <p className="small">{REMOVE_ONE}</p>
+          </details>
           {platform() !== "other" && (
             <a className="small" href={`${APP_SCHEME}://p/${code}`}>
               Have the Eye Drop Tracker app? Open this plan in the app

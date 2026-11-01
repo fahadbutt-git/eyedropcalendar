@@ -300,3 +300,23 @@ test("a missed dose is not offered when the next dose of that drug is due", () =
   const morning = nextDose(items, (it) => it.time === 480, 500);
   assert.equal(morning.state, "later");
 });
+
+test("every default formulary entry survives cleaning unchanged", async () => {
+  const { SEED_FORMULARY } = await import("../src/data/formulary.js");
+  const { cleanFormulary } = await import("../src/lib/validate.js");
+  const clean = cleanFormulary(SEED_FORMULARY);
+  assert.equal(clean.length, SEED_FORMULARY.length);
+  assert.deepEqual(clean, SEED_FORMULARY);
+});
+
+test("a reopened plan keeps its start date and plan ID", async () => {
+  const { encodeRegimen, decodeRegimen } = await import("../src/lib/share.js");
+  const { SEED_FORMULARY } = await import("../src/data/formulary.js");
+  const entries = [{ brand: "Pred Forte", eye: "OD", drops: 1, mode: "taper", freq: 4, durationDays: 7, startDay: 1, steps: [{ freq: 4, days: 7 }, { freq: 2, days: 7 }] }];
+  const first = decodeRegimen(encodeRegimen({ entries, formulary: SEED_FORMULARY, start: "2026-10-20", wake: "08:00", bed: "22:00", nonce: "abc12345" }));
+  const changed = first.entries.map((e) => ({ ...e, steps: [e.steps[0], { freq: 3, days: 14 }] }));
+  const again = decodeRegimen(encodeRegimen({ entries: changed, formulary: SEED_FORMULARY, start: first.start, wake: first.wake, bed: first.bed, nonce: first.nonce }));
+  assert.equal(again.nonce, "abc12345");
+  assert.equal(again.start, "2026-10-20");
+  assert.deepEqual(again.entries[0].steps, [{ freq: 4, days: 7 }, { freq: 3, days: 14 }]);
+});

@@ -32,12 +32,24 @@ export const CLASS_CAUTIONS = {
     text: "Contraindicated with hypersensitivity to aspirin or other NSAIDs. Use with care with a bleeding tendency. Prolonged use, especially with a steroid, can cause corneal melt: stop if the epithelium breaks down.",
   },
   ABX: {
-    title: "Fluoroquinolone",
-    text: "Avoid with a quinolone allergy. Keep to the set course; prolonged use encourages resistance and overgrowth.",
+    title: "Antibiotic",
+    text: "Check for an allergy to the drug or its class (quinolones, aminoglycosides, macrolides). Keep to the set course: prolonged use encourages resistance and fungal overgrowth.",
   },
   CYC: {
-    title: "Atropine",
+    title: "Cycloplegic",
     text: "Contraindicated in narrow angles or angle-closure glaucoma. Systemic effects (flushing, fever, fast heart rate, confusion) are more likely in children and older adults; press on the inner corner after each drop. Blurred near vision can last days.",
+  },
+  ALG: {
+    title: "Anti-allergy",
+    text: "Remove soft contact lenses before the drop and wait 10 minutes before putting them back. Not for contact lens related irritation.",
+  },
+  IMM: {
+    title: "Dry eye immunomodulator",
+    text: "Do not use with an active eye infection. Burning on instillation is common; with lifitegrast, a changed taste is common. Full effect takes weeks to months. Remove contact lenses first and wait 15 minutes.",
+  },
+  AV: {
+    title: "Antiviral",
+    text: "For herpetic epithelial keratitis. Step down once the epithelium heals, and avoid a steroid until it has.",
   },
 };
 
@@ -46,6 +58,11 @@ export const DRUG_CAUTIONS = {
   Simbrinza:
     "Contraindicated with MAO inhibitors, tricyclic antidepressants or mianserin, a sulfonamide allergy, severe renal impairment, hyperchloraemic acidosis and in children under 2.",
   "Timoptic-XE": "Gel: use 10 minutes after any other drop.",
+  Iopidine: "Contraindicated with MAO inhibitors. Effect wanes over weeks (tachyphylaxis): for short-term use while awaiting surgery.",
+  Maxitrol: "Contains neomycin, a common cause of contact allergy around the eye.",
+  "Maxitrol Ointment": "Contains neomycin, a common cause of contact allergy around the eye.",
+  Cyclogyl: "Can cause drowsiness, confusion or hallucinations, especially in young children.",
+  Eyezirgan: "Five times a day until the cornea heals, then three times a day for 7 days. Set it up as a taper.",
 };
 
 // Cautions for the drops in a plan, one per class, naming the drugs.

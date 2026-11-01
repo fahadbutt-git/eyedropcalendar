@@ -22,6 +22,7 @@ const STEPS = [
   ["rx", "Prescription", "Rx"],
 ];
 const TITLES = { regimen: "Patient and drops", schedule: "Calendar", rx: "Prescription", formulary: "Formulary" };
+const IDLE_MS = 30 * 60 * 1000;
 const BLANK_PATIENT = { name: "", dob: "", hcn: "", address: "" };
 const BLANK_PRESCRIBER = { name: "", license: "", clinic: "", street: "", city: "", phone: "", fax: "" };
 const defaultSettings = () => ({
@@ -245,6 +246,31 @@ function ClinicianApp() {
     setTab(next);
     window.scrollTo({ top: 0 });
   };
+  // On a shared clinic computer, a patient left open is cleared after 30
+  // minutes without use, so the next person at the desk never sees them.
+  const [cleared, setCleared] = useState(false);
+  const hasPatient = !!(patient.name || patient.dob || patient.hcn || patient.address || drops.length);
+  useEffect(() => {
+    if (!hasPatient) return;
+    let last = Date.now();
+    const touch = () => (last = Date.now());
+    const events = ["pointerdown", "keydown", "scroll"];
+    events.forEach((e) => window.addEventListener(e, touch, { passive: true }));
+    const timer = setInterval(() => {
+      if (Date.now() - last < IDLE_MS) return;
+      setPatient(BLANK_PATIENT);
+      setDrops([]);
+      setRx({ date: toISO(new Date()), notes: "", items: {} });
+      setSettings(defaultSettings());
+      setTab("regimen");
+      setCleared(true);
+    }, 30000);
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, touch));
+      clearInterval(timer);
+    };
+  }, [hasPatient, setPatient, setDrops, setRx, setSettings, setTab]);
+
   const reset = () => {
     if (!window.confirm("Clear this patient and start again?")) return;
     setPatient(BLANK_PATIENT);
@@ -252,6 +278,13 @@ function ClinicianApp() {
     setRx({ date: toISO(new Date()), notes: "", items: {} });
     setSettings(defaultSettings());
     go("regimen");
+  };
+
+  // A plan opened from a patient's link keeps its start date, dose times and
+  // plan ID. Each drop gets a fresh row id for editing.
+  const openPlan = (plan) => {
+    setDrops(plan.entries.map((e, i) => ({ ...e, id: `d${Date.now().toString(36)}o${i}` })));
+    setSettings((s) => ({ ...s, start: plan.start, wake: plan.wake, bed: plan.bed, nonce: plan.nonce || s.nonce }));
   };
 
   return (
@@ -279,6 +312,14 @@ function ClinicianApp() {
         </nav>
       </Header>
       <main id="main" ref={mainRef} tabIndex={-1}>
+        {cleared && (
+          <p className="notice idle-notice" role="status">
+            The last patient was cleared after 30 minutes without use.{" "}
+            <button className="link-btn" onClick={() => setCleared(false)}>
+              Dismiss
+            </button>
+          </p>
+        )}
         {tab === "regimen" && (
           <RegimenPage
             patient={patient}
@@ -290,6 +331,7 @@ function ClinicianApp() {
             warnings={warnings}
             go={go}
             reset={reset}
+            openPlan={openPlan}
           />
         )}
         {tab === "schedule" && (
