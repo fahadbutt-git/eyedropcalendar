@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { addDays, fmtShort, isValidISO, parseISO } from "../../lib/dates.js";
 import { scheduleSpan } from "../../lib/calendar.js";
 import { dosesOnDay } from "../../lib/regimen.js";
+import { chartNote } from "../../lib/chartNote.js";
 import { encodeRegimen, patientLink } from "../../lib/share.js";
 import { isClockTime } from "../../lib/times.js";
-import { Field, Icon, chipStyle, printSheets } from "../ui.jsx";
+import { CopyButton, Field, Icon, chipStyle, printSheets } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
 import { buildPages } from "./layout.js";
 import Legend from "./Legend.jsx";
@@ -49,8 +50,7 @@ function useQrCode(text, enabled) {
 
 // Start date and dose times only change when the new value is complete and
 // valid, so clearing a field can never break the page.
-function Settings({ s, setSettings, span, sheetCount, count, link, qr, print, go }) {
-  const [copied, setCopied] = useState(false);
+function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, print, go }) {
   const [times, setTimes] = useState({ wake: s.wake, bed: s.bed });
   const [startText, setStartText] = useState(s.start);
   const setStart = (v) => {
@@ -63,16 +63,6 @@ function Settings({ s, setSettings, span, sheetCount, count, link, qr, print, go
     if (isClockTime(value)) set({ [key]: value });
   };
   const togglePage = (key) => set({ pages: { ...s.pages, [key]: !s.pages[key] } });
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-      window.prompt("Copy this link", link);
-    }
-  };
   const nothing = !Object.values(s.pages).some(Boolean);
 
   return (
@@ -152,15 +142,14 @@ function Settings({ s, setSettings, span, sheetCount, count, link, qr, print, go
         )}
         <p className="hint">The link holds the drops and dates only, never the patient&apos;s name or health details.</p>
         <div className="row">
-          <button className="btn sm" onClick={copy}>
-            {copied ? "Copied" : "Copy link"}
-          </button>
+          <CopyButton text={link}>Copy link</CopyButton>
           <a className="btn sm" href={link} target="_blank" rel="noopener noreferrer">
             Preview on phone
           </a>
-          <span className="sr-only" role="status">
-            {copied ? "Link copied" : ""}
-          </span>
+        </div>
+        <div className="chart-note">
+          <CopyButton text={note}>Copy for chart note</CopyButton>
+          <p className="hint">The plan and its link, to paste into the clinic note. Paste the link back in at the next visit to change the plan.</p>
         </div>
       </div>
       <button className="btn" onClick={() => go("rx")}>
@@ -258,6 +247,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
         sheetCount={sheetCount}
         count={entries.length}
         link={link}
+        note={chartNote({ entries, formulary, start: s.start, wake: s.wake, bed: s.bed, link })}
         qr={qr}
         print={() => printSheets("schedule")}
         go={go}

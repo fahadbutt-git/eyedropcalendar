@@ -6,6 +6,7 @@ import { isValidISO, parseISO, toISO } from "./lib/dates.js";
 import { toEntries } from "./lib/regimen.js";
 import { codeFromUrl, decodeRegimen, newNonce } from "./lib/share.js";
 import { isNative, onPlanLink } from "./lib/native.js";
+import { adoptPlan, currentPlanCode, forgetCurrentPlan } from "./lib/patientStore.js";
 import { usePersistentState } from "./lib/storage.js";
 import { useIdle } from "./lib/useIdle.js";
 import { isClockTime } from "./lib/times.js";
@@ -142,19 +143,17 @@ function Header({ children }) {
 function readPatientRoute() {
   let code = codeFromUrl(window.location.hash);
   const installed = isNative || window.matchMedia?.("(display-mode: standalone)").matches;
-  if (!code && installed) {
-    try {
-      code = localStorage.getItem("edt.patientPlan");
-    } catch {
-      code = null;
-    }
-  }
+  if (!code && installed) code = currentPlanCode();
   if (!code) return installed ? { welcome: true } : null;
+  let plan;
   try {
-    return { code, plan: decodeRegimen(code) };
+    plan = decodeRegimen(code);
   } catch {
     return { invalid: true, installed };
   }
+  // The plan becomes this phone's current plan, keeping the patient's ticks.
+  adoptPlan(code, plan);
+  return { code, plan };
 }
 
 function PatientApp({ route }) {
@@ -178,11 +177,7 @@ function PatientApp({ route }) {
               <button
                 className="btn primary"
                 onClick={() => {
-                  try {
-                    localStorage.removeItem("edt.patientPlan");
-                  } catch {
-                    // Nothing stored.
-                  }
+                  forgetCurrentPlan();
                   window.location.hash = "";
                   window.dispatchEvent(new HashChangeEvent("hashchange"));
                 }}
@@ -364,12 +359,7 @@ export default function App() {
     const stop = onPlanLink((url) => {
       const code = codeFromUrl(url);
       if (!code) return;
-      let saved = null;
-      try {
-        saved = localStorage.getItem("edt.patientPlan");
-      } catch {
-        saved = null;
-      }
+      const saved = currentPlanCode();
       if (saved && saved !== code) {
         let names = "";
         try {

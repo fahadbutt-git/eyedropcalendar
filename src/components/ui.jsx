@@ -137,3 +137,28 @@ export function printSheets(kind) {
   window.addEventListener("afterprint", done);
   window.print();
 }
+
+// Copies text and says so. If the browser blocks the clipboard, the text is
+// shown for the clinician to copy by hand.
+export function CopyButton({ text, children, className = "btn sm" }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copy this text", text);
+    }
+  };
+  return (
+    <>
+      <button type="button" className={className} onClick={copy}>
+        {copied ? "Copied" : children}
+      </button>
+      <span className="sr-only" role="status">
+        {copied ? "Copied" : ""}
+      </span>
+    </>
+  );
+}

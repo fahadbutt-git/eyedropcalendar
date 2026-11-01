@@ -32,7 +32,8 @@ const REMOVE_ONE = "Without a separate calendar, open each alarm (they start wit
 
 // In the phone app: real notifications. In a browser: calendar alarms.
 export default function Reminders({ plan: shared, id, code }) {
-  const [on, setOn] = usePersistentState(`edt.alarms.${id}`, false);
+  // In the phone app reminders start on by themselves (null means not yet set).
+  const [on, setOn] = usePersistentState(`edt.alarms.${id}`, null);
   const [generic, setGeneric] = usePersistentState("edt.genericReminders", false);
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState(false);
@@ -46,6 +47,11 @@ export default function Reminders({ plan: shared, id, code }) {
   }, [shared]);
 
   useEffect(() => {
+    if (isNative && on === null) turnOn();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [on]);
+
+  useEffect(() => {
     if (!isNative || !on) return;
     const refresh = () => scheduleReminders(plan, { generic });
     refresh();
@@ -53,10 +59,17 @@ export default function Reminders({ plan: shared, id, code }) {
   }, [plan, on, generic]);
 
   const turnOn = async () => {
-    const result = await scheduleReminders(plan, { ask: true, generic });
+    let result;
+    try {
+      result = await scheduleReminders(plan, { ask: true, generic });
+    } catch {
+      result = { ok: false };
+    }
     setOn(result.ok);
     setLate(!!result.late);
-    setMessage(result.denied ? "Notifications are off for this app. Turn them on in your phone's Settings, then try again." : "");
+    setMessage(
+      result.ok ? "" : result.denied ? "Notifications are off for this app. Turn them on in your phone's Settings, then try again." : "Reminders could not be set. Try again."
+    );
   };
   const turnOff = async () => {
     await cancelReminders();
@@ -65,7 +78,7 @@ export default function Reminders({ plan: shared, id, code }) {
   const download = () => {
     // Events are named for the patient, so a new plan from the clinic updates
     // the same alarms rather than adding a second set.
-    downloadFile("eye-drop-reminders.ics", buildICS({ ...plan, id: shared.nonce ? `p-${shared.nonce}` : id, generic }), "text/calendar");
+    downloadFile("eye-drop-reminders.ics", buildICS({ ...plan, id, generic }), "text/calendar");
     setSaved(true);
   };
 

@@ -3,8 +3,8 @@ import { WEEKDAYS, addDays, daysBetween, fmtLong, fmtShort, parseISO, toISO } fr
 import { courseLastDay } from "../../lib/calendar.js";
 import { changeNotes, dayName } from "../../lib/changes.js";
 import { doseDayIndex, doseGroups, medOf, minutesInto, nextDose } from "../../lib/doses.js";
-import { planId } from "../../lib/hash.js";
-import { cancelReminders, isNative, onAppResume } from "../../lib/native.js";
+import { isNative, onAppResume } from "../../lib/native.js";
+import { patientKey } from "../../lib/patientStore.js";
 import { EYES } from "../../lib/regimen.js";
 import { fmtTime } from "../../lib/times.js";
 import { patientInstruction } from "../../lib/wording.js";
@@ -46,7 +46,7 @@ function doseLabel({ entry, med }) {
 }
 
 export default function PatientView({ plan: shared, code }) {
-  const id = useMemo(() => planId(code), [code]);
+  const id = useMemo(() => patientKey(shared, code), [shared, code]);
   const start = useMemo(() => parseISO(shared.start), [shared.start]);
   const lastDay = courseLastDay(shared.entries);
   const now = useNow();
@@ -63,17 +63,6 @@ export default function PatientView({ plan: shared, code }) {
   const [undo, setUndo] = useState(null);
   const [waitFrom, setWaitFrom] = useState(null);
 
-  // Remember this plan for the home screen icon. In the phone app, a new
-  // plan replaces the old plan's reminders.
-  useEffect(() => {
-    try {
-      const previous = localStorage.getItem("edt.patientPlan");
-      if (isNative && previous && previous !== code) cancelReminders();
-      localStorage.setItem("edt.patientPlan", code);
-    } catch {
-      // Without storage the plan simply opens from the link each time.
-    }
-  }, [code]);
   useEffect(() => {
     document.body.classList.toggle("large-text", large);
   }, [large]);

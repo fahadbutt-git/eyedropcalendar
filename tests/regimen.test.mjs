@@ -320,3 +320,40 @@ test("a reopened plan keeps its start date and plan ID", async () => {
   assert.equal(again.start, "2026-10-20");
   assert.deepEqual(again.entries[0].steps, [{ freq: 4, days: 7 }, { freq: 3, days: 14 }]);
 });
+
+test("a changed plan keeps the patient's check marks", async () => {
+  const store = new Map();
+  globalThis.localStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: (k) => store.delete(k),
+  };
+  const { adoptPlan, patientKey } = await import("../src/lib/patientStore.js");
+  const base = { brand: "Pred Forte", eye: "OD", drops: 1, mode: "taper", freq: 4, durationDays: 7, startDay: 1 };
+  const make = (steps, nonce) => {
+    const code = encodeRegimen({ entries: [{ ...base, steps }], formulary: SEED_FORMULARY, start: "2026-11-02", wake: "08:00", bed: "22:00", nonce });
+    return { code, plan: decodeRegimen(code) };
+  };
+  const a = make([{ freq: 4, days: 7 }, { freq: 2, days: 7 }], "pat00001");
+  adoptPlan(a.code, a.plan);
+  store.set(`edt.taken.${patientKey(a.plan, a.code)}`, JSON.stringify({ "2026-11-02": { "Pred Forte|OD|0": 1 } }));
+  store.set(`edt.alarms.${patientKey(a.plan, a.code)}`, "true");
+  // Re-entered at follow-up, so a new patient code.
+  const b = make([{ freq: 4, days: 7 }, { freq: 3, days: 14 }], "pat00002");
+  adoptPlan(b.code, b.plan);
+  const kb = patientKey(b.plan, b.code);
+  assert.deepEqual(JSON.parse(store.get(`edt.taken.${kb}`)), { "2026-11-02": { "Pred Forte|OD|0": 1 } });
+  assert.equal(store.get(`edt.alarms.${kb}`), "true");
+  assert.equal(store.get("edt.patientPlan"), b.code);
+  delete globalThis.localStorage;
+});
+
+test("the chart note holds the plan and a link that reopens it", async () => {
+  const { chartNote } = await import("../src/lib/chartNote.js");
+  const entries = [{ brand: "Xalatan", eye: "OU", drops: 1, mode: "ongoing", freq: 1, durationDays: 7, startDay: 1, steps: [] }];
+  const code = encodeRegimen({ entries, formulary: SEED_FORMULARY, start: "2026-11-02", wake: "08:00", bed: "22:00", nonce: "chart001" });
+  const note = chartNote({ entries, formulary: SEED_FORMULARY, start: "2026-11-02", wake: "08:00", bed: "22:00", link: `https://eyedroptracker.com/#/p/${code}` });
+  assert.match(note, /Xalatan \(Latanoprost 0\.005%\): Instill 1 drop in both eyes once daily at bedtime\./);
+  assert.match(note, /8:00 AM to 10:00 PM/);
+  assert.equal(codeFromUrl(note), code);
+});

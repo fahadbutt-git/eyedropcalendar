@@ -450,3 +450,4 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .remove-alarms h3 { margin-top: 8px; font-weight: 600; }
 .remove-alarms ol { padding-left: 1.3em; display: grid; gap: 4px; }
 .idle-notice { margin-bottom: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.chart-note { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-2); display: grid; gap: 6px; justify-items: start; }
