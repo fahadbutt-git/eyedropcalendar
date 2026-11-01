@@ -2,9 +2,17 @@
   "appId": "com.eyedroptracker.app",
   "appName": "Eye Drop Tracker",
   "webDir": "dist",
+  "backgroundColor": "#ffffff",
+  "ios": {
+    "contentInset": "always"
+  },
+  "android": {
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
   "plugins": {
     "LocalNotifications": {
-      "iconColor": "#12305C"
+      "smallIcon": "ic_stat_drop",
+      "iconColor": "#1f3a5f"
     }
   }
 }

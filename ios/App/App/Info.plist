@@ -17,6 +17,8 @@
 			</array>
 		</dict>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundleDisplayName</key>
         <string>Eye Drop Tracker</string>
 	<key>CFBundleExecutable</key>

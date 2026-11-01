@@ -1,5 +1,5 @@
 import { Component, useEffect, useMemo, useRef, useState } from "react";
-import { APP_NAME, CONTACT_EMAIL, COPYRIGHT_YEAR, OWNERS, REPO_URL } from "./config.js";
+import { APP_NAME, CONTACT_EMAIL, COPYRIGHT_YEAR, OWNERS, REPO_URL, SITE_URL } from "./config.js";
 import { DRUG_CLASSES, FORMULARY_VERSION, SEED_FORMULARY } from "./data/formulary.js";
 import { dropWarnings } from "./lib/checks.js";
 import { isValidISO, parseISO, toISO } from "./lib/dates.js";
@@ -7,6 +7,7 @@ import { toEntries } from "./lib/regimen.js";
 import { codeFromUrl, decodeRegimen, newNonce } from "./lib/share.js";
 import { isNative, onPlanLink } from "./lib/native.js";
 import { usePersistentState } from "./lib/storage.js";
+import { useIdle } from "./lib/useIdle.js";
 import { isClockTime } from "./lib/times.js";
 import { cleanEntry, cleanFormulary } from "./lib/validate.js";
 import RegimenPage from "./components/drops/RegimenPage.jsx";
@@ -23,6 +24,7 @@ const STEPS = [
 ];
 const TITLES = { regimen: "Patient and drops", schedule: "Calendar", rx: "Prescription", formulary: "Formulary" };
 const IDLE_MS = 30 * 60 * 1000;
+const blankRx = () => ({ date: toISO(new Date()), notes: "", items: {} });
 const BLANK_PATIENT = { name: "", dob: "", hcn: "", address: "" };
 const BLANK_PRESCRIBER = { name: "", license: "", clinic: "", street: "", city: "", phone: "", fax: "" };
 const defaultSettings = () => ({
@@ -70,7 +72,8 @@ function Footer({ patientView }) {
             Open source
           </a>{" "}
           under the Apache 2.0 licence. No ads and no industry funding. Feedback and errors:{" "}
-          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.{" "}
+          <a href={`${isNative ? SITE_URL : ""}/privacy.html`}>Privacy</a>
         </p>
         {!patientView && (
           <p>
@@ -219,7 +222,7 @@ function ClinicianApp() {
   const [patient, setPatient] = usePersistentState("edt.patient", BLANK_PATIENT, session);
   const [drops, setDrops] = usePersistentState("edt.drops", [], { ...session, check: checkDrops });
   const [settings, setSettings] = usePersistentState("edt.schedule.v3", defaultSettings, { ...session, check: checkSettings });
-  const [rx, setRx] = usePersistentState("edt.rx", { date: toISO(new Date()), notes: "", items: {} }, session);
+  const [rx, setRx] = usePersistentState("edt.rx", blankRx, session);
   // Any change to the drops or patient means the prescription has not been
   // reviewed in its new form, so the electronic signature comes off.
   useEffect(() => {
@@ -246,39 +249,24 @@ function ClinicianApp() {
     setTab(next);
     window.scrollTo({ top: 0 });
   };
-  // On a shared clinic computer, a patient left open is cleared after 30
-  // minutes without use, so the next person at the desk never sees them.
-  const [cleared, setCleared] = useState(false);
-  const hasPatient = !!(patient.name || patient.dob || patient.hcn || patient.address || drops.length);
-  useEffect(() => {
-    if (!hasPatient) return;
-    let last = Date.now();
-    const touch = () => (last = Date.now());
-    const events = ["pointerdown", "keydown", "scroll"];
-    events.forEach((e) => window.addEventListener(e, touch, { passive: true }));
-    const timer = setInterval(() => {
-      if (Date.now() - last < IDLE_MS) return;
-      setPatient(BLANK_PATIENT);
-      setDrops([]);
-      setRx({ date: toISO(new Date()), notes: "", items: {} });
-      setSettings(defaultSettings());
-      setTab("regimen");
-      setCleared(true);
-    }, 30000);
-    return () => {
-      events.forEach((e) => window.removeEventListener(e, touch));
-      clearInterval(timer);
-    };
-  }, [hasPatient, setPatient, setDrops, setRx, setSettings, setTab]);
-
-  const reset = () => {
-    if (!window.confirm("Clear this patient and start again?")) return;
+  // Everything about the current patient, cleared together.
+  const clearPatient = () => {
     setPatient(BLANK_PATIENT);
     setDrops([]);
-    setRx({ date: toISO(new Date()), notes: "", items: {} });
+    setRx(blankRx());
     setSettings(defaultSettings());
     go("regimen");
   };
+  const reset = () => window.confirm("Clear this patient and start again?") && clearPatient();
+
+  // On a shared clinic computer, a patient left open is cleared after 30
+  // minutes without use, so the next person at the desk never sees them.
+  const [cleared, setCleared] = useState(false);
+  const hasPatient = Object.values(patient).some(Boolean) || drops.length > 0;
+  useIdle(hasPatient, IDLE_MS, () => {
+    clearPatient();
+    setCleared(true);
+  });
 
   // A plan opened from a patient's link keeps its start date, dose times and
   // plan ID. Each drop gets a fresh row id for editing.

@@ -3,7 +3,7 @@ import { courseLastDay } from "../../lib/calendar.js";
 import { daysBetween, parseISO } from "../../lib/dates.js";
 import { buildICS } from "../../lib/ics.js";
 import { downloadFile } from "../../lib/download.js";
-import { APP_SCHEME, cancelReminders, isNative, onAppResume, scheduleReminders } from "../../lib/native.js";
+import { APP_SCHEME, allowExactTimes, cancelReminders, isNative, onAppResume, scheduleReminders } from "../../lib/native.js";
 import { usePersistentState } from "../../lib/storage.js";
 import { Icon } from "../ui.jsx";
 
@@ -36,6 +36,7 @@ export default function Reminders({ plan: shared, id, code }) {
   const [generic, setGeneric] = usePersistentState("edt.genericReminders", false);
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState(false);
+  const [late, setLate] = useState(false);
 
   // Ongoing drops never end, so the app keeps a rolling window of reminders.
   const plan = useMemo(() => {
@@ -54,6 +55,7 @@ export default function Reminders({ plan: shared, id, code }) {
   const turnOn = async () => {
     const result = await scheduleReminders(plan, { ask: true, generic });
     setOn(result.ok);
+    setLate(!!result.late);
     setMessage(result.denied ? "Notifications are off for this app. Turn them on in your phone's Settings, then try again." : "");
   };
   const turnOff = async () => {
@@ -74,6 +76,14 @@ export default function Reminders({ plan: shared, id, code }) {
         on ? (
           <>
             <p>Reminders are on. Your phone will alert you at each dose time.</p>
+            {late && (
+              <p className="notice warn">
+                Your phone may send reminders a few minutes late.{" "}
+                <button className="link-btn" onClick={async () => (await allowExactTimes(), turnOn())}>
+                  Allow exact times
+                </button>
+              </p>
+            )}
             <button className="btn" onClick={turnOff}>
               Turn reminders off
             </button>

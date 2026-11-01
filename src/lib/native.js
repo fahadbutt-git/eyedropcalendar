@@ -70,5 +70,17 @@ export async function scheduleReminders(plan, { ask = false, generic = false } =
     });
   }
   if (notifications.length) await LocalNotifications.schedule({ notifications });
-  return { ok: true };
+  return { ok: true, late: await mayRunLate() };
 }
+
+// Android 12 and later can delay reminders unless the patient allows the app
+// to use exact alarms ("Alarms and reminders" in the app's settings).
+async function mayRunLate() {
+  if (Capacitor.getPlatform() !== "android") return false;
+  try {
+    return (await LocalNotifications.checkExactNotificationSetting()).exact_alarm !== "granted";
+  } catch {
+    return false;
+  }
+}
+export const allowExactTimes = () => LocalNotifications.changeExactNotificationSetting().catch(() => {});

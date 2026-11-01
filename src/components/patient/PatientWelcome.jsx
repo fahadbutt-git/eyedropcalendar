@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SITE_URL } from "../../config.js";
 import { codeFromUrl } from "../../lib/share.js";
 
 // First screen of the phone app before a plan has been opened.
@@ -40,7 +41,7 @@ export default function PatientWelcome({ onCode }) {
               setText(e.target.value);
               setError("");
             }}
-            placeholder="https://eyedroptracker.com/#/p/..."
+            placeholder={`${SITE_URL}/#/p/...`}
           />
         </label>
         {error && (
