@@ -14,7 +14,7 @@ export default function MedPicker({ formulary, onPick, onCancel, label, autoFocu
 
   const q = query.trim().toLowerCase();
   const matches = [...formulary]
-    .filter((m) => !q || `${m.brand} ${m.generic}`.toLowerCase().includes(q))
+    .filter((m) => !q || `${m.brand} ${m.generic} ${m.aka || ""}`.toLowerCase().includes(q))
     .sort((a, b) => {
       const ga = a.cls.some((c) => GLAUCOMA.has(c)) ? 0 : 1;
       const gb = b.cls.some((c) => GLAUCOMA.has(c)) ? 0 : 1;
@@ -97,6 +97,7 @@ export default function MedPicker({ formulary, onPick, onCancel, label, autoFocu
                 onMouseEnter={() => setActive(i)}
               >
                 <b>{m.brand}</b> <span>{m.generic}</span>
+                {m.aka && <span> · also {m.aka}</span>}
               </li>,
             ];
           })}

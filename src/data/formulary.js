@@ -11,6 +11,7 @@
 //         Left empty where the ODB code could not be confirmed (Monoprost,
 //         Vistitan, ZimedMD PF, dorzolamide) or the drug is not an LU benefit.
 // maxFreq label maximum doses a day, when the label sets one
+// aka     other names the drug is searched by (such as a US brand name)
 
 export const DRUG_CLASSES = {
   PGA: "Prostaglandin analogue",
@@ -60,6 +61,7 @@ const d = (brand, generic, cls, freq, lu, extra = {}) => ({
   form: "solution",
   qhs: false,
   maxFreq: null,
+  aka: "",
   ...extra,
 });
 const PGA = { cap: "teal", qhs: true, maxFreq: 1 };
@@ -81,6 +83,9 @@ const SEED = [
   d("Simbrinza", "Brinzolamide 1% / brimonidine 0.2%", ["CAI", "AA"], 2, ["393", "466"], { cap: "lightgreen", form: "suspension", maxFreq: 2 }),
   d("Timoptic", "Timolol 0.5%", ["BB"], 2, [], { cap: "yellow", maxFreq: 2 }),
   d("Timoptic-XE", "Timolol 0.5% gel-forming solution", ["BB"], 1, [], { cap: "yellow", form: "gel", maxFreq: 1 }),
+  // Tafluprost is sold as Saflutan in Canada (Zioptan in the US), in
+  // preservative-free single-dose units, so it has no cap colour.
+  d("Saflutan", "Tafluprost 0.0015% (preservative free)", ["PGA"], 1, [], { qhs: true, maxFreq: 1, aka: "Zioptan" }),
   d("Travatan Z", "Travoprost 0.004%", ["PGA"], 1, LU_SINGLE, PGA),
   // The Trusopt brand is discontinued in Canada; generic dorzolamide remains.
   d("Dorzolamide", "Dorzolamide 2%", ["CAI"], 3, [], { cap: "orange", maxFreq: 3 }),
@@ -90,6 +95,8 @@ const SEED = [
   d("Xalatan", "Latanoprost 0.005%", ["PGA"], 1, LU_SINGLE, PGA),
   d("ZimedMD PF", "Bimatoprost 0.03% (preservative free)", ["PGA"], 1, [], PGA),
   d("Pred Forte", "Prednisolone acetate 1%", ["STER"], 4, [], { cap: "pink", form: "suspension" }),
+  d("FML", "Fluorometholone 0.1%", ["STER"], 4, [], { cap: "pink", form: "suspension" }),
+  d("Lotemax", "Loteprednol etabonate 0.5%", ["STER"], 4, [], { cap: "pink", form: "suspension", maxFreq: 4 }),
   d("Durezol", "Difluprednate 0.05%", ["STER"], 4, [], { cap: "pink", form: "emulsion", maxFreq: 4 }),
   d("Nevanac", "Nepafenac 0.1%", ["NSAID"], 3, [], { cap: "grey", form: "suspension", maxFreq: 3 }),
   d("Prolensa", "Bromfenac 0.07%", ["NSAID"], 1, [], { cap: "grey", maxFreq: 1 }),
@@ -99,4 +106,4 @@ const SEED = [
 
 export const SEED_FORMULARY = SEED.map((m, i) => ({ id: i + 1, ...m }));
 
-export const FORMULARY_VERSION = 5;
+export const FORMULARY_VERSION = 6;

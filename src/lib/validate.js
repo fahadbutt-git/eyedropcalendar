@@ -39,6 +39,7 @@ export function cleanMed(m, id) {
     form: oneOf(m.form, FORMS, "solution"),
     qhs: m.qhs === true,
     maxFreq: FREQ_OPTIONS.includes(m.maxFreq) ? m.maxFreq : null,
+    aka: text(m.aka, 60),
   };
 }
 
