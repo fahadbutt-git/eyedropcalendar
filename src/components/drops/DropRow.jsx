@@ -4,6 +4,7 @@ import { FREQ_OPTIONS, TAPER_PRESETS } from "../../lib/regimen.js";
 import { sigText } from "../../lib/wording.js";
 import { CapDot, Choice, NumberInput } from "../ui.jsx";
 import MedPicker from "./MedPicker.jsx";
+import { formInfo } from "../../data/forms.js";
 import TaperEditor from "./TaperEditor.jsx";
 
 const EYE_CHOICES = [
@@ -16,7 +17,6 @@ const COURSE_CHOICES = [
   ["duration", "Fixed course"],
   ["taper", "Taper"],
 ];
-const FORM_NOTE = { suspension: "Shake well", emulsion: "Emulsion", gel: "Gel, use last" };
 const timesADay = (f) => (f === 1 ? "Once a day" : `${f} times a day`);
 
 // The plan fields a new drug starts from. Changing the drug resets them, so
@@ -63,7 +63,7 @@ export default function DropRow({ index, drop, formulary, startDate, update, rem
           )}
           <div className="drop-meta">
             <CapDot cap={med?.cap} named />
-            {FORM_NOTE[med?.form] && <span className="tag">{FORM_NOTE[med.form]}</span>}
+            {formInfo(med?.form).tag && <span className="tag">{formInfo(med.form).tag}</span>}
             {!med && <span className="tag warn">Not in the formulary</span>}
           </div>
           <div className="drop-actions">

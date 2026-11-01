@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CAP_COLOURS, DRUG_CLASSES } from "../../data/formulary.js";
 import { FREQ_OPTIONS } from "../../lib/regimen.js";
 import { cleanMed } from "../../lib/validate.js";
+import { FORM_INFO } from "../../data/forms.js";
 import { Field } from "../ui.jsx";
 
 const BLANK = { brand: "", generic: "", cls: [], freq: 2, drops: 1, lu: [], cap: "", form: "solution", qhs: false, maxFreq: null };
@@ -81,10 +82,11 @@ export default function MedEditor({ initial, existing, onSave, onClose }) {
             </Field>
             <Field label="Formulation">
               <select className="select" value={m.form} onChange={set("form")}>
-                <option value="solution">Solution</option>
-                <option value="suspension">Suspension (shake well)</option>
-                <option value="emulsion">Emulsion</option>
-                <option value="gel">Gel-forming (use last)</option>
+                {Object.entries(FORM_INFO).map(([k, f]) => (
+                  <option key={k} value={k}>
+                    {f.label}
+                  </option>
+                ))}
               </select>
             </Field>
           </div>

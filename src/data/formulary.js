@@ -23,6 +23,10 @@ export const DRUG_CLASSES = {
   NSAID: "NSAID",
   ABX: "Antibiotic",
   CYC: "Cycloplegic / mydriatic",
+  ALG: "Anti-allergy",
+  IMM: "Dry eye immunomodulator",
+  AV: "Antiviral",
+  AF: "Antifungal",
   LUB: "Lubricant",
   OTHER: "Other",
 };
@@ -44,7 +48,7 @@ export const CAP_COLOURS = {
   lightgreen: { label: "Light green", hex: "#8fcf7e" },
 };
 
-export const FORMS = ["solution", "suspension", "emulsion", "gel"];
+export { FORMS } from "./forms.js";
 
 // ODB Limited Use codes, by product type.
 const LU_SINGLE = ["171", "172", "387"];

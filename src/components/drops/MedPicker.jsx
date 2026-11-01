@@ -1,6 +1,19 @@
 import { useId, useRef, useState } from "react";
 
-const GLAUCOMA = new Set(["PGA", "BB", "CAI", "AA", "MIO"]);
+// Search results are grouped the way clinicians think about them.
+const GROUPS = [
+  ["Glaucoma", (c) => c.some((x) => ["PGA", "BB", "CAI", "AA", "MIO"].includes(x))],
+  ["Steroid and antibiotic", (c) => c.includes("STER") && c.includes("ABX")],
+  ["Corticosteroids", (c) => c.includes("STER")],
+  ["NSAIDs", (c) => c.includes("NSAID")],
+  ["Antibiotics", (c) => c.includes("ABX")],
+  ["Anti-allergy", (c) => c.includes("ALG")],
+  ["Dry eye", (c) => c.includes("IMM") || c.includes("LUB")],
+  ["Antiviral and antifungal", (c) => c.includes("AV") || c.includes("AF")],
+  ["Dilating and cycloplegic", (c) => c.includes("CYC")],
+  ["Other", () => true],
+];
+const groupOf = (m) => GROUPS.findIndex(([, test]) => test(m.cls));
 
 // Type to search the formulary, then choose with the mouse or the arrow keys
 // and Enter. Nothing is chosen until the clinician confirms a drug, so
@@ -16,8 +29,8 @@ export default function MedPicker({ formulary, onPick, onCancel, label, autoFocu
   const matches = [...formulary]
     .filter((m) => !q || `${m.brand} ${m.generic} ${m.aka || ""}`.toLowerCase().includes(q))
     .sort((a, b) => {
-      const ga = a.cls.some((c) => GLAUCOMA.has(c)) ? 0 : 1;
-      const gb = b.cls.some((c) => GLAUCOMA.has(c)) ? 0 : 1;
+      const ga = groupOf(a);
+      const gb = groupOf(b);
       const starts = (m) => (m.brand.toLowerCase().startsWith(q) ? 0 : 1);
       return (q ? starts(a) - starts(b) : ga - gb) || a.brand.localeCompare(b.brand);
     });
@@ -75,7 +88,7 @@ export default function MedPicker({ formulary, onPick, onCancel, label, autoFocu
         <ul className="picker-list" id={listId} role="listbox" aria-label="Formulary">
           {matches.length === 0 && <li className="picker-none">No match. Add it in the Formulary first.</li>}
           {matches.map((m, i) => {
-            const group = q ? null : m.cls.some((c) => GLAUCOMA.has(c)) ? "Glaucoma" : "Post-operative and other";
+            const group = q ? null : GROUPS[groupOf(m)][0];
             const heading = group !== lastGroup ? group : null;
             lastGroup = group;
             return [

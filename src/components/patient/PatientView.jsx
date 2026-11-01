@@ -10,14 +10,14 @@ import { fmtTime } from "../../lib/times.js";
 import { patientInstruction } from "../../lib/wording.js";
 import { usePersistentState } from "../../lib/storage.js";
 import { CapDot, Icon } from "../ui.jsx";
+import { formInfo } from "../../data/forms.js";
 import InstallTip from "./InstallTip.jsx";
 import Reminders from "./Reminders.jsx";
 
 // Check marks are stored per plan and per date as { "<brand>|<eye>|<dose>": time }.
 const doseKey = ({ entry, dose }) => `${entry.brand}|${entry.eye}|${dose}`;
-const ADVICE = { suspension: "Shake first.", gel: "Use last." };
-// Five minutes between drops, ten before a gel.
-const waitFor = (it) => (it?.med?.form === "gel" ? 10 : 5) * 60 * 1000;
+// Five minutes between drops, ten before a gel or ointment.
+const waitFor = (it) => formInfo(it?.med?.form).wait * 60 * 1000;
 const isObject = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
 
 // The current time, refreshed every 30 seconds and whenever the phone wakes
@@ -42,7 +42,7 @@ function useNow() {
 }
 
 function doseLabel({ entry, med }) {
-  return [`${entry.drops} drop${entry.drops > 1 ? "s" : ""}, ${EYES[entry.eye].long}.`, ADVICE[med?.form]].filter(Boolean).join(" ");
+  return [`${entry.drops} drop${entry.drops > 1 ? "s" : ""}, ${EYES[entry.eye].long}.`, formInfo(med?.form).advice].filter(Boolean).join(" ");
 }
 
 export default function PatientView({ plan: shared, code }) {

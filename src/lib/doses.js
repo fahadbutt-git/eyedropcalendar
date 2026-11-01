@@ -4,9 +4,10 @@ import { addDays } from "./dates.js";
 import { dosesOnDay, modeOf } from "./regimen.js";
 import { doseTimes } from "./times.js";
 
+import { formInfo } from "../data/forms.js";
+
 // Drops given together go in this order: solutions, then suspensions and
-// emulsions, then gels, which need 10 minutes before anything else.
-const ORDER = { solution: 0, suspension: 1, emulsion: 1, gel: 2 };
+// emulsions, then gels and ointments, which need 10 minutes after the rest.
 
 export const medOf = (formulary, entry) => formulary.find((m) => m.brand === entry.brand);
 const bedtimeDrop = (entry, med) => !!med?.qhs && modeOf(entry) !== "taper";
@@ -26,7 +27,7 @@ export function doseGroups(entries, formulary, dayIndex, wake, bed) {
     .sort((a, b) => a[0] - b[0])
     .map(([time, items]) => ({
       time,
-      items: items.sort((a, b) => (ORDER[a.med?.form] ?? 0) - (ORDER[b.med?.form] ?? 0) || a.index - b.index),
+      items: items.sort((a, b) => formInfo(a.med?.form).order - formInfo(b.med?.form).order || a.index - b.index),
     }));
 }
 
@@ -50,7 +51,6 @@ export function upcomingReminders(plan, from, limit) {
   return out;
 }
 
-const ADVICE = { suspension: "Shake first.", gel: "Use it last, 10 minutes after other drops." };
 
 // Notification text. `generic` hides drug names on the lock screen.
 export const reminderText = (items, eyes, generic = false) => {
@@ -60,7 +60,7 @@ export const reminderText = (items, eyes, generic = false) => {
     body:
       items
         .map(({ entry: e, med }) =>
-          [`${e.brand}: ${e.drops} drop${e.drops > 1 ? "s" : ""}, ${eyes[e.eye].long}.`, ADVICE[med?.form]].filter(Boolean).join(" ")
+          [`${e.brand}: ${e.drops} drop${e.drops > 1 ? "s" : ""}, ${eyes[e.eye].long}.`, formInfo(med?.form).advice].filter(Boolean).join(" ")
         )
         .join("\n") + (items.length > 1 ? "\nWait 5 minutes between drops, in this order." : ""),
   };
