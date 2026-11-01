@@ -45,9 +45,12 @@ export function daysBetween(a, b) {
 
 // ── Regimen model ───────────────────────────────────────────────────────────
 // mode: "ongoing" | "duration" | "taper"
-export function newSlot() {
+let uid = 0;
+export function newSlot(eye = "OU") {
   return {
+    id: `d${Date.now().toString(36)}${(uid++).toString(36)}`,
     brand: "",
+    eye,
     freq: 2,
     drops: 1,
     mode: "ongoing",
@@ -72,12 +75,16 @@ export const TAPER_PRESETS = [
   { label: "Durezol: QID x14d, BID x14d", build: () => [{ freq: 4, days: 14 }, { freq: 2, days: 14 }] },
 ];
 
+// A taper with no steps behaves as ongoing until steps are added.
+const modeOf = (slot) => (slot.mode === "taper" && !slot.steps?.length ? "ongoing" : slot.mode);
+
 // Number of doses on day `dayIndex` (0 = schedule start date).
 export function dosesOnDay(slot, dayIndex) {
   const d = dayIndex - (Math.max(1, slot.startDay || 1) - 1);
   if (d < 0) return 0;
-  if (slot.mode === "duration") return d < slot.durationDays ? slot.freq : 0;
-  if (slot.mode === "taper") {
+  const mode = modeOf(slot);
+  if (mode === "duration") return d < slot.durationDays ? slot.freq : 0;
+  if (mode === "taper") {
     let acc = 0;
     for (const s of slot.steps) {
       acc += s.days;
@@ -91,22 +98,29 @@ export function dosesOnDay(slot, dayIndex) {
 // Last day index (inclusive) with doses, or null when ongoing.
 export function lastDayIndex(slot) {
   const offset = Math.max(1, slot.startDay || 1) - 1;
-  if (slot.mode === "duration") return offset + slot.durationDays - 1;
-  if (slot.mode === "taper") return offset + slot.steps.reduce((a, s) => a + s.days, 0) - 1;
+  const mode = modeOf(slot);
+  if (mode === "duration") return offset + slot.durationDays - 1;
+  if (mode === "taper") return offset + slot.steps.reduce((a, s) => a + s.days, 0) - 1;
   return null;
 }
 
 export function totalDays(slot) {
-  if (slot.mode === "duration") return slot.durationDays;
-  if (slot.mode === "taper") return slot.steps.reduce((a, s) => a + s.days, 0);
+  const mode = modeOf(slot);
+  if (mode === "duration") return slot.durationDays;
+  if (mode === "taper") return slot.steps.reduce((a, s) => a + s.days, 0);
   return null;
 }
 
 // Plain-language instruction (also used as the Rx sig).
-export function sigText(slot, eye, qhs = false) {
+const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+export function sigText(slot, eye, qhs = false, startDate = null) {
   const drops = `${slot.drops} drop${slot.drops > 1 ? "s" : ""}`;
   const where = `in ${eye === "OU" ? "" : "the "}${EYES[eye].long} (${EYES[eye].short})`;
-  const start = slot.startDay > 1 ? `Starting on day ${slot.startDay}, instill` : "Instill";
+  let start = "Instill";
+  if (slot.startDay > 1) {
+    const d = startDate ? addDays(startDate, slot.startDay - 1) : null;
+    start = d ? `Starting ${MONTH_ABBR[d.getMonth()]} ${d.getDate()}, instill` : `Starting on day ${slot.startDay}, instill`;
+  }
   if (slot.mode === "taper" && slot.steps.length) {
     const parts = slot.steps.map((s) => `${freqWords(s.freq)} for ${s.days} day${s.days > 1 ? "s" : ""}`);
     return `${start} ${drops} ${where} ${parts.join(", then ")}, then stop.`;
@@ -119,6 +133,24 @@ export function sigText(slot, eye, qhs = false) {
   return `${start} ${drops} ${where} ${when}.`;
 }
 
+// Patient-facing wording, without Latin abbreviations.
+const aDay = (n) => freqWords(n).replace(" daily", " a day");
+export function patientPlanText(e, qhs = false) {
+  if (modeOf(e) === "taper")
+    return e.steps.map((s) => `${aDay(s.freq)} for ${s.days} day${s.days > 1 ? "s" : ""}`).join(", then ") + ", then stop";
+  const base = qhs && e.freq === 1 ? "once a day at bedtime" : aDay(e.freq);
+  return modeOf(e) === "duration" ? `${base} for ${e.durationDays} day${e.durationDays > 1 ? "s" : ""}, then stop` : base;
+}
+export function patientInstruction(e, qhs = false, startDate = null) {
+  const where = e.eye === "OU" ? "both eyes" : `the ${EYES[e.eye].long}`;
+  let lead = "";
+  if (e.startDay > 1) {
+    const d = startDate ? addDays(startDate, e.startDay - 1) : null;
+    lead = d ? `Starting ${MONTH_ABBR[d.getMonth()]} ${d.getDate()}: ` : `Starting on day ${e.startDay}: `;
+  }
+  return `${lead}${e.drops} drop${e.drops > 1 ? "s" : ""} in ${where}, ${patientPlanText(e, qhs)}.`;
+}
+
 // Short plan used in calendar legends.
 export function planShort(slot) {
   if (slot.mode === "taper" && slot.steps.length)
@@ -129,12 +161,26 @@ export function planShort(slot) {
 
 // Merge identical regimens in both eyes into one OU entry.
 const planKey = (s) =>
-  JSON.stringify([s.brand, s.freq, s.drops, s.mode, s.durationDays, s.startDay, s.steps]);
+  JSON.stringify([s.brand, s.freq, s.drops, modeOf(s), s.durationDays, s.startDay, modeOf(s) === "taper" ? s.steps : []]);
+
+// Single drop list (each with eye OD, OS or OU) to schedule entries. Matching
+// right and left eye entries with the same plan are combined into OU.
+export function toEntries(drops) {
+  const list = drops.filter((d) => d.brand).map((d) => ({ ...d, mode: modeOf(d) }));
+  return mergeEyes(
+    list.filter((d) => d.eye !== "OS"),
+    list.filter((d) => d.eye === "OS")
+  );
+}
 
 export function mergeEyes(right, left) {
   const out = [];
   const usedLeft = new Set();
   right.filter((s) => s.brand).forEach((s) => {
+    if (s.eye === "OU") {
+      out.push({ ...s });
+      return;
+    }
     const li = left.findIndex((l, i) => !usedLeft.has(i) && l.brand && planKey(l) === planKey(s));
     if (li >= 0) {
       usedLeft.add(li);
@@ -168,11 +214,20 @@ export function doseTimes(n, wake = "08:00", bed = "22:00", qhs = false) {
   if (n === 1) return [qhs ? b : w];
   // Spread doses over at most 12 waking hours (8 AM, 12 PM, 4 PM, 8 PM for QID)
   const step = Math.min(12 * 60, b - w) / (n - 1);
-  return Array.from({ length: n }, (_, i) => Math.round((w + i * step) / 30) * 30);
+  const unit = n > 4 ? 15 : 30;
+  return Array.from({ length: n }, (_, i) => Math.round((w + i * step) / unit) * unit);
 }
 
 // ── Safety checks ───────────────────────────────────────────────────────────
 // Returns warnings for duplicate drugs or duplicate drug classes in one eye.
+export function dropWarnings(drops, formulary, classNames) {
+  const active = drops.filter((d) => d.brand);
+  return [
+    ...regimenWarnings(active.filter((d) => d.eye !== "OS"), formulary, "right eye", classNames),
+    ...regimenWarnings(active.filter((d) => d.eye !== "OD"), formulary, "left eye", classNames),
+  ].filter((w, i, a) => a.indexOf(w) === i);
+}
+
 export function regimenWarnings(slots, formulary, eyeLabel, classNames) {
   const warnings = [];
   const active = slots.filter((s) => s.brand);

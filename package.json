@@ -1,7 +1,7 @@
 {
   "name": "eyedroptracker",
   "private": true,
-  "version": "0.0.1",
+  "version": "2.0.0",
   "homepage": "https://fahadbutt-git.github.io/eyedropcalendar",
   "type": "module",
   "scripts": {
@@ -10,14 +10,24 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "test": "node --test tests/*.test.mjs",
+    "app:sync": "vite build && cap sync",
+    "app:android": "vite build && cap sync android && cap open android",
+    "app:ios": "vite build && cap sync ios && cap open ios"
   },
   "dependencies": {
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/core": "^7.6.10",
+    "@capacitor/local-notifications": "^7.0.7",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@capacitor/android": "^7.6.10",
+    "@capacitor/cli": "^7.6.10",
+    "@capacitor/ios": "^7.6.10",
     "@eslint/js": "^9.19.0",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",

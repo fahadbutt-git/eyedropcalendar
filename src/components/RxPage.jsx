@@ -10,7 +10,7 @@ const fmtDate = (iso) => {
   return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 };
 
-export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, rx, setRx, go }) {
+export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, rx, setRx, start, go }) {
   const pr = (k) => (e) => setPrescriber({ ...prescriber, [k]: e.target.value });
   const opt = (e) => ({ ...DEFAULT_OPT, ...(rx.items[rxKey(e)] || {}) });
   const setOpt = (e, patch) =>
@@ -75,37 +75,59 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
 
         <section className="card">
           <div className="card-h">
-            <h2>Items</h2>
+            <h2>Prescription</h2>
           </div>
           <div className="card-b stack" style={{ gap: 10 }}>
             <Field label="Date">
               <input className="input" type="date" value={rx.date} onChange={(e) => setRx({ ...rx, date: e.target.value })} />
             </Field>
-            {entries.map((e) => {
-              const o = opt(e);
-              return (
-                <div className="rx-item-edit" key={rxKey(e)}>
-                  <label className="row">
-                    <input type="checkbox" checked={o.include} onChange={(ev) => setOpt(e, { include: ev.target.checked })} />
-                    <b>{e.brand}</b> <span className={`tag ${e.eye.toLowerCase()}`}>{e.eye}</span>
-                  </label>
-                  {o.include && (
-                    <div className="grid-2">
-                      <Field label="Dispense">
-                        <input className="input" value={o.disp} onChange={(ev) => setOpt(e, { disp: ev.target.value })} />
-                      </Field>
-                      <Field label="Refills">
-                        <select className="select" value={o.refills} onChange={(ev) => setOpt(e, { refills: Number(ev.target.value) })}>
-                          {[0, 1, 2, 3, 4, 5, 6, 11].map((n) => (
-                            <option key={n} value={n}>{n}</option>
-                          ))}
-                        </select>
-                      </Field>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            <div className="rx-items">
+              <div className="rx-items-h" aria-hidden="true">
+                <span>Drug</span>
+                <span>Dispense</span>
+                <span>Refills</span>
+              </div>
+              {entries.map((e) => {
+                const o = opt(e);
+                const k = rxKey(e).replace(/\W/g, "-");
+                return (
+                  <div className={`rx-item-row ${o.include ? "" : "off"}`} key={rxKey(e)}>
+                    <label className="check" htmlFor={`rx-inc-${k}`}>
+                      <input
+                        id={`rx-inc-${k}`}
+                        type="checkbox"
+                        checked={o.include}
+                        onChange={(ev) => setOpt(e, { include: ev.target.checked })}
+                      />
+                      <span>
+                        <b>{e.brand}</b> <span className={`tag ${e.eye.toLowerCase()}`}>{e.eye}</span>
+                      </span>
+                    </label>
+                    <input
+                      className="input sm"
+                      aria-label={`Dispense for ${e.brand}`}
+                      disabled={!o.include}
+                      value={o.disp}
+                      onChange={(ev) => setOpt(e, { disp: ev.target.value })}
+                    />
+                    <select
+                      className="select sm"
+                      aria-label={`Refills for ${e.brand}`}
+                      disabled={!o.include}
+                      value={o.refills}
+                      onChange={(ev) => setOpt(e, { refills: Number(ev.target.value) })}
+                    >
+                      {[0, 1, 2, 3, 4, 5, 6, 11].map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="small muted">Untick a drug the patient already has to leave it off the prescription.</p>
             <Field label="Notes" optional>
               <textarea className="textarea" rows={3} value={rx.notes} onChange={(e) => setRx({ ...rx, notes: e.target.value })} />
             </Field>
@@ -115,7 +137,7 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
         {missing.length > 0 && (
           <div className="notice warn small">Still needed: {missing.join(", ")}.</div>
         )}
-        <button className="btn primary" onClick={print} disabled={!items.length}>
+        <button className="btn primary lg" onClick={print} disabled={!items.length}>
           {Icon.print} Print prescription
         </button>
       </aside>
@@ -175,7 +197,7 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
                   {med?.generic && <span className="gen"> ({med.generic}) ophthalmic</span>}
                 </div>
                 <div>
-                  <b>Sig:</b> {sigText(e, e.eye, med?.qhs)}
+                  <b>Sig:</b> {sigText(e, e.eye, med?.qhs, start ? parseISO(start) : null)}
                   {med?.form === "suspension" ? " Shake well." : ""}
                 </div>
                 <div className="meta">

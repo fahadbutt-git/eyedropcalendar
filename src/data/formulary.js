@@ -87,4 +87,4 @@ const SEED = [
 
 export const SEED_FORMULARY = SEED.map((m, i) => ({ id: i + 1, ...m }));
 
-export const FORMULARY_VERSION = 2;
+export const FORMULARY_VERSION = 3;

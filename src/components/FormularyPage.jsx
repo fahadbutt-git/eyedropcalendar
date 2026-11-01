@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { CAP_COLOURS, DRUG_CLASSES, SEED_FORMULARY } from "../data/formulary.js";
+import { CAP_COLOURS, DRUG_CLASSES } from "../data/formulary.js";
 import { FREQ_OPTIONS, DROP_OPTIONS, freqAbbrev } from "../lib/regimen.js";
 import { downloadFile } from "../lib/ics.js";
 import { CapDot, Field } from "./ui.jsx";
@@ -85,7 +85,7 @@ function EditModal({ initial, onSave, onClose, existing }) {
   );
 }
 
-export default function FormularyPage({ formulary, setFormulary }) {
+export default function FormularyPage({ formulary, setFormulary, restore, outdated }) {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState(["brand", 1]);
   const [editing, setEditing] = useState(null);
@@ -139,9 +139,18 @@ export default function FormularyPage({ formulary, setFormulary }) {
         <button className="btn primary" onClick={() => setEditing({})}>Add medication</button>
       </div>
 
+      {outdated && (
+        <div className="notice info">
+          Updated defaults are available. Your edited list is still in use.{" "}
+          <button className="link-btn" onClick={() => window.confirm("Replace your edited list with the updated defaults?") && restore()}>
+            Use the updated defaults
+          </button>
+        </div>
+      )}
+
       <section className="card">
         <div className="card-h">
-          <input className="input" style={{ maxWidth: 340 }} placeholder="Search brand, generic, class or LU code" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input className="input" aria-label="Search the formulary" style={{ maxWidth: 340 }} placeholder="Search brand, generic, class or LU code" value={q} onChange={(e) => setQ(e.target.value)} />
           <span className="muted small">{rows.length} of {formulary.length}</span>
           <span className="spacer" />
           <button className="btn sm" onClick={() => downloadFile("formulary.json", JSON.stringify({ formulary }, null, 2), "application/json")}>
@@ -151,7 +160,7 @@ export default function FormularyPage({ formulary, setFormulary }) {
           <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={importFile} />
           <button
             className="btn sm danger"
-            onClick={() => confirm("Restore the default formulary? Your edits will be lost.") && setFormulary(SEED_FORMULARY)}
+            onClick={() => window.confirm("Restore the default formulary? Your edits on this device will be lost.") && restore()}
           >
             Restore defaults
           </button>
@@ -191,7 +200,7 @@ export default function FormularyPage({ formulary, setFormulary }) {
                       <button className="btn sm" onClick={() => setEditing(m)}>Edit</button>
                       <button
                         className="btn sm ghost danger"
-                        onClick={() => confirm(`Remove ${m.brand} from the formulary?`) && setFormulary(formulary.filter((x) => x.id !== m.id))}
+                        onClick={() => window.confirm(`Remove ${m.brand} from the formulary?`) && setFormulary(formulary.filter((x) => x.id !== m.id))}
                       >
                         Delete
                       </button>

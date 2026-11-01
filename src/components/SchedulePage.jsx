@@ -7,10 +7,9 @@ import {
   dosesOnDay,
   doseTimes,
   fmtTime,
-  freqWords,
   parseISO,
+  patientPlanText,
 } from "../lib/regimen.js";
-import { buildICS, downloadFile } from "../lib/ics.js";
 import { encodeRegimen, patientLink } from "../lib/share.js";
 import { CapDot, Chip, Field, Icon, chipStyle } from "./ui.jsx";
 
@@ -20,15 +19,7 @@ const EYE_PHRASE = { OD: "right eye", OS: "left eye", OU: "both eyes" };
 const shortMonth = (d) => MONTHS[d.getMonth()].slice(0, 3);
 const fmtDay = (d) => `${shortMonth(d)} ${d.getDate()}`;
 
-function planWords(e, qhs) {
-  if (e.mode === "taper" && e.steps.length)
-    return (
-      e.steps.map((s) => `${freqWords(s.freq).replace(" daily", " a day").replace("once a day", "once a day")} for ${s.days} days`).join(", then ") +
-      ", then stop"
-    );
-  const base = qhs && e.freq === 1 ? "once a day at bedtime" : freqWords(e.freq).replace(" daily", " a day");
-  return e.mode === "duration" ? `${base} for ${e.durationDays} days, then stop` : base;
-}
+const planWords = patientPlanText;
 
 // ── Page building ───────────────────────────────────────────────────────────
 function monthWeeks(year, month) {
@@ -67,16 +58,20 @@ function buildPages({ view, size, start, span, n }) {
   const need = z.dnum + n * z.dose;
   const fitWeeks = Math.max(1, Math.floor(compactAvail / need));
 
+  // Whole-month pages are the most familiar, so use them when every month fits
+  // on a page and the plan fills most of its first and last month. Otherwise
+  // use weekly pages that start on the week of the start date.
   let pages;
-  let monthFallback = false;
-  if (view === "month") {
+  if (view === "calendar" && size === "standard") {
     const months = span.months.map(({ year, month }) => ({
       title: `${MONTHS[month]} ${year}`,
       weeks: monthWeeks(year, month),
       month,
     }));
-    if (size === "standard" && months.every((m) => m.weeks.length <= fitWeeks)) pages = months;
-    else monthFallback = true;
+    const fits = months.every((m) => m.weeks.length <= fitWeeks);
+    const firstFull = start.getDate() <= 7;
+    const lastFull = months.length === 1 || span.end.getDate() >= 21;
+    if (fits && firstFull && lastFull) pages = months;
   }
   if (!pages) {
     const all = rollingWeeks(start, span.end);
@@ -96,7 +91,7 @@ function buildPages({ view, size, start, span, n }) {
     const avail = singleFirst && i === 0 ? fullAvail : compactAvail;
     pg.rowH = Math.max(need, Math.floor(avail / pg.weeks.length) - 2);
   });
-  return { pages, singleFirst, monthFallback };
+  return { pages, singleFirst };
 }
 
 // ── Pieces ──────────────────────────────────────────────────────────────────
@@ -137,9 +132,9 @@ function Legend({ entries, formulary, wake, bed, compact }) {
               </div>
               <div className="legend-sub">
                 {med?.cap && (
-                  <span className="row" style={{ display: "inline-flex", gap: 4 }}>
-                    <CapDot cap={med.cap} /> cap ·{" "}
-                  </span>
+                  <>
+                    <CapDot cap={med.cap} /> cap{" · "}
+                  </>
                 )}
                 {med?.generic}
                 {med?.form === "suspension" ? " · shake well" : ""}
@@ -203,7 +198,11 @@ function Calendar({ weeks, entries, formulary, start, endIndex, month, rowH }) {
                               <i key={k} />
                             ))}
                           </span>
-                          {(changed || started) && <span className="change">{started ? "Start" : `now ${n}x`}</span>}
+                          {(changed || started) && (
+                            <span className="change" title={started ? "Starts today" : `Changes to ${n} times a day`}>
+                              {started ? "start" : `${n < prev ? "↓" : "↑"}${n}x`}
+                            </span>
+                          )}
                         </div>
                       );
                     })}
@@ -333,7 +332,7 @@ export default function SchedulePage({ entries, formulary, patient, settings, se
   const start = parseISO(s.start);
   const span = scheduleSpan(entries, Number(s.months), start);
   const size = s.large ? "large" : "standard";
-  const view = s.view === "table" ? "table" : s.view === "month" ? "month" : "weeks";
+  const view = s.view === "table" ? "table" : "calendar";
   const [qr, setQr] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -370,7 +369,7 @@ export default function SchedulePage({ entries, formulary, patient, settings, se
       </div>
     );
 
-  const { pages, singleFirst, monthFallback } = buildPages({ view, size, start, span, n: entries.length });
+  const { pages, singleFirst } = buildPages({ view, size, start, span, n: entries.length });
   const pageCount = pages.length + (singleFirst ? 0 : 1);
 
   const print = () => {
@@ -378,12 +377,6 @@ export default function SchedulePage({ entries, formulary, patient, settings, se
     window.print();
     document.body.classList.remove("print-schedule");
   };
-  const ics = () =>
-    downloadFile(
-      "eye-drop-reminders.ics",
-      buildICS({ entries, formulary, start, days: span.days, wake: s.wake, bed: s.bed }),
-      "text/calendar"
-    );
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(link);
@@ -403,7 +396,7 @@ export default function SchedulePage({ entries, formulary, patient, settings, se
       <div className="who">
         {patient.name && <div className="who-name">{patient.name}</div>}
         {patient.dob && <div>Born {fmtDay(parseISO(patient.dob))}, {parseISO(patient.dob).getFullYear()}</div>}
-        <div>Started {fmtDay(start)}, {start.getFullYear()}</div>
+        <div>From {fmtDay(start)}, {start.getFullYear()}</div>
       </div>
     </div>
   );
@@ -415,26 +408,18 @@ export default function SchedulePage({ entries, formulary, patient, settings, se
 
   return (
     <div className="sched-layout">
-      <aside className="card no-print">
+      <aside className="card no-print sched-aside">
         <div className="card-h">
-          <h2>Schedule settings</h2>
+          <h2>Calendar</h2>
         </div>
-        <div className="card-b stack" style={{ gap: 14 }}>
+        <div className="card-b stack" style={{ gap: 16 }}>
           <Field label="Start date">
             <input className="input" type="date" value={s.start} onChange={set("start")} />
           </Field>
-          <div className="grid-2">
-            <Field label="First dose">
-              <input className="input" type="time" value={s.wake} onChange={set("wake")} />
-            </Field>
-            <Field label="Bedtime">
-              <input className="input" type="time" value={s.bed} onChange={set("bed")} />
-            </Field>
-          </div>
           {span.hasOngoing && (
-            <Field label="Length for ongoing drops">
+            <Field label="Cover ongoing drops for">
               <select className="select" value={s.months} onChange={set("months")}>
-                {[1, 2, 3, 6].map((m) => (
+                {[1, 2, 3].map((m) => (
                   <option key={m} value={m}>
                     {m} month{m > 1 ? "s" : ""}
                   </option>
@@ -443,61 +428,68 @@ export default function SchedulePage({ entries, formulary, patient, settings, se
             </Field>
           )}
           <Field label="Layout">
-            <div className="seg" role="group" aria-label="Layout">
+            <div className="seg full" role="radiogroup" aria-label="Layout">
               {[
-                ["weeks", "Calendar"],
-                ["month", "By month"],
+                ["calendar", "Calendar"],
                 ["table", "Checklist"],
               ].map(([k, l]) => (
-                <button key={k} className={view === k ? "on" : ""} aria-pressed={view === k} onClick={() => setSettings({ ...s, view: k })}>
+                <button key={k} role="radio" aria-checked={view === k} className={view === k ? "on" : ""} onClick={() => setSettings({ ...s, view: k })}>
                   {l}
                 </button>
               ))}
             </div>
           </Field>
-          {monthFallback && (
-            <div className="notice info small">
-              {size === "large"
-                ? "Large print uses the weekly calendar."
-                : "Too many drops to fit a whole month on one page, so the weekly calendar is used."}
-            </div>
-          )}
           <label className="check">
             <input type="checkbox" checked={!!s.large} onChange={set("large")} />
             <span>
               <b>Large print</b>
-              <span className="muted"> for low vision. Bigger text and boxes, 2 weeks per page.</span>
+              <span className="muted"> for low vision</span>
             </span>
           </label>
           <label className="check">
             <input type="checkbox" checked={!!s.qr} onChange={set("qr")} />
-            <span>Include QR code for phone reminders</span>
+            <span>
+              <b>QR code</b>
+              <span className="muted"> so the patient can get phone reminders</span>
+            </span>
           </label>
-          <p className="small muted">
-            {span.days} days, {fmtDay(start)} to {fmtDay(span.end)}. Prints {view === "table" ? "as a checklist" : `${pageCount} page${pageCount > 1 ? "s" : ""}`}.
-          </p>
-          <button className="btn primary" onClick={print}>
-            {Icon.print} Print schedule
-          </button>
-          <hr className="rule" />
-          <div>
-            <div className="small" style={{ fontWeight: 650, marginBottom: 4 }}>
-              Phone reminders
+          <details className="more">
+            <summary>Dose times</summary>
+            <div className="grid-2" style={{ marginTop: 10 }}>
+              <Field label="First dose">
+                <input className="input" type="time" value={s.wake} onChange={set("wake")} />
+              </Field>
+              <Field label="Bedtime">
+                <input className="input" type="time" value={s.bed} onChange={set("bed")} />
+              </Field>
             </div>
-            <p className="small muted">
-              The QR code and link carry the drop plan only. The patient&apos;s name and health details are never included.
+            <p className="small muted" style={{ marginTop: 8 }}>
+              Doses are spread over the day from the first dose. Bedtime drops use the bedtime.
             </p>
+          </details>
+          <button className="btn primary lg" onClick={print}>
+            {Icon.print} Print {view === "table" ? "checklist" : pageCount > 1 ? `${pageCount} pages` : "calendar"}
+          </button>
+          <p className="small muted">
+            {fmtDay(start)} to {fmtDay(span.end)}, {span.days} days.
+          </p>
+          <hr className="rule" />
+          <div className="stack" style={{ gap: 8 }}>
+            <div className="small" style={{ fontWeight: 700 }}>
+              Patient phone link
+            </div>
+            <p className="small muted">Holds the drops and dates only, never the patient&apos;s name or health details.</p>
+            <div className="row">
+              <button className="btn sm" onClick={copy}>
+                {copied ? "Copied" : "Copy link"}
+              </button>
+              <a className="btn sm" href={link} target="_blank" rel="noreferrer">
+                Preview on phone
+              </a>
+            </div>
           </div>
-          <div className="row">
-            <button className="btn sm" onClick={copy}>
-              {copied ? "Link copied" : "Copy patient link"}
-            </button>
-            <a className="btn sm" href={link} target="_blank" rel="noreferrer">
-              Preview phone view
-            </a>
-          </div>
-          <button className="btn sm" onClick={ics}>
-            {Icon.bell} Download calendar alarms
+          <button className="btn ghost sm" onClick={() => go("rx")}>
+            Next: prescription →
           </button>
         </div>
       </aside>

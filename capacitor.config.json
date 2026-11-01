@@ -1,0 +1,10 @@
+{
+  "appId": "com.eyedroptracker.app",
+  "appName": "Eye Drop Tracker",
+  "webDir": "dist",
+  "plugins": {
+    "LocalNotifications": {
+      "iconColor": "#12305C"
+    }
+  }
+}
