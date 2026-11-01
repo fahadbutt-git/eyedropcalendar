@@ -4,8 +4,8 @@ import { MONTHS, addDays, fmtShort } from "../../lib/dates.js";
 // Height budget in CSS pixels (7.75 in of printable height at 96 px per inch).
 const PAGE = 745;
 const SIZES = {
-  standard: { header: 84, thead: 32, compactRow: 26, fullRow: 66, cols: 3, dayLabel: 28, dose: 21, perLine: 7, instructions: 210, maxWeeks: 5 },
-  large: { header: 98, thead: 42, compactRow: 36, fullRow: 92, cols: 2, dayLabel: 42, dose: 32, perLine: 4, instructions: 400, maxWeeks: 2 },
+  standard: { header: 112, thead: 32, compactRow: 26, fullRow: 66, cols: 3, dayLabel: 28, dose: 21, perLine: 7, maxWeeks: 5 },
+  large: { header: 124, thead: 42, compactRow: 36, fullRow: 92, cols: 2, dayLabel: 42, dose: 32, perLine: 4, maxWeeks: 2 },
 };
 
 function monthWeeks(year, month) {
@@ -26,7 +26,7 @@ function weeksFrom(start, end) {
 // Month pages are the most familiar, so they are used when each month fits on
 // a page and the plan fills most of its first and last month. Otherwise pages
 // hold whole weeks starting from the week of the start date, spread evenly.
-// The legend and instructions share page 1 when they fit, or get a cover page.
+// Page 1 carries the full legend when it fits, otherwise the short one.
 // `peaks` holds each drug's highest number of doses in a day, so drugs with
 // many doses get the extra lines their tick boxes wrap onto.
 export function buildPages({ size, start, span, peaks }) {
@@ -35,7 +35,7 @@ export function buildPages({ size, start, span, peaks }) {
   const base = PAGE - z.header - z.thead - 16;
   const legendRows = Math.ceil(count / z.cols);
   const calendarOnly = base - legendRows * z.compactRow;
-  const withInstructions = base - legendRows * z.fullRow - z.instructions;
+  const withLegend = base - legendRows * z.fullRow;
   const rowNeed = z.dayLabel + peaks.reduce((h, p) => h + z.dose * Math.max(1, Math.ceil(p / z.perLine)), 0);
   const fitWeeks = Math.max(1, Math.floor(calendarOnly / rowNeed));
 
@@ -55,9 +55,9 @@ export function buildPages({ size, start, span, peaks }) {
     }
   }
 
-  const combined = pages[0].weeks.length * rowNeed <= withInstructions;
+  const combined = pages[0].weeks.length * rowNeed <= withLegend;
   pages.forEach((p, i) => {
-    const room = combined && i === 0 ? withInstructions : calendarOnly;
+    const room = combined && i === 0 ? withLegend : calendarOnly;
     p.rowHeight = Math.max(rowNeed, Math.floor(room / p.weeks.length) - 2);
   });
   return { pages, combined };

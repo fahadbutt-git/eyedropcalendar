@@ -11,7 +11,6 @@ import Legend from "./Legend.jsx";
 import CalendarGrid from "./CalendarGrid.jsx";
 import DailyChart, { chartPages } from "./DailyChart.jsx";
 import Checklist from "./Checklist.jsx";
-import Instructions from "./Instructions.jsx";
 
 export const PAGE_TYPES = [
   ["calendar", "Month calendar", "A tick box for each dose on a calendar page"],
@@ -182,26 +181,42 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
   const peaks = entries.map((e) => Math.max(...Array.from({ length: span.days }, (_, i) => dosesOnDay(e, i))));
   const cal = buildPages({ size, start, span, peaks });
   const chart = s.pages.chart ? chartPages({ items, entries, formulary, start, days: span.days, wake: s.wake, bed: s.bed, size }) : [];
-  const calendarFirst = s.pages.calendar && cal.combined;
-  const sheetCount = (calendarFirst ? 0 : 1) + (s.pages.calendar ? cal.pages.length : 0) + chart.length + (s.pages.checklist ? 1 : 0);
+  const sheetCount = (s.pages.calendar ? cal.pages.length : 0) + chart.length + (s.pages.checklist ? 1 : 0);
 
   const dob = patient.dob && isValidISO(patient.dob) ? parseISO(patient.dob) : null;
-  const header = (kicker, title) => (
-    <div className="sheet-h">
-      <div>
-        <div className="kicker">{kicker}</div>
-        <h2>{title}</h2>
+  // The first printed page carries the QR code in its top right corner.
+  let qrShown = false;
+  const header = (kicker, title) => {
+    const withQr = s.qr && qr && !qrShown;
+    qrShown = qrShown || withQr;
+    return (
+      <div className="sheet-h">
+        <div>
+          <div className="kicker">{kicker}</div>
+          <h2>{title}</h2>
+        </div>
+        <div className="sheet-h-right">
+          <div className="who">
+            {patient.name && <div className="who-name">{patient.name}</div>}
+            {dob && (
+              <div className="mono">
+                Born {fmtShort(dob)}, {dob.getFullYear()}
+              </div>
+            )}
+          </div>
+          {withQr && (
+            <div className="sheet-qr">
+              <img src={qr} alt="QR code that opens this drop plan on a phone" />
+              <span>Scan for phone reminders</span>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="who">
-        {patient.name && <div className="who-name">{patient.name}</div>}
-        {dob && <div className="mono">Born {fmtShort(dob)}, {dob.getFullYear()}</div>}
-      </div>
-    </div>
-  );
+    );
+  };
   const range = `${fmtShort(start)} to ${fmtShort(span.end)}, ${span.end.getFullYear()}`;
   const legend = <Legend items={items} start={start} wake={s.wake} bed={s.bed} />;
   const compact = <Legend compact items={items} />;
-  const instructions = <Instructions items={items} wake={s.wake} bed={s.bed} qr={s.qr ? qr : ""} />;
 
   return (
     <div className="sched-layout">
@@ -219,20 +234,12 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
         <div className="no-print">
           <Warnings warnings={warnings} compact />
         </div>
-        {!calendarFirst && (
-          <section className="sheet flow">
-            {header("Eye drop plan", "Your drops and how to use them")}
-            {legend}
-            {instructions}
-          </section>
-        )}
         {s.pages.calendar &&
           cal.pages.map((p, i) => (
             <section className="sheet" key={`cal-${p.title}`}>
               {header(cal.pages.length > 1 ? `Calendar, page ${i + 1} of ${cal.pages.length}` : "Eye drop calendar", p.title)}
-              {calendarFirst && i === 0 ? legend : compact}
+              {cal.combined && i === 0 ? legend : compact}
               <CalendarGrid weeks={p.weeks} items={items} start={start} lastIndex={span.days - 1} month={p.month} rowHeight={p.rowHeight} />
-              {calendarFirst && i === 0 && instructions}
             </section>
           ))}
         {chart.map((p) => (

@@ -1,10 +1,13 @@
 import { fmtLong, parseISO } from "../../lib/dates.js";
 import { sigText } from "../../lib/wording.js";
 
+// Missing details show as grey placeholders on screen and print blank.
+const Missing = ({ children }) => <span className="ph no-print">{children}</span>;
+
 const Line = ({ label, children, wide }) => (
   <div style={wide ? { gridColumn: "1 / -1" } : undefined}>
     <span className="lbl">{label}</span>
-    {children || " "}
+    {children || <Missing>Not entered</Missing>}
   </div>
 );
 
@@ -15,12 +18,12 @@ export default function PrescriptionSheet({ items, prescriber, patient, date, no
     <article className="rx-sheet">
       <header className="rx-head">
         <div className="prescriber">
-          <b>{prescriber.name || " "}</b>
-          {prescriber.license && <div>Licence {prescriber.license}</div>}
+          <b>{prescriber.name || <Missing>Prescriber name</Missing>}</b>
+          <div>{prescriber.license ? `Licence ${prescriber.license}` : <Missing>Licence number</Missing>}</div>
         </div>
         <div className="clinic">
           {prescriber.clinic && <div className="clinic-name">{prescriber.clinic}</div>}
-          {prescriber.street && <div>{prescriber.street}</div>}
+          <div>{prescriber.street || <Missing>Practice address</Missing>}</div>
           {prescriber.city && <div>{prescriber.city}</div>}
           {prescriber.phone && <div>Tel {prescriber.phone}</div>}
           {prescriber.fax && <div>Fax {prescriber.fax}</div>}
