@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { addDays, fmtShort } from "../../lib/dates.js";
-import { DROP_OPTIONS, FREQ_OPTIONS, TAPER_PRESETS } from "../../lib/regimen.js";
+import { FREQ_OPTIONS, TAPER_PRESETS } from "../../lib/regimen.js";
 import { sigText } from "../../lib/wording.js";
 import { CapDot, Choice, NumberInput } from "../ui.jsx";
 import MedPicker from "./MedPicker.jsx";
@@ -21,7 +21,8 @@ const timesADay = (f) => (f === 1 ? "Once a day" : `${f} times a day`);
 
 // The plan fields a new drug starts from. Changing the drug resets them, so
 // a taper or course never carries over to a different drug by accident.
-export const freshPlan = (m) => ({ freq: m?.freq ?? 2, drops: m?.drops ?? 1, mode: "ongoing", steps: [], durationDays: 7 });
+// Every dose is one drop.
+export const freshPlan = (m) => ({ freq: m?.freq ?? 2, drops: 1, mode: "ongoing", steps: [], durationDays: 7 });
 
 export default function DropRow({ index, drop, formulary, startDate, update, remove }) {
   const [changing, setChanging] = useState(false);
@@ -87,15 +88,6 @@ export default function DropRow({ index, drop, formulary, startDate, update, rem
                 ))}
               </select>
             )}
-          </Field2>
-          <Field2 label="Amount" id={`a-${drop.id}`}>
-            <select id={`a-${drop.id}`} className="select" value={drop.drops} onChange={(e) => update({ drops: Number(e.target.value) })}>
-              {DROP_OPTIONS.map((d) => (
-                <option key={d} value={d}>
-                  {d} drop{d > 1 ? "s" : ""}
-                </option>
-              ))}
-            </select>
           </Field2>
           <Choice legend="Course" value={drop.mode} options={COURSE_CHOICES} onChange={setMode} />
           {drop.mode === "duration" && (

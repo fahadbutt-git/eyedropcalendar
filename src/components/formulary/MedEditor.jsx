@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CAP_COLOURS, DRUG_CLASSES } from "../../data/formulary.js";
-import { DROP_OPTIONS, FREQ_OPTIONS } from "../../lib/regimen.js";
+import { FREQ_OPTIONS } from "../../lib/regimen.js";
 import { cleanMed } from "../../lib/validate.js";
 import { Field } from "../ui.jsx";
 
@@ -56,15 +56,6 @@ export default function MedEditor({ initial, existing, onSave, onClose }) {
                 {FREQ_OPTIONS.map((f) => (
                   <option key={f} value={f}>
                     {f}x a day
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Drops each time">
-              <select className="select" value={m.drops} onChange={setNum("drops")}>
-                {DROP_OPTIONS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
                   </option>
                 ))}
               </select>

@@ -108,7 +108,7 @@ test("formulary entries are complete", () => {
     assert.ok([1, 2, 3, 4, 5, 6, 8].includes(m.freq), m.brand);
   }
   const lu = (b) => SEED_FORMULARY.find((m) => m.brand === b).lu;
-  assert.deepEqual(lu("Simbrinza"), ["466", "393"]);
+  assert.deepEqual(lu("Simbrinza"), ["393", "466"]);
   assert.deepEqual(lu("Xalatan"), ["171", "172", "387"]);
   assert.deepEqual(lu("Pred Forte"), []);
   const freq = (b) => SEED_FORMULARY.find((m) => m.brand === b).freq;

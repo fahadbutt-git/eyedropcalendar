@@ -9,7 +9,7 @@ const classNames = (m) => m.cls.map((c) => DRUG_CLASSES[c]).join(" + ");
 const COLUMNS = [
   ["brand", "Drug", (m) => m.brand.toLowerCase()],
   ["cls", "Class", classNames],
-  ["freq", "Usual dose", (m) => m.freq],
+  ["freq", "How often", (m) => m.freq],
   ["lu", "LU codes", (m) => m.lu.join(" ")],
 ];
 
@@ -137,7 +137,7 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
                   </td>
                   <td>{classNames(m)}</td>
                   <td className="nowrap">
-                    {m.drops} drop{m.drops > 1 ? "s" : ""}, {m.freq === 1 ? (m.qhs ? "once a day at bedtime" : "once a day") : `${m.freq} times a day`}
+                    {m.freq === 1 ? (m.qhs ? "Once a day at bedtime" : "Once a day") : `${m.freq} times a day`}
                   </td>
                   <td className="nowrap">{m.lu.length ? m.lu.join(", ") : "None"}</td>
                   <td className="nowrap">
