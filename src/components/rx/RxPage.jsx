@@ -147,7 +147,6 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
     <div className="rx-layout">
       <aside className="stack no-print">
         <Warnings warnings={warnings} compact />
-        <PrescriberForm prescriber={prescriber} setPrescriber={setPrescriber} signature={signature} setSignature={setSignature} />
         <section className="card">
           <div className="card-h">
             <h2>Prescription</h2>
@@ -176,7 +175,7 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
             </Field>
           </div>
         </section>
-        {missing.length > 0 && <div className="notice warn small">Still needed: {missing.join(", ")}.</div>}
+        {missing.length > 0 && <div className="notice warn small">Still needed: {missing.join(", ")}. Prescriber details are under the preview.</div>}
         <button className="btn primary lg" onClick={print} disabled={!items.length}>
           {Icon.print} Print prescription
         </button>
@@ -191,6 +190,9 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
           start={start}
           signature={rx.esign ? signature : ""}
         />
+        <div className="no-print rx-prescriber">
+          <PrescriberForm prescriber={prescriber} setPrescriber={setPrescriber} signature={signature} setSignature={setSignature} />
+        </div>
       </div>
     </div>
   );
