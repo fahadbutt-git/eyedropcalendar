@@ -1,5 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="0" fill="#14305a"/>
-  <path d="M96 256s64-104 160-104 160 104 160 104-64 104-160 104S96 256 96 256z" fill="none" stroke="#fff" stroke-width="30" stroke-linejoin="round"/>
-  <circle cx="256" cy="256" r="46" fill="#fff"/>
+  <rect width="512" height="512" fill="#1f3a5f"/>
+  <g transform="translate(256 249) scale(0.86) translate(-256 -249)">
+  <g fill="#ffffff">
+    <rect x="200" y="44" width="112" height="104" rx="18"/>
+    <path d="M200 140 H312 L290 172 H222 Z"/>
+    <rect x="230" y="168" width="52" height="26" rx="4"/>
+    <path d="M238 192 H274 L256 224 Z"/>
+    <path d="M256 236 C256 236 234 264 234 280 a22 22 0 0 0 44 0 C278 264 256 236 256 236 Z"/>
+  </g>
+  <rect x="218" y="74" width="76" height="42" rx="5" fill="#1f3a5f"/>
+  <path d="M100 384 C146 330 198 314 256 314 C314 314 366 330 412 384 C366 438 314 454 256 454 C198 454 146 438 100 384 Z" fill="none" stroke="#ffffff" stroke-width="26" stroke-linejoin="round"/>
+  <circle cx="256" cy="384" r="46" fill="#ffffff"/>
+  <circle cx="256" cy="384" r="18" fill="#1f3a5f"/>
+  </g>
 </svg>

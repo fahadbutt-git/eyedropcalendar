@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { DRUG_CLASSES } from "../../data/formulary.js";
 import { downloadFile } from "../../lib/download.js";
 import { cleanFormulary } from "../../lib/validate.js";
-import { freqAbbrev } from "../../lib/wording.js";
 import { CapDot } from "../ui.jsx";
 import MedEditor from "./MedEditor.jsx";
 
@@ -135,17 +134,16 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
                 <tr key={m.id}>
                   <td className="strong">{m.brand}</td>
                   <td>{m.generic}</td>
-                  <td className="small">{classNames(m)}</td>
+                  <td className="cls">{classNames(m)}</td>
                   <td className="nowrap">
-                    {m.drops} drop{m.drops > 1 ? "s" : ""} {freqAbbrev(m.freq)}
-                    {m.qhs && m.freq === 1 && " at bedtime"}
+                    {m.drops} drop{m.drops > 1 ? "s" : ""}, {m.freq === 1 ? (m.qhs ? "once a day at bedtime" : "once a day") : `${m.freq} times a day`}
                   </td>
-                  <td className="mono">{m.lu.length ? m.lu.join(", ") : <span className="hint">none</span>}</td>
-                  <td>
+                  <td className="codes mono">{m.lu.length ? m.lu.join(", ") : <span className="hint">none</span>}</td>
+                  <td className="capcol">
                     <CapDot cap={m.cap} named />
                   </td>
-                  <td>
-                    <div className="row" style={{ gap: 4, justifyContent: "flex-end" }}>
+                  <td className="actions">
+                    <div className="row">
                       <button className="btn sm" onClick={() => setEditing(m)}>
                         Edit<span className="sr-only"> {m.brand}</span>
                       </button>

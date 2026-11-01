@@ -18,7 +18,7 @@
   --maroon-bg: #f6e7e5;
   --focus: #1f5fbf;
   --sans: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --mono: var(--sans);
   --read: "Atkinson Hyperlegible Next", "IBM Plex Sans", Arial, sans-serif;
 }
 
@@ -34,7 +34,7 @@ a:hover { color: var(--ink); }
 .skip { position: absolute; left: -999px; top: 8px; background: var(--ink); color: #fff; padding: 8px 12px; z-index: 100; }
 .skip:focus { left: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.mono { font-variant-numeric: tabular-nums; }
 .small { font-size: 0.875rem; }
 .hint { display: block; font-size: 0.875rem; color: var(--ink-3); font-weight: 400; }
 .right { text-align: right; }
@@ -45,7 +45,8 @@ a:hover { color: var(--ink); }
 /* ── Header and footer ─────────────────────────────────────────────── */
 .topbar { border-bottom: 3px solid var(--rule); background: var(--bg); }
 .topbar-inner { max-width: 1240px; margin: 0 auto; padding: 0 24px; display: flex; flex-wrap: wrap; align-items: stretch; justify-content: space-between; gap: 0 32px; }
-.brand { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; padding: 16px 0; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; padding: 12px 0; }
+.brand img { width: 36px; height: 36px; display: block; }
 .steps { display: flex; flex-wrap: wrap; gap: 0 22px; }
 .step { border: 0; background: none; cursor: pointer; color: var(--ink-3); font-size: 0.95rem; padding: 14px 0 11px; border-bottom: 4px solid transparent; min-height: 48px; }
 .step:hover:not(:disabled) { color: var(--ink); }
@@ -54,8 +55,7 @@ a:hover { color: var(--ink); }
 .step-num { font-family: var(--mono); font-weight: 600; }
 .step.plain { text-decoration: underline; text-underline-offset: 4px; }
 .site-foot { border-top: 3px solid var(--rule); margin-top: 40px; }
-.site-foot-inner { max-width: 1240px; margin: 0 auto; padding: 20px 24px 28px; display: grid; gap: 8px; font-size: 0.875rem; color: var(--ink-2); }
-.site-foot-inner p { max-width: 70ch; }
+.site-foot-inner { max-width: 1240px; margin: 0 auto; padding: 22px 24px 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px 48px; font-size: 0.875rem; line-height: 1.6; color: var(--ink-2); }
 
 main { flex: 1; width: 100%; max-width: 1240px; margin: 0 auto; padding: 28px 24px 0; }
 .page { display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); }
@@ -166,7 +166,7 @@ details.more[open] summary { margin-bottom: 8px; }
 .taper-title { font-weight: 700; }
 .taper-presets { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; font-size: 0.9rem; }
 .taper-presets .link-btn { font-size: 0.9rem; font-weight: 500; }
-.table-wrap { overflow-x: auto; }
+.table-wrap { overflow-x: auto; position: relative; }
 .taper-table { width: 100%; border-collapse: collapse; min-width: 560px; }
 .taper-table th { text-align: left; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 12px; border-bottom: 1px solid var(--ink); }
 .taper-table td { padding: 4px 12px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
@@ -177,7 +177,11 @@ details.more[open] summary { margin-bottom: 8px; }
 /* ── Tables (formulary) ────────────────────────────────────────────── */
 table.t { width: 100%; border-collapse: collapse; }
 table.t th { text-align: left; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 10px 12px; border-bottom: 2px solid var(--ink); white-space: nowrap; }
-table.t td { padding: 8px 12px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
+table.t td { padding: 10px 12px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
+table.t td.codes, table.t td.capcol, table.t td.actions { white-space: nowrap; }
+table.t td.actions .row { flex-wrap: nowrap; justify-content: flex-end; gap: 6px; }
+table.t td.codes .hint { display: inline; }
+table.t .cls { font-size: 0.9rem; color: var(--ink-2); }
 th.sort button { all: unset; cursor: pointer; padding: 6px 0; }
 th.sort button:focus-visible { outline: 3px solid var(--focus); }
 td.strong { font-weight: 700; }

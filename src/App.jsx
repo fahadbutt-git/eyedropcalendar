@@ -114,6 +114,7 @@ function Header({ children }) {
     <header className="topbar no-print">
       <div className="topbar-inner">
         <a className="brand" href={isNative ? "#" : import.meta.env.BASE_URL}>
+          <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" />
           {APP_NAME}
         </a>
         {children}
