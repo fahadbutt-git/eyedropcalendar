@@ -6,10 +6,12 @@
 
 export const FREQ_OPTIONS = [1, 2, 3, 4, 5, 6, 8];
 export const DROP_OPTIONS = [1, 2, 3];
+// Eyes are always written out in full. OD, OS and OU are on the ISMP list of
+// error-prone abbreviations, so they are only used as internal keys.
 export const EYES = {
-  OD: { short: "OD", long: "right eye" },
-  OS: { short: "OS", long: "left eye" },
-  OU: { short: "OU", long: "both eyes" },
+  OD: { label: "Right eye", long: "right eye", short: "Right" },
+  OS: { label: "Left eye", long: "left eye", short: "Left" },
+  OU: { label: "Both eyes", long: "both eyes", short: "Both" },
 };
 
 let counter = 0;
@@ -28,10 +30,16 @@ export function newSlot(eye = "OU") {
   };
 }
 
-const weekly = (from) => Array.from({ length: from }, (_, i) => ({ freq: from - i, days: 7 }));
+// One week at each supported frequency from `from` down to once a day. It
+// never starts above the current frequency and never skips to an
+// unsupported one (there is no 7 times a day).
+const weekly = (from) =>
+  FREQ_OPTIONS.filter((f) => f <= from)
+    .reverse()
+    .map((freq) => ({ freq, days: 7 }));
 
 export const TAPER_PRESETS = [
-  { label: "Weekly, from current frequency", build: (f) => weekly(Math.max(f, 2)) },
+  { label: "Weekly, from current frequency", build: (f) => weekly(f) },
   { label: "4 weeks: QID, TID, BID, daily", build: () => weekly(4) },
   {
     label: "2 weeks: QID x4d, TID x4d, BID x3d, daily x3d",

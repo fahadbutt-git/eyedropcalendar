@@ -1,35 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CAP_COLOURS, DRUG_CLASSES } from "../../data/formulary.js";
 import { DROP_OPTIONS, FREQ_OPTIONS } from "../../lib/regimen.js";
 import { cleanMed } from "../../lib/validate.js";
 import { Field } from "../ui.jsx";
 
-const BLANK = { brand: "", generic: "", cls: [], freq: 2, drops: 1, lu: "", cap: "", form: "solution", qhs: false };
+const BLANK = { brand: "", generic: "", cls: [], freq: 2, drops: 1, lu: [], cap: "", form: "solution", qhs: false, maxFreq: null };
 
 // Add or edit one formulary entry in a dialog.
 export default function MedEditor({ initial, existing, onSave, onClose }) {
-  const [m, setM] = useState({ ...BLANK, ...initial });
+  const [m, setM] = useState({ ...BLANK, ...initial, lu: (initial.lu || []).join(", ") });
+  const dialog = useRef(null);
   const set = (key) => (e) => setM({ ...m, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
   const setNum = (key) => (e) => setM({ ...m, [key]: Number(e.target.value) });
   const toggleClass = (c) => setM({ ...m, cls: m.cls.includes(c) ? m.cls.filter((x) => x !== c) : [...m.cls, c] });
   const name = m.brand.trim().toLowerCase();
   const duplicate = existing.some((x) => x.id !== m.id && x.brand.toLowerCase() === name);
 
+  // A native modal dialog keeps focus inside, makes the page behind inert and
+  // returns focus to the button that opened it.
   useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    const d = dialog.current;
+    const opener = document.activeElement;
+    if (!d.open) d.showModal();
+    return () => opener?.focus?.();
+  }, []);
 
   const save = (e) => {
     e.preventDefault();
-    const clean = cleanMed(m, m.id);
+    const clean = cleanMed({ ...m, lu: m.lu.split(/[\s,]+/), maxFreq: Number(m.maxFreq) || null }, m.id);
     if (clean && !duplicate) onSave(clean);
   };
 
   return (
-    <div className="modal-bg" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <form className="modal" role="dialog" aria-modal="true" aria-labelledby="med-h" onSubmit={save}>
+    <dialog ref={dialog} className="modal" aria-labelledby="med-h" onCancel={(e) => (e.preventDefault(), onClose())}>
+      <form onSubmit={save}>
         <div className="card-h">
           <h2 id="med-h">{m.id ? `Edit ${initial.brand}` : "Add medication"}</h2>
         </div>
@@ -38,8 +42,8 @@ export default function MedEditor({ initial, existing, onSave, onClose }) {
             <Field label="Brand name">
               <input className="input" value={m.brand} onChange={set("brand")} maxLength={60} required autoFocus />
             </Field>
-            <Field label="LU code" optional>
-              <input className="input" value={m.lu} onChange={set("lu")} maxLength={12} />
+            <Field label="LU codes" optional hint="Separate codes with commas">
+              <input className="input mono" value={m.lu} onChange={set("lu")} maxLength={40} />
             </Field>
           </div>
           {duplicate && <div className="notice warn small">A medication with this name already exists.</div>}
@@ -65,6 +69,16 @@ export default function MedEditor({ initial, existing, onSave, onClose }) {
                 ))}
               </select>
             </Field>
+            <Field label="Label maximum a day" optional>
+              <select className="select" value={m.maxFreq ?? ""} onChange={set("maxFreq")}>
+                <option value="">No limit set</option>
+                {FREQ_OPTIONS.map((f) => (
+                  <option key={f} value={f}>
+                    {f}x a day
+                  </option>
+                ))}
+              </select>
+            </Field>
             <Field label="Cap colour">
               <select className="select" value={m.cap} onChange={set("cap")}>
                 {Object.entries(CAP_COLOURS).map(([k, v]) => (
@@ -78,6 +92,7 @@ export default function MedEditor({ initial, existing, onSave, onClose }) {
               <select className="select" value={m.form} onChange={set("form")}>
                 <option value="solution">Solution</option>
                 <option value="suspension">Suspension (shake well)</option>
+                <option value="emulsion">Emulsion</option>
                 <option value="gel">Gel-forming (use last)</option>
               </select>
             </Field>
@@ -106,6 +121,6 @@ export default function MedEditor({ initial, existing, onSave, onClose }) {
           </div>
         </div>
       </form>
-    </div>
+    </dialog>
   );
 }

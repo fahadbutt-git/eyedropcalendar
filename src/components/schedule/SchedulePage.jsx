@@ -1,21 +1,34 @@
 import { useEffect, useMemo, useState } from "react";
-import QRCode from "qrcode";
-import { fmtShort, parseISO } from "../../lib/dates.js";
+import { addDays, fmtShort, isValidISO, parseISO } from "../../lib/dates.js";
 import { scheduleSpan } from "../../lib/calendar.js";
+import { dosesOnDay } from "../../lib/regimen.js";
 import { encodeRegimen, patientLink } from "../../lib/share.js";
-import { Field, Icon, chipStyle } from "../ui.jsx";
+import { isClockTime } from "../../lib/times.js";
+import { Field, Icon, chipStyle, printSheets } from "../ui.jsx";
+import Warnings from "../Warnings.jsx";
 import { buildPages } from "./layout.js";
 import Legend from "./Legend.jsx";
 import CalendarGrid from "./CalendarGrid.jsx";
+import DailyChart, { chartPages } from "./DailyChart.jsx";
 import Checklist from "./Checklist.jsx";
 import Instructions from "./Instructions.jsx";
+
+export const PAGE_TYPES = [
+  ["calendar", "Month calendar", "A tick box for each dose on a calendar page"],
+  ["chart", "Daily chart", "One page a week, a row for each time of day"],
+  ["checklist", "Checklist", "A plain table, one row per day"],
+];
 
 function useQrCode(text, enabled) {
   const [src, setSrc] = useState("");
   useEffect(() => {
     let live = true;
-    if (!enabled || !text) return setSrc("");
-    QRCode.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "L" })
+    if (!enabled || !text) {
+      setSrc("");
+      return;
+    }
+    import("qrcode")
+      .then((QR) => QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "L" }))
       .then((url) => live && setSrc(url))
       .catch(() => live && setSrc(""));
     return () => {
@@ -25,114 +38,124 @@ function useQrCode(text, enabled) {
   return src;
 }
 
-function Settings({ s, setSettings, span, pageLabel, link, print, go }) {
+// Start date and dose times only change when the new value is complete and
+// valid, so clearing a field can never break the page.
+function Settings({ s, setSettings, span, sheetCount, link, print, go }) {
   const [copied, setCopied] = useState(false);
-  const set = (key) => (e) => setSettings({ ...s, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
+  const [times, setTimes] = useState({ wake: s.wake, bed: s.bed });
+  const [startText, setStartText] = useState(s.start);
+  const setStart = (v) => {
+    setStartText(v);
+    if (isValidISO(v) && Number(v.slice(0, 4)) >= 2000) set({ start: v });
+  };
+  const set = (patch) => setSettings({ ...s, ...patch });
+  const setTime = (key, value) => {
+    setTimes({ ...times, [key]: value });
+    if (isClockTime(value)) set({ [key]: value });
+  };
+  const togglePage = (key) => set({ pages: { ...s.pages, [key]: !s.pages[key] } });
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
+      setCopied(false);
       window.prompt("Copy this link", link);
     }
   };
+  const nothing = !Object.values(s.pages).some(Boolean);
+
   return (
-    <aside className="card no-print sched-aside">
-      <div className="card-h">
-        <h2>Calendar</h2>
-      </div>
-      <div className="card-b stack" style={{ gap: 16 }}>
-        <Field label="Start date">
-          <input className="input" type="date" value={s.start} onChange={set("start")} />
-        </Field>
-        {span.hasOngoing && (
-          <Field label="Cover ongoing drops for">
-            <select className="select" value={s.months} onChange={set("months")}>
-              {[1, 2, 3].map((m) => (
-                <option key={m} value={m}>
-                  {m} month{m > 1 ? "s" : ""}
-                </option>
-              ))}
-            </select>
-          </Field>
-        )}
-        <Field label="Layout">
-          <div className="seg full" role="radiogroup" aria-label="Layout">
-            {[
-              ["calendar", "Calendar"],
-              ["table", "Checklist"],
-            ].map(([k, label]) => (
-              <button key={k} role="radio" aria-checked={s.view === k} className={s.view === k ? "on" : ""} onClick={() => setSettings({ ...s, view: k })}>
-                {label}
-              </button>
+    <aside className="sched-aside no-print" aria-label="Calendar settings">
+      <Field label="Start date">
+        <input className="input mono" type="date" value={startText} aria-invalid={startText !== s.start} onChange={(e) => setStart(e.target.value)} />
+      </Field>
+      {span.hasOngoing && (
+        <Field label="Print ongoing drops for">
+          <select className="select" value={s.months} onChange={(e) => set({ months: Number(e.target.value) })}>
+            {[1, 2, 3].map((m) => (
+              <option key={m} value={m}>
+                {m} month{m > 1 ? "s" : ""}
+              </option>
             ))}
-          </div>
+          </select>
         </Field>
-        <label className="check">
-          <input type="checkbox" checked={s.large} onChange={set("large")} />
-          <span>
-            <b>Large print</b>
-            <span className="muted"> for low vision</span>
-          </span>
-        </label>
-        <label className="check">
-          <input type="checkbox" checked={s.qr} onChange={set("qr")} />
-          <span>
-            <b>QR code</b>
-            <span className="muted"> so the patient can get phone reminders</span>
-          </span>
-        </label>
-        <details className="more">
-          <summary>Dose times</summary>
-          <div className="grid-2" style={{ marginTop: 10 }}>
-            <Field label="First dose">
-              <input className="input" type="time" value={s.wake} onChange={set("wake")} />
-            </Field>
-            <Field label="Bedtime">
-              <input className="input" type="time" value={s.bed} onChange={set("bed")} />
-            </Field>
-          </div>
-          <p className="small muted" style={{ marginTop: 8 }}>
-            Doses are spread over the day from the first dose. Bedtime drops use the bedtime.
-          </p>
-        </details>
-        <button className="btn primary lg" onClick={print}>
-          {Icon.print} Print {pageLabel}
-        </button>
-        <p className="small muted">
-          {fmtShort(parseISO(s.start))} to {fmtShort(span.end)}, {span.days} days.
-        </p>
-        <hr className="rule" />
-        <div className="stack" style={{ gap: 8 }}>
-          <div className="small" style={{ fontWeight: 700 }}>
-            Patient phone link
-          </div>
-          <p className="small muted">Holds the drops and dates only, never the patient&apos;s name or health details.</p>
-          <div className="row">
-            <button className="btn sm" onClick={copy}>
-              {copied ? "Copied" : "Copy link"}
-            </button>
-            <a className="btn sm" href={link} target="_blank" rel="noopener noreferrer">
-              Preview on phone
-            </a>
-          </div>
+      )}
+      <fieldset className="choice-list">
+        <legend className="field-label">Pages to print</legend>
+        {PAGE_TYPES.map(([key, label, hint]) => (
+          <label className="check" key={key}>
+            <input type="checkbox" checked={!!s.pages[key]} onChange={() => togglePage(key)} />
+            <span>
+              <b>{label}</b>
+              <span className="hint">{hint}</span>
+            </span>
+          </label>
+        ))}
+        <p className="hint">Ask the patient which they find easiest. Any mix can be printed.</p>
+      </fieldset>
+      <label className="check">
+        <input type="checkbox" checked={s.large} onChange={(e) => set({ large: e.target.checked })} />
+        <span>
+          <b>Large print</b>
+          <span className="hint">For low vision</span>
+        </span>
+      </label>
+      <label className="check">
+        <input type="checkbox" checked={s.qr} onChange={(e) => set({ qr: e.target.checked })} />
+        <span>
+          <b>QR code</b>
+          <span className="hint">Opens the plan on the patient&apos;s phone for reminders</span>
+        </span>
+      </label>
+      <details className="more">
+        <summary>Dose times</summary>
+        <div className="grid-2">
+          <Field label="First dose">
+            <input className="input mono" type="time" value={times.wake} aria-invalid={!isClockTime(times.wake)} onChange={(e) => setTime("wake", e.target.value)} />
+          </Field>
+          <Field label="Bedtime">
+            <input className="input mono" type="time" value={times.bed} aria-invalid={!isClockTime(times.bed)} onChange={(e) => setTime("bed", e.target.value)} />
+          </Field>
         </div>
-        <button className="btn ghost sm" onClick={() => go("rx")}>
-          Next: prescription →
-        </button>
+        <p className="hint">Doses are spread through the day from the first dose. Bedtime drops go at bedtime.</p>
+      </details>
+      <button className="btn primary lg" onClick={print} disabled={nothing}>
+        {Icon.print} Print {sheetCount} page{sheetCount === 1 ? "" : "s"}
+      </button>
+      <p className="hint mono">
+        {fmtShort(parseISO(s.start))} to {fmtShort(span.end)}, {span.end.getFullYear()} · {span.days} days
+      </p>
+      <div className="link-box">
+        <h2 className="field-label">Patient phone link</h2>
+        <p className="hint">Holds the drops and dates only, never the patient&apos;s name or health details.</p>
+        <div className="row">
+          <button className="btn sm" onClick={copy}>
+            {copied ? "Copied" : "Copy link"}
+          </button>
+          <a className="btn sm" href={link} target="_blank" rel="noopener noreferrer">
+            Preview on phone
+          </a>
+          <span className="sr-only" role="status">
+            {copied ? "Link copied" : ""}
+          </span>
+        </div>
       </div>
+      <button className="btn" onClick={() => go("rx")}>
+        Next: prescription
+      </button>
     </aside>
   );
 }
 
-export default function SchedulePage({ entries, formulary, patient, settings: s, setSettings, go }) {
+export default function SchedulePage({ entries, formulary, patient, settings: s, setSettings, warnings, go }) {
   const start = parseISO(s.start);
-  const span = scheduleSpan(entries, Number(s.months), start);
+  const span = scheduleSpan(entries, s.months, start);
   const size = s.large ? "large" : "standard";
   const items = entries.map((entry, index) => {
     const med = formulary.find((m) => m.brand === entry.brand);
-    return { entry, index, med, chip: chipStyle(index, med) };
+    return { entry, index, med, chip: chipStyle(med) };
   });
   const link = useMemo(
     () => (entries.length ? patientLink(encodeRegimen({ entries, formulary, start: s.start, wake: s.wake, bed: s.bed })) : ""),
@@ -142,25 +165,22 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
 
   if (!entries.length)
     return (
-      <div className="card card-b empty">
-        <h2>No drops yet</h2>
-        <p className="muted">Add the patient&apos;s drops first.</p>
+      <div className="empty">
+        <h1>No drops yet</h1>
+        <p>Add the patient&apos;s drops first.</p>
         <button className="btn primary" onClick={() => go("regimen")}>
           Add drops
         </button>
       </div>
     );
 
-  const { pages, combined } = buildPages({ size, start, span, count: entries.length });
-  const pageCount = pages.length + (combined ? 0 : 1);
-  const table = s.view === "table";
-  const print = () => {
-    document.body.classList.add("print-schedule");
-    window.print();
-    document.body.classList.remove("print-schedule");
-  };
+  const peaks = entries.map((e) => Math.max(...Array.from({ length: span.days }, (_, i) => dosesOnDay(e, i))));
+  const cal = buildPages({ size, start, span, peaks });
+  const chart = s.pages.chart ? chartPages({ items, entries, formulary, start, days: span.days, wake: s.wake, bed: s.bed, size }) : [];
+  const calendarFirst = s.pages.calendar && cal.combined;
+  const sheetCount = (calendarFirst ? 0 : 1) + (s.pages.calendar ? cal.pages.length : 0) + chart.length + (s.pages.checklist ? 1 : 0);
 
-  const dob = patient.dob ? parseISO(patient.dob) : null;
+  const dob = patient.dob && isValidISO(patient.dob) ? parseISO(patient.dob) : null;
   const header = (kicker, title) => (
     <div className="sheet-h">
       <div>
@@ -169,18 +189,13 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
       </div>
       <div className="who">
         {patient.name && <div className="who-name">{patient.name}</div>}
-        {dob && (
-          <div>
-            Born {fmtShort(dob)}, {dob.getFullYear()}
-          </div>
-        )}
-        <div>
-          From {fmtShort(start)}, {start.getFullYear()}
-        </div>
+        {dob && <div className="mono">Born {fmtShort(dob)}, {dob.getFullYear()}</div>}
       </div>
     </div>
   );
+  const range = `${fmtShort(start)} to ${fmtShort(span.end)}, ${span.end.getFullYear()}`;
   const legend = <Legend items={items} start={start} wake={s.wake} bed={s.bed} />;
+  const compact = <Legend compact items={items} />;
   const instructions = <Instructions items={items} wake={s.wake} bed={s.bed} qr={s.qr ? qr : ""} />;
 
   return (
@@ -189,41 +204,47 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
         s={s}
         setSettings={setSettings}
         span={span}
-        pageLabel={table ? "checklist" : pageCount > 1 ? `${pageCount} pages` : "calendar"}
+        sheetCount={sheetCount}
         link={link}
-        print={print}
+        print={() => printSheets("schedule")}
         go={go}
       />
       <div className={`sched-print ${size}`}>
-        {table ? (
+        <div className="no-print">
+          <Warnings warnings={warnings} compact />
+        </div>
+        {!calendarFirst && (
           <section className="sheet flow">
-            {header("Eye drop checklist", `${fmtShort(start)} to ${fmtShort(span.end)}, ${span.end.getFullYear()}`)}
+            {header("Eye drop plan", "Your drops and how to use them")}
             {legend}
-            <Checklist items={items} start={start} days={span.days} />
             {instructions}
           </section>
-        ) : (
-          <>
-            {!combined && (
-              <section className="sheet flow">
-                {header("Eye drop plan", "Your drops and how to use them")}
-                {legend}
-                {instructions}
-              </section>
+        )}
+        {s.pages.calendar &&
+          cal.pages.map((p, i) => (
+            <section className="sheet" key={`cal-${p.title}`}>
+              {header(cal.pages.length > 1 ? `Calendar, page ${i + 1} of ${cal.pages.length}` : "Eye drop calendar", p.title)}
+              {calendarFirst && i === 0 ? legend : compact}
+              <CalendarGrid weeks={p.weeks} items={items} start={start} lastIndex={span.days - 1} month={p.month} rowHeight={p.rowHeight} />
+              {calendarFirst && i === 0 && instructions}
+            </section>
+          ))}
+        {chart.map((p) => (
+          <section className="sheet" key={`chart-${p.first}-${p.part}`}>
+            {header(
+              `Daily chart, week ${p.week} of ${Math.ceil(span.days / 7)}${p.part ? ", continued" : ""}`,
+              `${fmtShort(addDays(start, p.first))} to ${fmtShort(addDays(start, p.first + 6))}, ${addDays(start, p.first + 6).getFullYear()}`
             )}
-            {pages.map((p, i) => {
-              const first = combined && i === 0;
-              const n = i + 1 + (combined ? 0 : 1);
-              return (
-                <section className="sheet" key={p.title}>
-                  {header(pageCount > 1 ? `Eye drop calendar, page ${n} of ${pageCount}` : "Eye drop calendar", p.title)}
-                  {first ? legend : <Legend compact items={items} />}
-                  <CalendarGrid weeks={p.weeks} items={items} start={start} lastIndex={span.days - 1} month={p.month} rowHeight={p.rowHeight} />
-                  {first && instructions}
-                </section>
-              );
-            })}
-          </>
+            <DailyChart page={p} start={start} lastIndex={span.days - 1} />
+            <p className="chart-foot">Tick each box when you use the drop. Wait 5 minutes between drops, in the order shown.</p>
+          </section>
+        ))}
+        {s.pages.checklist && (
+          <section className="sheet flow">
+            {header("Eye drop checklist", range)}
+            {compact}
+            <Checklist items={items} start={start} days={span.days} />
+          </section>
         )}
       </div>
     </div>

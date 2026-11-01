@@ -1,150 +1,146 @@
+import { useState } from "react";
+import { addDays, fmtShort } from "../../lib/dates.js";
 import { DROP_OPTIONS, FREQ_OPTIONS, TAPER_PRESETS } from "../../lib/regimen.js";
-import TaperEditor, { clampDays } from "./TaperEditor.jsx";
-import { CapDot } from "../ui.jsx";
+import { sigText } from "../../lib/wording.js";
+import { CapDot, Choice, NumberInput } from "../ui.jsx";
+import MedPicker from "./MedPicker.jsx";
+import TaperEditor from "./TaperEditor.jsx";
 
-const GLAUCOMA = new Set(["PGA", "BB", "CAI", "AA", "MIO"]);
 const EYE_CHOICES = [
-  ["OD", "Right"],
-  ["OS", "Left"],
-  ["OU", "Both"],
+  ["OD", "Right eye"],
+  ["OS", "Left eye"],
+  ["OU", "Both eyes"],
 ];
+const COURSE_CHOICES = [
+  ["ongoing", "Ongoing"],
+  ["duration", "Fixed course"],
+  ["taper", "Taper"],
+];
+const FORM_NOTE = { suspension: "Shake well", emulsion: "Emulsion", gel: "Gel, use last" };
+const timesADay = (f) => (f === 1 ? "Once a day" : `${f} times a day`);
 
-function MedSelect({ id, value, onChange, formulary }) {
-  const sorted = [...formulary].sort((a, b) => a.brand.localeCompare(b.brand));
-  const groups = [
-    ["Glaucoma", sorted.filter((m) => m.cls.some((c) => GLAUCOMA.has(c)))],
-    ["Post-operative and other", sorted.filter((m) => !m.cls.some((c) => GLAUCOMA.has(c)))],
-  ];
-  return (
-    <select id={id} className="select" value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">{value ? "Remove this drop" : "Add a drop"}</option>
-      {groups.map(
-        ([label, meds]) =>
-          meds.length > 0 && (
-            <optgroup key={label} label={label}>
-              {meds.map((m) => (
-                <option key={m.id} value={m.brand}>
-                  {m.brand}  ·  {m.generic.split(" (")[0]}
-                </option>
-              ))}
-            </optgroup>
-          )
-      )}
-    </select>
-  );
-}
+// The plan fields a new drug starts from. Changing the drug resets them, so
+// a taper or course never carries over to a different drug by accident.
+export const freshPlan = (m) => ({ freq: m?.freq ?? 2, drops: m?.drops ?? 1, mode: "ongoing", steps: [], durationDays: 7 });
 
-function NumberField({ label, value, onChange, after }) {
-  return (
-    <label className="inline">
-      {label}
-      <input
-        className="input sm num"
-        type="number"
-        inputMode="numeric"
-        min={1}
-        max={365}
-        value={value}
-        onChange={(e) => onChange(clampDays(e.target.value))}
-      />
-      {after}
-    </label>
-  );
-}
-
-export default function DropRow({ index, drop, formulary, update, remove }) {
+export default function DropRow({ index, drop, formulary, startDate, update, remove }) {
+  const [changing, setChanging] = useState(false);
   const med = formulary.find((m) => m.brand === drop.brand);
+  const n = index + 1;
   const name = drop.brand;
-  const pick = (brand) => {
-    if (!brand) return remove();
-    const m = formulary.find((x) => x.brand === brand);
-    update({ brand, freq: m?.freq ?? 2, drops: m?.drops ?? 1 });
-  };
+
   const setMode = (mode) =>
     update(mode === "taper" && !drop.steps.length ? { mode, steps: TAPER_PRESETS[0].build(drop.freq) } : { mode });
-
-  if (!name)
-    return (
-      <li className="drop drop-empty">
-        <label htmlFor={`med-${drop.id}`} className="sr-only">
-          Drop {index + 1}
-        </label>
-        <MedSelect id={`med-${drop.id}`} value="" formulary={formulary} onChange={pick} />
-      </li>
-    );
+  const delay = drop.startDay - 1;
 
   return (
     <li className="drop">
-      <div className="drop-grid">
-        <div className="drop-med">
-          <label htmlFor={`med-${drop.id}`} className="sr-only">
-            Drop {index + 1}
-          </label>
-          <MedSelect id={`med-${drop.id}`} value={name} formulary={formulary} onChange={pick} />
-          {med && (
-            <div className="drop-meta">
-              <CapDot cap={med.cap} />
-              {med.lu && <span className="tag lu">LU {med.lu}</span>}
-              {med.form === "suspension" && <span className="tag">Shake well</span>}
-              {med.qhs && drop.freq === 1 && drop.mode !== "taper" && <span className="tag">At bedtime</span>}
-            </div>
+      <span className="drop-n" aria-hidden="true">
+        {n}
+      </span>
+      <div className="drop-body">
+        <div className="drop-head">
+          {changing ? (
+            <MedPicker
+              label={`Change drug ${n}, ${name}`}
+              formulary={formulary}
+              autoFocus
+              onPick={(brand) => {
+                setChanging(false);
+                if (brand !== name) update({ brand, ...freshPlan(formulary.find((m) => m.brand === brand)) });
+              }}
+              onCancel={() => setChanging(false)}
+            />
+          ) : (
+            <h3 className="drop-name">
+              {name} {med?.generic && <span className="drop-generic">{med.generic}</span>}
+            </h3>
+          )}
+          <div className="drop-meta">
+            <CapDot cap={med?.cap} named />
+            {FORM_NOTE[med?.form] && <span className="tag">{FORM_NOTE[med.form]}</span>}
+            {!med && <span className="tag warn">Not in the formulary</span>}
+          </div>
+          <div className="drop-actions">
+            <button className="link-btn" onClick={() => setChanging(!changing)} aria-expanded={changing}>
+              {changing ? "Keep drug" : "Change drug"}
+            </button>
+            <button className="link-btn danger" onClick={remove} aria-label={`Remove ${name}`}>
+              Remove
+            </button>
+          </div>
+        </div>
+
+        <div className="drop-fields">
+          <Choice legend="Eye" value={drop.eye} options={EYE_CHOICES} onChange={(eye) => update({ eye })} />
+          <Field2 label="How often" id={`f-${drop.id}`}>
+            {drop.mode === "taper" ? (
+              <span className="static" id={`f-${drop.id}`}>
+                Set by the taper
+              </span>
+            ) : (
+              <select id={`f-${drop.id}`} className="select" value={drop.freq} onChange={(e) => update({ freq: Number(e.target.value) })}>
+                {FREQ_OPTIONS.map((f) => (
+                  <option key={f} value={f}>
+                    {f === 1 && med?.qhs ? "Once a day, at bedtime" : timesADay(f)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field2>
+          <Field2 label="Amount" id={`a-${drop.id}`}>
+            <select id={`a-${drop.id}`} className="select" value={drop.drops} onChange={(e) => update({ drops: Number(e.target.value) })}>
+              {DROP_OPTIONS.map((d) => (
+                <option key={d} value={d}>
+                  {d} drop{d > 1 ? "s" : ""}
+                </option>
+              ))}
+            </select>
+          </Field2>
+          <Choice legend="Course" value={drop.mode} options={COURSE_CHOICES} onChange={setMode} />
+          {drop.mode === "duration" && (
+            <Field2 label="Days" id={`d-${drop.id}`}>
+              <NumberInput id={`d-${drop.id}`} value={drop.durationDays} onChange={(v) => update({ durationDays: v })} />
+            </Field2>
           )}
         </div>
-        <div className="seg eye-seg" role="radiogroup" aria-label={`Eye for ${name}`}>
-          {EYE_CHOICES.map(([k, label]) => (
-            <button key={k} role="radio" aria-checked={drop.eye === k} className={drop.eye === k ? "on" : ""} onClick={() => update({ eye: k })}>
-              {label}
-            </button>
-          ))}
-        </div>
-        <select
-          className="select"
-          aria-label={`How often for ${name}`}
-          disabled={drop.mode === "taper"}
-          value={drop.mode === "taper" ? drop.steps[0]?.freq ?? drop.freq : drop.freq}
-          onChange={(e) => update({ freq: Number(e.target.value) })}
-        >
-          {FREQ_OPTIONS.map((f) => (
-            <option key={f} value={f}>
-              {f}x a day
-            </option>
-          ))}
-        </select>
-        <select className="select" aria-label={`Drops each time for ${name}`} value={drop.drops} onChange={(e) => update({ drops: Number(e.target.value) })}>
-          {DROP_OPTIONS.map((d) => (
-            <option key={d} value={d}>
-              {d} drop{d > 1 ? "s" : ""}
-            </option>
-          ))}
-        </select>
-        <select className="select" aria-label={`Course for ${name}`} value={drop.mode} onChange={(e) => setMode(e.target.value)}>
-          <option value="ongoing">Ongoing</option>
-          <option value="duration">Fixed course</option>
-          <option value="taper">Taper</option>
-        </select>
-        <button className="icon-btn" aria-label={`Remove ${name}`} onClick={remove}>
-          ×
-        </button>
-      </div>
 
-      <div className="drop-extra">
-        {drop.mode === "duration" && (
-          <NumberField label="For" value={drop.durationDays} onChange={(v) => update({ durationDays: v })} after="days, then stop" />
-        )}
-        {drop.startDay > 1 || drop.showStart ? (
-          <>
-            <NumberField label="Starts on day" value={drop.startDay} onChange={(v) => update({ startDay: v })} after="of the schedule" />
-            <button className="link-btn" onClick={() => update({ startDay: 1, showStart: false })}>
-              Start on day 1
-            </button>
-          </>
-        ) : (
-          <button className="link-btn" onClick={() => update({ showStart: true })}>
+        {drop.mode === "taper" && <TaperEditor drop={drop} startDate={startDate} update={update} />}
+
+        <div className="drop-foot">
+          <label className="inline">
+            <input type="checkbox" checked={delay > 0} onChange={(e) => update({ startDay: e.target.checked ? 2 : 1 })} />
             Start later
-          </button>
-        )}
+          </label>
+          {delay > 0 && (
+            <span className="inline">
+              <NumberInput label={`Days to wait before starting ${name}`} value={delay} min={1} max={364} onChange={(v) => update({ startDay: v + 1 })} />
+              days after the calendar starts
+              {startDate && (
+                <b className="mono">
+                  First dose {fmtShort(addDays(startDate, delay))}, {addDays(startDate, delay).getFullYear()}
+                </b>
+              )}
+            </span>
+          )}
+        </div>
+        <p className="sig">
+          <span className="label">Rx</span> {sigText(drop, med?.qhs, startDate)}
+          {med?.form === "suspension" && " Shake well."}
+        </p>
       </div>
-      {drop.mode === "taper" && <TaperEditor drop={drop} update={update} />}
     </li>
+  );
+}
+
+// A label above a single control.
+function Field2({ label, id, children }) {
+  return (
+    <div className="field">
+      <label className="field-label" htmlFor={id}>
+        {label}
+      </label>
+      {children}
+    </div>
   );
 }

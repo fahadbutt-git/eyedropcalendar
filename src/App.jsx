@@ -1,27 +1,61 @@
-import { useEffect, useMemo, useState } from "react";
+import { Component, useEffect, useMemo, useRef, useState } from "react";
 import { APP_NAME, CONTACT_EMAIL, COPYRIGHT_YEAR, OWNERS, REPO_URL } from "./config.js";
-import { FORMULARY_VERSION, SEED_FORMULARY } from "./data/formulary.js";
-import { toISO } from "./lib/dates.js";
-import { newSlot, toEntries } from "./lib/regimen.js";
+import { DRUG_CLASSES, FORMULARY_VERSION, SEED_FORMULARY } from "./data/formulary.js";
+import { dropWarnings } from "./lib/checks.js";
+import { isValidISO, parseISO, toISO } from "./lib/dates.js";
+import { toEntries } from "./lib/regimen.js";
 import { codeFromUrl, decodeRegimen } from "./lib/share.js";
 import { isNative, onPlanLink } from "./lib/native.js";
 import { usePersistentState } from "./lib/storage.js";
-import { cleanFormulary } from "./lib/validate.js";
+import { isClockTime } from "./lib/times.js";
+import { cleanEntry, cleanFormulary } from "./lib/validate.js";
 import RegimenPage from "./components/drops/RegimenPage.jsx";
 import SchedulePage from "./components/schedule/SchedulePage.jsx";
 import RxPage from "./components/rx/RxPage.jsx";
 import FormularyPage from "./components/formulary/FormularyPage.jsx";
 import PatientView from "./components/patient/PatientView.jsx";
 import PatientWelcome from "./components/patient/PatientWelcome.jsx";
-import { Icon } from "./components/ui.jsx";
 
 const STEPS = [
-  ["regimen", "Patient and drops", "Drops"],
-  ["schedule", "Calendar", "Calendar"],
-  ["rx", "Prescription", "Rx"],
+  ["regimen", "Patient and drops"],
+  ["schedule", "Calendar"],
+  ["rx", "Prescription"],
 ];
+const TITLES = { regimen: "Patient and drops", schedule: "Calendar", rx: "Prescription", formulary: "Formulary" };
 const BLANK_PATIENT = { name: "", dob: "", hcn: "", address: "" };
 const BLANK_PRESCRIBER = { name: "", license: "", clinic: "", street: "", city: "", phone: "", fax: "" };
+const defaultSettings = () => ({
+  start: toISO(new Date()),
+  wake: "08:00",
+  bed: "22:00",
+  months: 1,
+  pages: { calendar: true, chart: false, checklist: false },
+  qr: true,
+  large: false,
+});
+
+// Stored settings are repaired field by field, so a bad value can never break a page.
+function checkSettings(s) {
+  if (!s || typeof s !== "object") return null;
+  const d = defaultSettings();
+  const pages = s.pages && typeof s.pages === "object" ? s.pages : d.pages;
+  return {
+    start: isValidISO(s.start) ? s.start : d.start,
+    wake: isClockTime(s.wake) ? s.wake : d.wake,
+    bed: isClockTime(s.bed) ? s.bed : d.bed,
+    months: [1, 2, 3].includes(Number(s.months)) ? Number(s.months) : 1,
+    pages: { calendar: pages.calendar === true, chart: pages.chart === true, checklist: pages.checklist === true },
+    qr: s.qr !== false,
+    large: s.large === true,
+  };
+}
+const checkDrops = (list) =>
+  Array.isArray(list)
+    ? list.slice(0, 12).flatMap((d) => {
+        const clean = d?.brand ? cleanEntry(d) : null;
+        return clean ? [{ ...clean, id: typeof d.id === "string" ? d.id : `d${Math.random().toString(36).slice(2)}` }] : [];
+      })
+    : null;
 
 function Footer({ patientView }) {
   return (
@@ -32,12 +66,14 @@ function Footer({ patientView }) {
           <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
             Open source
           </a>{" "}
-          under the Apache 2.0 licence. Partnerships and feedback: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          under the Apache 2.0 licence. No ads and no industry funding. Feedback and errors:{" "}
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
         </p>
         {!patientView && (
           <p>
-            A clinical aid, not a substitute for clinical judgement. Check every calendar and prescription before it goes
-            to a patient. Patient information never leaves this browser.
+            A clinical aid, not a substitute for clinical judgement. Check every calendar and prescription before it goes to a
+            patient. Defaults follow Canadian product monographs and the Ontario Drug Benefit formulary. Patient details are never
+            sent anywhere.
           </p>
         )}
       </div>
@@ -45,18 +81,40 @@ function Footer({ patientView }) {
   );
 }
 
-function Header({ subtitle, children }) {
+// Any unexpected error shows a way back instead of a blank page.
+class ErrorBoundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    const restart = () => {
+      try {
+        sessionStorage.clear();
+      } catch {
+        // Nothing to clear.
+      }
+      window.location.reload();
+    };
+    return (
+      <main className="empty" id="main">
+        <h1>Something went wrong</h1>
+        <p>Your formulary and prescriber details are safe. The current patient will need to be entered again.</p>
+        <button className="btn primary" onClick={restart}>
+          Start again
+        </button>
+      </main>
+    );
+  }
+}
+
+function Header({ children }) {
   return (
     <header className="topbar no-print">
       <div className="topbar-inner">
         <a className="brand" href={isNative ? "#" : import.meta.env.BASE_URL}>
-          <span className="brand-mark" aria-hidden="true">
-            {Icon.eye}
-          </span>
-          <span>
-            <span className="brand-name">{APP_NAME}</span>
-            <span className="brand-sub">{subtitle}</span>
-          </span>
+          {APP_NAME}
         </a>
         {children}
       </div>
@@ -75,7 +133,7 @@ function readPatientRoute() {
       code = null;
     }
   }
-  if (!code) return isNative ? { welcome: true } : null;
+  if (!code) return installed ? { welcome: true } : null;
   try {
     return { code, plan: decodeRegimen(code) };
   } catch {
@@ -85,15 +143,21 @@ function readPatientRoute() {
 
 function PatientApp({ route }) {
   const open = (code) => (window.location.hash = `#/p/${code}`);
+  useEffect(() => {
+    document.title = `My eye drops · ${APP_NAME}`;
+  }, []);
   return (
     <>
-      <Header subtitle="Your eye drops" />
-      <main id="main">
+      <a className="skip" href="#main">
+        Skip to content
+      </a>
+      <Header />
+      <main id="main" tabIndex={-1}>
         {route.welcome && <PatientWelcome onCode={open} />}
         {route.invalid && (
-          <div className="card card-b pt">
+          <div className="pt">
             <h1>This link did not open</h1>
-            <p>The link may be incomplete. Scan the QR code on your calendar again, or ask your clinic for a new one.</p>
+            <p>The link is damaged or out of date. Scan the QR code on your printed calendar again, or ask your eye clinic for a new one.</p>
           </div>
         )}
         {route.plan && <PatientView key={route.code} plan={route.plan} code={route.code} />}
@@ -119,20 +183,30 @@ function useFormulary() {
 }
 
 function ClinicianApp() {
-  const today = toISO(new Date());
   const session = { kind: "session" };
   const formulary = useFormulary();
-  const [tab, setTab] = usePersistentState("edt.tab", "regimen", session);
+  const [tab, setTab] = usePersistentState("edt.tab", "regimen", { ...session, check: (t) => (TITLES[t] ? t : null) });
   const [prescriber, setPrescriber] = usePersistentState("edt.prescriber.v1", BLANK_PRESCRIBER);
   const [patient, setPatient] = usePersistentState("edt.patient", BLANK_PATIENT, session);
-  const [drops, setDrops] = usePersistentState("edt.drops", () => [newSlot()], session);
-  const [settings, setSettings] = usePersistentState(
-    "edt.schedule.v2",
-    { start: today, wake: "08:00", bed: "22:00", months: 1, view: "calendar", qr: true, large: false },
-    session
-  );
-  const [rx, setRx] = usePersistentState("edt.rx", { date: today, notes: "", items: {} }, session);
+  const [drops, setDrops] = usePersistentState("edt.drops", [], { ...session, check: checkDrops });
+  const [settings, setSettings] = usePersistentState("edt.schedule.v3", defaultSettings, { ...session, check: checkSettings });
+  const [rx, setRx] = usePersistentState("edt.rx", { date: toISO(new Date()), notes: "", items: {} }, session);
   const entries = useMemo(() => toEntries(drops), [drops]);
+  const warnings = useMemo(() => dropWarnings(drops, formulary.list, DRUG_CLASSES, { dob: patient.dob }), [drops, formulary.list, patient.dob]);
+  const mainRef = useRef(null);
+  const first = useRef(true);
+
+  // Each step gets its own page title, and focus moves to its heading.
+  useEffect(() => {
+    document.title = `${TITLES[tab]} · ${APP_NAME}`;
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const target = mainRef.current?.querySelector("h1") || mainRef.current;
+    target?.setAttribute("tabindex", "-1");
+    target?.focus({ preventScroll: true });
+  }, [tab]);
 
   const go = (next) => {
     setTab(next);
@@ -141,20 +215,20 @@ function ClinicianApp() {
   const reset = () => {
     if (!window.confirm("Clear this patient and start again?")) return;
     setPatient(BLANK_PATIENT);
-    setDrops([newSlot()]);
-    setRx({ date: today, notes: "", items: {} });
-    setSettings({ ...settings, start: today });
+    setDrops([]);
+    setRx({ date: toISO(new Date()), notes: "", items: {} });
+    setSettings(defaultSettings());
     go("regimen");
   };
 
   return (
     <>
-      <a className="skip" href="#main">
+      <a className="skip" href="#main" onClick={(e) => (e.preventDefault(), mainRef.current?.focus())}>
         Skip to content
       </a>
-      <Header subtitle="Drop calendars, prescriptions and reminders">
+      <Header>
         <nav className="steps" aria-label="Steps">
-          {STEPS.map(([key, label, short], i) => (
+          {STEPS.map(([key, label], i) => (
             <button
               key={key}
               className={`step ${tab === key ? "active" : ""}`}
@@ -162,24 +236,30 @@ function ClinicianApp() {
               disabled={i > 0 && !entries.length}
               onClick={() => go(key)}
             >
-              <span className="step-num">{i + 1}</span>
-              <span className="long">{label}</span>
-              <span className="short" aria-hidden="true">
-                {short}
-              </span>
+              <span className="step-num">{i + 1}</span> {label}
             </button>
           ))}
+          <button className={`step plain ${tab === "formulary" ? "active" : ""}`} aria-current={tab === "formulary" ? "page" : undefined} onClick={() => go("formulary")}>
+            Formulary
+          </button>
         </nav>
-        <button className={`nav-link ${tab === "formulary" ? "active" : ""}`} aria-current={tab === "formulary" ? "page" : undefined} onClick={() => go("formulary")}>
-          Formulary
-        </button>
       </Header>
-      <main id="main">
+      <main id="main" ref={mainRef} tabIndex={-1}>
         {tab === "regimen" && (
-          <RegimenPage patient={patient} setPatient={setPatient} drops={drops} setDrops={setDrops} formulary={formulary.list} go={go} reset={reset} />
+          <RegimenPage
+            patient={patient}
+            setPatient={setPatient}
+            drops={drops}
+            setDrops={setDrops}
+            formulary={formulary.list}
+            startDate={parseISO(settings.start)}
+            warnings={warnings}
+            go={go}
+            reset={reset}
+          />
         )}
         {tab === "schedule" && (
-          <SchedulePage entries={entries} formulary={formulary.list} patient={patient} settings={settings} setSettings={setSettings} go={go} />
+          <SchedulePage entries={entries} formulary={formulary.list} patient={patient} settings={settings} setSettings={setSettings} warnings={warnings} go={go} />
         )}
         {tab === "rx" && (
           <RxPage
@@ -191,6 +271,7 @@ function ClinicianApp() {
             rx={rx}
             setRx={setRx}
             start={settings.start}
+            warnings={warnings}
             go={go}
           />
         )}
@@ -203,7 +284,8 @@ function ClinicianApp() {
   );
 }
 
-// The phone app only ever shows the patient side.
+// The phone app only ever shows the patient side. A link that would replace
+// a saved plan asks first.
 export default function App() {
   const [route, setRoute] = useState(readPatientRoute);
   useEffect(() => {
@@ -211,12 +293,28 @@ export default function App() {
     window.addEventListener("hashchange", update);
     const stop = onPlanLink((url) => {
       const code = codeFromUrl(url);
-      if (code) window.location.hash = `#/p/${code}`;
+      if (!code) return;
+      let saved = null;
+      try {
+        saved = localStorage.getItem("edt.patientPlan");
+      } catch {
+        saved = null;
+      }
+      if (saved && saved !== code) {
+        let names = "";
+        try {
+          names = decodeRegimen(code).entries.map((e) => e.brand).join(", ");
+        } catch {
+          names = "";
+        }
+        if (!window.confirm(`Replace your current drop plan with this one${names ? ` (${names})` : ""}?`)) return;
+      }
+      window.location.hash = `#/p/${code}`;
     });
     return () => {
       window.removeEventListener("hashchange", update);
       stop();
     };
   }, []);
-  return route ? <PatientApp route={route} /> : <ClinicianApp />;
+  return <ErrorBoundary>{route ? <PatientApp route={route} /> : <ClinicianApp />}</ErrorBoundary>;
 }

@@ -33,11 +33,11 @@ Adherence to glaucoma and post-operative drops is poor, and complex regimens (se
 - Taper changes (for example ↓3x) and stop days marked on the day they happen
 - Plain wording for patients, suggested dose times and how-to instructions
 - Large print for low vision: bigger text and boxes, 2 weeks per page
-- Checklist layout as an alternative
+- Three printed layouts the patient can choose from, in any mix: month calendar, daily chart (one page a week, a row for each time of day) and checklist
 
 **Prescription**
 - Prescriber details saved on the device; clinic, address, phone and fax optional
-- Full sig, dispense, refills and LU code per drug; the patient's address and healthcare number appear only when entered
+- Full sig with the eye written out (no OD, OS or OU), dispense, refills and an ODB LU code chosen per drug from the codes that apply; the patient's address and healthcare number appear only when entered
 - Leave off any drug the patient already has
 
 **Phone**
@@ -47,17 +47,17 @@ Adherence to glaucoma and post-operative drops is poor, and complex regimens (se
 - Add to home screen, works offline, larger text option
 
 **Formulary**
-- 31 glaucoma and post-operative drops with generic name, class, usual dose, LU code, cap colour and formulation
+- 29 glaucoma and post-operative drops with generic name, class, usual dose (from the Canadian product monographs), label maximum, the ODB LU codes that can apply, AAO cap colour and formulation
 - Add, edit, delete, search and sort; export and import to share a list across a clinic
 - An unedited formulary follows the latest defaults automatically
 
 ## Privacy
 
-There is no server and no account. Patient details are kept only in the open browser tab and are cleared when it is closed. Formulary edits and prescriber details are saved in the browser on that device. The phone link and QR code contain the drug plan and start date only, never the patient's name, date of birth, healthcare number or address.
+There is no server and no account. Patient details are kept only in the open browser tab. The browser may keep them after a reload or when it restores tabs, so press New patient before the next person. Formulary edits and prescriber details are saved in the browser on that device. The phone link and QR code contain the drug plan and start date only, never the patient's name, date of birth, healthcare number or address.
 
 ## Accessibility
 
-- Text and controls meet WCAG AA contrast
+- Text and controls aim for WCAG 2.2 AA: AA contrast, visible focus, native radio controls, sizes in rem so the phone's text size setting applies, and support for high contrast mode
 - Drugs are identified by number and name as well as colour, and eyes are written out
 - Large print schedule and larger text phone view for low vision
 - Keyboard focus is visible throughout, with a skip link and labelled controls
@@ -101,8 +101,10 @@ src/
     regimen.js               drop model and doses per day
     wording.js               prescription sig and patient wording
     times.js                 suggested dose times
-    checks.js                duplicate therapy warnings
-    calendar.js              how many days a schedule covers
+    checks.js                safety checks: duplicate therapy, label maximum, age, beta blockers in both eyes
+    changes.js               plain-language notes when a drop starts, changes or stops
+    hash.js                  plan fingerprint for check marks and calendar events
+    calendar.js              how many days a schedule covers; ongoing drops never end on the phone
     doses.js                 doses grouped by time (phone view, alarms, notifications)
     ics.js                   calendar alarm file
     share.js                 phone link encoding and decoding
@@ -110,12 +112,12 @@ src/
     native.js                phone app notifications and links
     storage.js, download.js  browser storage and file saving
   components/
-    drops/                   step 1: patient, drop list, taper editor
-    schedule/                step 2: calendar pages, checklist, legend, instructions
+    drops/                   step 1: patient, drop list, drug search, taper editor
+    schedule/                step 2: month calendar, daily chart, checklist, legend, instructions
     rx/                      step 3: prescription form and sheet
     formulary/               formulary table and editor
     patient/                 phone view, reminders, install tip, app welcome
-    ui.jsx                   shared small pieces
+    ui.jsx, Warnings.jsx     shared small pieces and safety prompts
 tests/                       automated checks
 android/, ios/               phone app projects
 public/                      icons, web app manifest, offline support
@@ -124,7 +126,7 @@ public/                      icons, web app manifest, offline support
 ## Security
 
 - No server, accounts, analytics or third-party scripts.
-- Patient details stay in the browser tab and are cleared when it closes.
+- Patient details stay in the browser tab and are cleared with New patient.
 - The phone link carries the drug plan only, in the URL fragment, which browsers never send to a server.
 - Links, imported formularies and stored data are validated and size-limited before use.
 - The site sends a strict content security policy and refuses to be framed.

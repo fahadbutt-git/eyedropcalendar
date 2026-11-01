@@ -1,9 +1,12 @@
-import { Field, Icon } from "../ui.jsx";
+import { EYES } from "../../lib/regimen.js";
+import { Field, Icon, printSheets } from "../ui.jsx";
+import Warnings from "../Warnings.jsx";
 import PrescriptionSheet from "./PrescriptionSheet.jsx";
 
 const REFILLS = [0, 1, 2, 3, 4, 5, 6, 11];
-const DEFAULTS = { include: true, disp: "1 bottle", refills: 0 };
-const keyOf = (e) => `${e.brand}|${e.eye}`;
+const DEFAULTS = { include: true, disp: "1 bottle", refills: 0, lu: "" };
+// Choices are stored by the drop's own id, so changing its eye keeps them.
+const keyOf = (e) => e.id;
 
 function PrescriberForm({ prescriber, setPrescriber }) {
   const bind = (key) => ({ value: prescriber[key], onChange: (e) => setPrescriber({ ...prescriber, [key]: e.target.value }) });
@@ -23,10 +26,10 @@ function PrescriberForm({ prescriber, setPrescriber }) {
         <Field label="Clinic or practice name" optional>
           <input className="input" {...bind("clinic")} />
         </Field>
-        <Field label="Street address" optional>
+        <Field label="Practice street address">
           <input className="input" {...bind("street")} />
         </Field>
-        <Field label="City, province or state" optional>
+        <Field label="City, province or state">
           <input className="input" {...bind("city")} />
         </Field>
         <div className="grid-2">
@@ -42,42 +45,49 @@ function PrescriberForm({ prescriber, setPrescriber }) {
   );
 }
 
-function ItemRow({ entry, opt, setOpt }) {
-  const id = `rx-${keyOf(entry).replace(/\W/g, "-")}`;
+function ItemRow({ entry, med, opt, setOpt }) {
+  const id = `rx-${entry.id}`;
+  const codes = med?.lu || [];
   return (
     <div className={`rx-item-row ${opt.include ? "" : "off"}`}>
       <label className="check" htmlFor={id}>
         <input id={id} type="checkbox" checked={opt.include} onChange={(e) => setOpt({ include: e.target.checked })} />
         <span>
-          <b>{entry.brand}</b> <span className={`tag ${entry.eye.toLowerCase()}`}>{entry.eye}</span>
+          <b>{entry.brand}</b>
+          <span className="hint">{EYES[entry.eye].label}</span>
         </span>
       </label>
-      <input
-        className="input sm"
-        aria-label={`Dispense for ${entry.brand}`}
-        disabled={!opt.include}
-        value={opt.disp}
-        maxLength={40}
-        onChange={(e) => setOpt({ disp: e.target.value })}
-      />
-      <select
-        className="select sm"
-        aria-label={`Refills for ${entry.brand}`}
-        disabled={!opt.include}
-        value={opt.refills}
-        onChange={(e) => setOpt({ refills: Number(e.target.value) })}
-      >
-        {REFILLS.map((n) => (
-          <option key={n} value={n}>
-            {n}
-          </option>
-        ))}
-      </select>
+      <div className="rx-item-fields">
+        <Field label="Dispense">
+          <input className="input sm" disabled={!opt.include} value={opt.disp} maxLength={40} onChange={(e) => setOpt({ disp: e.target.value })} />
+        </Field>
+        <Field label="Refills">
+          <select className="select sm" disabled={!opt.include} value={opt.refills} onChange={(e) => setOpt({ refills: Number(e.target.value) })}>
+            {REFILLS.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </Field>
+        {codes.length > 0 && (
+          <Field label="ODB LU code">
+            <select className="select sm" disabled={!opt.include} value={codes.includes(opt.lu) ? opt.lu : ""} onChange={(e) => setOpt({ lu: e.target.value })}>
+              <option value="">None</option>
+              {codes.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+      </div>
     </div>
   );
 }
 
-export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, rx, setRx, start, go }) {
+export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, rx, setRx, start, warnings, go }) {
   if (!entries.length)
     return (
       <div className="card card-b empty">
@@ -93,24 +103,27 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
   const setOpt = (e) => (patch) => setRx({ ...rx, items: { ...rx.items, [keyOf(e)]: { ...optOf(e), ...patch } } });
   const items = entries
     .filter((e) => optOf(e).include)
-    .map((entry) => ({ entry, med: formulary.find((m) => m.brand === entry.brand), ...optOf(entry) }));
+    .map((entry) => {
+      const med = formulary.find((m) => m.brand === entry.brand);
+      const opt = optOf(entry);
+      return { entry, med, ...opt, lu: med?.lu?.includes(opt.lu) ? opt.lu : "" };
+    });
+  const medOf = (e) => formulary.find((m) => m.brand === e.brand);
 
   const missing = [
     !prescriber.name && "prescriber name",
     !prescriber.license && "licence number",
     !patient.name && "patient name",
+    !(prescriber.street && prescriber.city) && "practice address",
     !patient.dob && "date of birth",
+    !rx.date && "prescription date",
   ].filter(Boolean);
-
-  const print = () => {
-    document.body.classList.add("print-rx");
-    window.print();
-    document.body.classList.remove("print-rx");
-  };
+  const print = () => printSheets("rx");
 
   return (
     <div className="rx-layout">
       <aside className="stack no-print">
+        <Warnings warnings={warnings} compact />
         <PrescriberForm prescriber={prescriber} setPrescriber={setPrescriber} />
         <section className="card">
           <div className="card-h">
@@ -121,16 +134,11 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
               <input className="input" type="date" value={rx.date} onChange={(e) => setRx({ ...rx, date: e.target.value })} />
             </Field>
             <div className="rx-items">
-              <div className="rx-items-h" aria-hidden="true">
-                <span>Drug</span>
-                <span>Dispense</span>
-                <span>Refills</span>
-              </div>
               {entries.map((e) => (
-                <ItemRow key={keyOf(e)} entry={e} opt={optOf(e)} setOpt={setOpt(e)} />
+                <ItemRow key={keyOf(e)} entry={e} med={medOf(e)} opt={optOf(e)} setOpt={setOpt(e)} />
               ))}
             </div>
-            <p className="small muted">Untick a drug the patient already has to leave it off.</p>
+            <p className="hint">Untick a drug the patient already has. Pick an LU code only when the Ontario Drug Benefit applies.</p>
             <Field label="Notes" optional>
               <textarea className="textarea" rows={3} maxLength={500} value={rx.notes} onChange={(e) => setRx({ ...rx, notes: e.target.value })} />
             </Field>

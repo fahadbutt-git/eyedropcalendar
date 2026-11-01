@@ -1,8 +1,9 @@
 import { doseTimes, fmtTime } from "../../lib/times.js";
+import { atBedtime } from "../../lib/wording.js";
 
 // How-to steps, suggested times and the QR code, written for the patient.
 export default function Instructions({ items, wake, bed, qr }) {
-  const isBedtime = ({ entry, med }) => entry.mode !== "taper" && entry.freq === 1 && med?.qhs;
+  const isBedtime = ({ entry, med }) => atBedtime(entry, med?.qhs);
   const freqs = new Set();
   items.forEach((it) => {
     if (it.entry.mode === "taper") it.entry.steps.forEach((s) => freqs.add(s.freq));
@@ -17,9 +18,9 @@ export default function Instructions({ items, wake, bed, qr }) {
         <h3>How to use your drops</h3>
         <ol>
           <li>Wash your hands. Tilt your head back and gently pull down your lower eyelid.</li>
-          <li>Squeeze one drop into the pocket. Do not let the bottle touch your eye.</li>
+          <li>Squeeze {items.some((it) => it.entry.drops > 1) ? "each drop" : "one drop"} into the pocket. Do not let the bottle touch your eye.</li>
           <li>Close your eye and press gently on the inner corner for 1 minute.</li>
-          {items.length > 1 && <li>Wait at least 5 minutes between different drops.</li>}
+          {items.length > 1 && <li>Wait at least 5 minutes between different drops. Use them in the order listed for each time.</li>}
           {has("suspension") && <li>Shake bottles marked &quot;shake well&quot; before each use.</li>}
           {has("gel") && <li>Use gel drops last, at least 10 minutes after other drops.</li>}
           <li>Tick a box each time you use a drop. Bring this sheet to your next visit.</li>

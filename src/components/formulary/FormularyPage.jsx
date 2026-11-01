@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { CAP_COLOURS, DRUG_CLASSES } from "../../data/formulary.js";
+import { DRUG_CLASSES } from "../../data/formulary.js";
 import { downloadFile } from "../../lib/download.js";
 import { cleanFormulary } from "../../lib/validate.js";
 import { freqAbbrev } from "../../lib/wording.js";
@@ -12,7 +12,7 @@ const COLUMNS = [
   ["generic", "Generic", (m) => m.generic.toLowerCase()],
   ["cls", "Class", classNames],
   ["freq", "Usual dose", (m) => m.freq],
-  ["lu", "LU code", (m) => m.lu],
+  ["lu", "LU codes", (m) => m.lu.join(" ")],
 ];
 
 function SortHeader({ id, label, sort, setSort }) {
@@ -36,7 +36,7 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
   const sortValue = COLUMNS.find(([k]) => k === sort.key)[2];
   const q = query.trim().toLowerCase();
   const rows = formulary
-    .filter((m) => `${m.brand} ${m.generic} ${m.lu} ${classNames(m)}`.toLowerCase().includes(q))
+    .filter((m) => `${m.brand} ${m.generic} ${m.lu.join(" ")} ${classNames(m)}`.toLowerCase().includes(q))
     .sort((a, b) => (sortValue(a) > sortValue(b) ? 1 : sortValue(a) < sortValue(b) ? -1 : 0) * sort.dir);
 
   const save = (med) => {
@@ -54,6 +54,7 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
       const data = JSON.parse(await file.text());
       const list = cleanFormulary(Array.isArray(data) ? data : data?.formulary);
       if (!list) throw new Error();
+      if (!window.confirm(`Replace your formulary of ${formulary.length} drugs with the ${list.length} in this file?`)) return;
       setFormulary(list);
       setImportError("");
     } catch {
@@ -101,7 +102,7 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <span className="muted small">
+          <span className="hint" role="status">
             {rows.length} of {formulary.length}
           </span>
           <span className="spacer" />
@@ -139,23 +140,20 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
                     {m.drops} drop{m.drops > 1 ? "s" : ""} {freqAbbrev(m.freq)}
                     {m.qhs && m.freq === 1 && " at bedtime"}
                   </td>
-                  <td>{m.lu ? <span className="tag lu">{m.lu}</span> : <span className="muted">none</span>}</td>
+                  <td className="mono">{m.lu.length ? m.lu.join(", ") : <span className="hint">none</span>}</td>
                   <td>
-                    <span className="row" style={{ gap: 6 }}>
-                      <CapDot cap={m.cap} />
-                      <span className="small muted">{m.cap && CAP_COLOURS[m.cap].label}</span>
-                    </span>
+                    <CapDot cap={m.cap} named />
                   </td>
                   <td>
                     <div className="row" style={{ gap: 4, justifyContent: "flex-end" }}>
                       <button className="btn sm" onClick={() => setEditing(m)}>
-                        Edit
+                        Edit<span className="sr-only"> {m.brand}</span>
                       </button>
                       <button
                         className="btn sm ghost danger"
                         onClick={() => window.confirm(`Remove ${m.brand} from the formulary?`) && setFormulary(formulary.filter((x) => x.id !== m.id))}
                       >
-                        Delete
+                        Delete<span className="sr-only"> {m.brand}</span>
                       </button>
                     </div>
                   </td>
@@ -166,8 +164,8 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
         </div>
       </section>
       <p className="small muted">
-        Cap colours follow the American Academy of Ophthalmology class convention and are left blank for fixed combinations and
-        preservative-free unit doses. Confirm against the dispensed product. LU codes apply to the Ontario Drug Benefit program.
+        Cap colours follow the American Academy of Ophthalmology class convention. Confirm against the dispensed product. LU codes
+        are the Ontario Drug Benefit Limited Use codes that can apply to each drug; the prescriber picks one on the prescription.
       </p>
 
       {editing && <MedEditor initial={editing} existing={formulary} onSave={save} onClose={() => setEditing(null)} />}

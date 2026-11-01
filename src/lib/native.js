@@ -35,19 +35,29 @@ export async function cancelReminders() {
   if (notifications.length) await LocalNotifications.cancel({ notifications: notifications.map(({ id }) => ({ id })) });
 }
 
+// Android shows only "Eye drop reminder" on the lock screen for this channel.
+let channelReady = null;
+const ensureChannel = () =>
+  (channelReady ??= Capacitor.getPlatform() === "android"
+    ? LocalNotifications.createChannel({ id: "doses", name: "Dose reminders", importance: 4, visibility: 0 }).catch(() => {})
+    : Promise.resolve());
+
 // Returns { ok: true } once scheduled, or { ok: false, denied } when the
-// patient has not allowed notifications.
-export async function scheduleReminders(plan, { ask = false } = {}) {
+// patient has not allowed notifications. `generic` keeps drug names out of
+// the notification text.
+export async function scheduleReminders(plan, { ask = false, generic = false } = {}) {
   if (!isNative) return { ok: false };
   let permission = await LocalNotifications.checkPermissions();
   if (permission.display !== "granted" && ask) permission = await LocalNotifications.requestPermissions();
   if (permission.display !== "granted") return { ok: false, denied: true };
 
+  await ensureChannel();
   await cancelReminders();
   const upcoming = upcomingReminders(plan, new Date(), WINDOW);
   const notifications = upcoming.map(({ at, items }, i) => ({
     id: i + 1,
-    ...reminderText(items, EYES),
+    ...reminderText(items, EYES, generic),
+    channelId: "doses",
     schedule: { at, allowWhileIdle: true },
   }));
   if (upcoming.length === WINDOW) {
@@ -55,6 +65,7 @@ export async function scheduleReminders(plan, { ask = false } = {}) {
       id: WINDOW + 1,
       title: "Keep your drop reminders going",
       body: "Open Eye Drop Tracker to load your next reminders.",
+      channelId: "doses",
       schedule: { at: new Date(upcoming[WINDOW - 1].at.getTime() + 30 * 60000), allowWhileIdle: true },
     });
   }

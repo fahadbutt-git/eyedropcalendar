@@ -40,11 +40,12 @@ export default function PrescriptionSheet({ items, prescriber, patient, date, no
       </div>
 
       <div className="rx-symbol">Rx</div>
-      {items.map(({ entry, med, disp, refills }) => (
-        <div className="rx-item" key={`${entry.brand}-${entry.eye}`}>
+      {items.map(({ entry, med, disp, refills, lu }) => (
+        <div className="rx-item" key={entry.id}>
           <div>
             <span className="name">{entry.brand}</span>
-            {med?.generic && <span className="gen"> ({med.generic}) ophthalmic</span>}
+            {med?.generic && <span className="gen"> ({med.generic})</span>}
+            <span className="gen"> ophthalmic {med?.form || "solution"}</span>
           </div>
           <div>
             <b>Sig:</b> {sigText(entry, med?.qhs, startDate)}
@@ -57,9 +58,9 @@ export default function PrescriptionSheet({ items, prescriber, patient, date, no
             <span>
               <b>Refills:</b> {refills || "none"}
             </span>
-            {med?.lu && (
+            {lu && (
               <span>
-                <b>LU code:</b> {med.lu}
+                <b>LU code:</b> {lu}
               </span>
             )}
           </div>

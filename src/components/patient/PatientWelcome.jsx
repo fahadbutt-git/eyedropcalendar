@@ -18,15 +18,15 @@ export default function PatientWelcome({ onCode }) {
         <h1>Welcome</h1>
         <p className="lede">This app reminds you when to use your eye drops and keeps track of each dose.</p>
       </div>
-      <section className="card card-b stack" style={{ gap: 14 }}>
-        <h2 className="pt-h2">Load your drop plan</h2>
+      <section className="pt-card">
+        <h2>Load your drop plan</h2>
         <ol className="pt-steps">
           <li>Find the calendar your eye clinic gave you.</li>
           <li>Open your phone&apos;s camera and point it at the square QR code.</li>
           <li>Tap the link that appears, then tap Open in the app.</li>
         </ol>
       </section>
-      <form className="card card-b stack" style={{ gap: 12 }} onSubmit={open}>
+      <form className="pt-card" onSubmit={open}>
         <label className="field" htmlFor="plan-link">
           <span>Or paste the link from your clinic</span>
           <input
@@ -44,7 +44,7 @@ export default function PatientWelcome({ onCode }) {
           />
         </label>
         {error && (
-          <p className="notice warn small" role="alert">
+          <p className="notice warn" role="alert">
             {error}
           </p>
         )}

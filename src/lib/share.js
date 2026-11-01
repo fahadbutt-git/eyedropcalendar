@@ -2,7 +2,7 @@
 // browsers never send to a server. It holds the drugs, eyes, doses and dates
 // only, never the patient's name, date of birth, healthcare number or address.
 import { isValidISO } from "./dates.js";
-import { cleanEntry, cleanMed, isClockTime } from "./validate.js";
+import { MAX_DROPS, cleanEntry, cleanMed, isClockTime } from "./validate.js";
 
 const toBase64Url = (s) =>
   btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -31,15 +31,18 @@ export function decodeRegimen(code) {
   if (!o || o.v !== 1 || !isValidISO(o.s) || !isClockTime(o.w) || !isClockTime(o.b) || !Array.isArray(o.e)) {
     throw new Error("Invalid plan");
   }
-  if (!o.e.length || o.e.length > 24) throw new Error("Invalid plan");
+  if (!o.e.length || o.e.length > MAX_DROPS) throw new Error("Invalid plan");
   const entries = [];
   const formulary = [];
   o.e.forEach((a, i) => {
     if (!Array.isArray(a)) throw new Error("Invalid plan");
-    const entry = cleanEntry({
-      brand: a[0], eye: a[5], drops: a[6], mode: MODES[a[7]], freq: a[8], durationDays: a[9], startDay: a[10],
-      steps: Array.isArray(a[11]) ? a[11].map((s) => ({ freq: s?.[0], days: s?.[1] })) : [],
-    });
+    const entry = cleanEntry(
+      {
+        brand: a[0], eye: a[5], drops: a[6], mode: MODES[a[7]], freq: a[8], durationDays: a[9], startDay: a[10],
+        steps: Array.isArray(a[11]) ? a[11].map((s) => ({ freq: s?.[0], days: s?.[1] })) : [],
+      },
+      { strict: true }
+    );
     const med = cleanMed({ brand: a[0], generic: a[1], cap: a[2], form: a[3], qhs: a[4] === 1 }, i + 1);
     if (!entry || !med) throw new Error("Invalid plan");
     entries.push(entry);
@@ -51,4 +54,16 @@ export function decodeRegimen(code) {
 // Origin and path only, so nothing else from the clinician's address bar leaks.
 export const patientLink = (code) => `${window.location.origin}${window.location.pathname}#/p/${code}`;
 
-export const codeFromUrl = (url) => String(url || "").match(/(?:#\/p\/|:\/\/p\/)([\w-]+)/)?.[1] || null;
+// Accepts a full link, a link an email client wrapped over two lines, an
+// encoded "#", or a bare code.
+export function codeFromUrl(url) {
+  let s = String(url || "").replace(/\s+/g, "");
+  try {
+    s = decodeURIComponent(s);
+  } catch {
+    // Leave it as typed.
+  }
+  const m = s.match(/(?:#\/p\/|:\/\/p\/|\/p\/)([\w-]+)/);
+  if (m) return m[1];
+  return /^[\w-]{40,}$/.test(s) ? s : null;
+}

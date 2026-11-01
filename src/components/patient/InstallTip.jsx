@@ -23,14 +23,14 @@ export default function InstallTip() {
     setPrompt(null);
   };
   return (
-    <section className="card card-b stack" style={{ gap: 10 }}>
-      <h2 className="pt-h2">Keep this on your phone</h2>
+    <section className="pt-card">
+      <h2>Keep this on your phone</h2>
       <p>Add this page to your home screen to open it like an app, even without internet.</p>
       <button className="btn" onClick={install}>
         Add to home screen
       </button>
       {showHelp && (
-        <p className="notice info small">
+        <p className="pt-note">
           {isIOS()
             ? "In Safari, tap the Share button (a square with an arrow), then Add to Home Screen."
             : "Open your browser menu (three dots), then tap Install app or Add to Home screen."}

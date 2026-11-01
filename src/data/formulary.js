@@ -1,12 +1,16 @@
 // Default formulary. Every field is editable in the Formulary tab, and edits
-// are saved in the user's browser.
+// are saved in the user's browser. Doses follow the Canadian product
+// monographs. LU codes follow the Ontario Drug Benefit formulary.
 //
-// cls   drug classes, used for duplicate-therapy warnings
-// cap   AAO standard cap colour by class (single-agent drugs only). Fixed
-//       combinations and preservative-free unit doses are left blank because
-//       their caps are not standardised. Verify against local product.
-// form  "solution" | "suspension" | "gel" (sets shake-well and order advice)
-// qhs   true when once-daily dosing is usually given at bedtime
+// cls     drug classes, used for duplicate-therapy warnings
+// cap     AAO standard cap colour by class. Verify against local product.
+// form    "solution" | "suspension" | "emulsion" | "gel" (sets shake-well
+//         advice and the order drops go in)
+// qhs     true when once-daily dosing is usually given at bedtime
+// lu      the LU codes that can apply; the prescriber picks one on the Rx.
+//         Left empty where the ODB code could not be confirmed (Monoprost,
+//         Vistitan, ZimedMD PF, dorzolamide) or the drug is not an LU benefit.
+// maxFreq label maximum doses a day, when the label sets one
 
 export const DRUG_CLASSES = {
   PGA: "Prostaglandin analogue",
@@ -36,7 +40,14 @@ export const CAP_COLOURS = {
   grey: { label: "Grey", hex: "#8c939c" },
   tan: { label: "Tan", hex: "#c9a77c" },
   white: { label: "White", hex: "#ffffff" },
+  lightgreen: { label: "Light green", hex: "#8fcf7e" },
 };
+
+export const FORMS = ["solution", "suspension", "emulsion", "gel"];
+
+// ODB Limited Use codes, by product type.
+const LU_SINGLE = ["171", "172", "387"];
+const LU_COMBO = ["310", "393"];
 
 const d = (brand, generic, cls, freq, lu, extra = {}) => ({
   brand,
@@ -48,43 +59,43 @@ const d = (brand, generic, cls, freq, lu, extra = {}) => ({
   cap: "",
   form: "solution",
   qhs: false,
+  maxFreq: null,
   ...extra,
 });
+const PGA = { cap: "teal", qhs: true, maxFreq: 1 };
 
 const SEED = [
-  d("Alphagan", "Brimonidine 0.2%", ["AA"], 2, "172", { cap: "purple" }),
-  d("Alphagan-P", "Brimonidine 0.15%", ["AA"], 2, "172", { cap: "purple" }),
-  d("Azarga", "Brinzolamide 1% / timolol 0.5%", ["CAI", "BB"], 2, "310", { form: "suspension" }),
-  d("Azopt", "Brinzolamide 1%", ["CAI"], 2, "172", { cap: "orange", form: "suspension" }),
-  d("Betagan", "Levobunolol 0.5%", ["BB"], 2, "", { cap: "yellow" }),
-  d("Betoptic-S", "Betaxolol 0.25%", ["BB"], 2, "", { cap: "blue", form: "suspension" }),
-  d("Combigan", "Brimonidine 0.2% / timolol 0.5%", ["AA", "BB"], 2, "310"),
-  d("Cosopt", "Dorzolamide 2% / timolol 0.5%", ["CAI", "BB"], 2, "310"),
-  d("Cosopt-PF", "Dorzolamide 2% / timolol 0.5% (preservative free)", ["CAI", "BB"], 2, "310"),
-  d("DuoTrav", "Travoprost 0.004% / timolol 0.5%", ["PGA", "BB"], 1, "310"),
-  d("Izba", "Travoprost 0.003%", ["PGA"], 1, "172", { cap: "teal", qhs: true }),
-  d("Lumigan RC", "Bimatoprost 0.01%", ["PGA"], 1, "172", { cap: "teal", qhs: true }),
-  d("Monoprost", "Latanoprost 0.005% (preservative free)", ["PGA"], 1, "172", { qhs: true }),
-  d("Pilocarpine", "Pilocarpine 2%", ["MIO"], 3, "", { cap: "green" }),
-  d("Simbrinza", "Brinzolamide 1% / brimonidine 0.2%", ["CAI", "AA"], 2, "393", { form: "suspension" }),
-  d("Timoptic", "Timolol 0.5%", ["BB"], 2, "", { cap: "yellow" }),
-  d("Timoptic-XE", "Timolol 0.5% gel-forming solution", ["BB"], 1, "", { cap: "yellow", form: "gel" }),
-  d("Travatan Z", "Travoprost 0.004%", ["PGA"], 1, "172", { cap: "teal", qhs: true }),
-  d("Trusopt", "Dorzolamide 2%", ["CAI"], 2, "172", { cap: "orange" }),
-  d("Trusopt-PF", "Dorzolamide 2% (preservative free)", ["CAI"], 2, "172"),
-  d("Vistitan", "Bimatoprost 0.03%", ["PGA"], 1, "172", { cap: "teal", qhs: true }),
-  d("Vyzulta", "Latanoprostene bunod 0.024%", ["PGA"], 1, "172", { cap: "teal", qhs: true }),
-  d("Xalacom", "Latanoprost 0.005% / timolol 0.5%", ["PGA", "BB"], 1, "310"),
-  d("Xalatan", "Latanoprost 0.005%", ["PGA"], 1, "172", { cap: "teal", qhs: true }),
-  d("Zimed PF", "Bimatoprost 0.03% (preservative free)", ["PGA"], 1, "172", { qhs: true }),
-  d("Pred Forte", "Prednisolone acetate 1%", ["STER"], 4, "", { cap: "pink", form: "suspension" }),
-  d("Durezol", "Difluprednate 0.05%", ["STER"], 4, "", { cap: "pink" }),
-  d("Nevanac", "Nepafenac 0.1%", ["NSAID"], 3, "", { cap: "grey", form: "suspension" }),
-  d("Prolensa", "Bromfenac 0.07%", ["NSAID"], 1, "", { cap: "grey" }),
-  d("Vigamox", "Moxifloxacin 0.5%", ["ABX"], 4, "", { cap: "tan" }),
-  d("Atropine", "Atropine sulfate 1%", ["CYC"], 3, "", { cap: "red" }),
+  d("Alphagan", "Brimonidine 0.2%", ["AA"], 2, LU_SINGLE, { cap: "purple" }),
+  d("Alphagan-P", "Brimonidine 0.15%", ["AA"], 3, LU_SINGLE, { cap: "purple", maxFreq: 3 }),
+  d("Azarga", "Brinzolamide 1% / timolol 0.5%", ["CAI", "BB"], 2, LU_COMBO, { cap: "darkblue", form: "suspension" }),
+  d("Azopt", "Brinzolamide 1%", ["CAI"], 2, LU_SINGLE, { cap: "orange", form: "suspension", maxFreq: 3 }),
+  d("Betoptic-S", "Betaxolol 0.25%", ["BB"], 2, [], { cap: "yellow", form: "suspension" }),
+  d("Combigan", "Brimonidine 0.2% / timolol 0.5%", ["AA", "BB"], 2, LU_COMBO, { cap: "darkblue" }),
+  d("Cosopt", "Dorzolamide 2% / timolol 0.5%", ["CAI", "BB"], 2, LU_COMBO, { cap: "darkblue" }),
+  d("Cosopt-PF", "Dorzolamide 2% / timolol 0.5% (preservative free)", ["CAI", "BB"], 2, LU_COMBO, { cap: "darkblue" }),
+  d("DuoTrav PQ", "Travoprost 0.004% / timolol 0.5%", ["PGA", "BB"], 1, LU_COMBO, { cap: "darkblue", maxFreq: 1 }),
+  d("Izba", "Travoprost 0.003%", ["PGA"], 1, LU_SINGLE, PGA),
+  d("Lumigan RC", "Bimatoprost 0.01%", ["PGA"], 1, LU_SINGLE, PGA),
+  d("Monoprost", "Latanoprost 0.005% (preservative free)", ["PGA"], 1, [], PGA),
+  d("Pilocarpine", "Pilocarpine 2%", ["MIO"], 4, [], { cap: "green", drops: 2 }),
+  d("Simbrinza", "Brinzolamide 1% / brimonidine 0.2%", ["CAI", "AA"], 2, ["466", "393"], { cap: "lightgreen", form: "suspension" }),
+  d("Timoptic", "Timolol 0.5%", ["BB"], 2, [], { cap: "yellow", maxFreq: 2 }),
+  d("Timoptic-XE", "Timolol 0.5% gel-forming solution", ["BB"], 1, [], { cap: "yellow", form: "gel", maxFreq: 1 }),
+  d("Travatan Z", "Travoprost 0.004%", ["PGA"], 1, LU_SINGLE, PGA),
+  d("Dorzolamide", "Dorzolamide 2% (generic; Trusopt brand discontinued)", ["CAI"], 3, [], { cap: "orange", maxFreq: 3 }),
+  d("Vistitan", "Bimatoprost 0.03%", ["PGA"], 1, [], PGA),
+  d("Vyzulta", "Latanoprostene bunod 0.024%", ["PGA"], 1, LU_SINGLE, PGA),
+  d("Xalacom", "Latanoprost 0.005% / timolol 0.5%", ["PGA", "BB"], 1, LU_COMBO, { cap: "darkblue", maxFreq: 1 }),
+  d("Xalatan", "Latanoprost 0.005%", ["PGA"], 1, LU_SINGLE, PGA),
+  d("ZimedMD PF", "Bimatoprost 0.03% (preservative free)", ["PGA"], 1, [], PGA),
+  d("Pred Forte", "Prednisolone acetate 1%", ["STER"], 4, [], { cap: "pink", form: "suspension" }),
+  d("Durezol", "Difluprednate 0.05%", ["STER"], 4, [], { cap: "pink", form: "emulsion" }),
+  d("Nevanac", "Nepafenac 0.1%", ["NSAID"], 3, [], { cap: "grey", form: "suspension" }),
+  d("Prolensa", "Bromfenac 0.07%", ["NSAID"], 1, [], { cap: "grey", maxFreq: 1 }),
+  d("Vigamox", "Moxifloxacin 0.5%", ["ABX"], 3, [], { cap: "tan" }),
+  d("Atropine", "Atropine sulfate 1%", ["CYC"], 3, [], { cap: "red" }),
 ];
 
 export const SEED_FORMULARY = SEED.map((m, i) => ({ id: i + 1, ...m }));
 
-export const FORMULARY_VERSION = 3;
+export const FORMULARY_VERSION = 4;

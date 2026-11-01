@@ -1,27 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { courseLastDay } from "../../lib/calendar.js";
+import { daysBetween, parseISO } from "../../lib/dates.js";
 import { buildICS } from "../../lib/ics.js";
 import { downloadFile } from "../../lib/download.js";
 import { APP_SCHEME, cancelReminders, isNative, onAppResume, scheduleReminders } from "../../lib/native.js";
 import { usePersistentState } from "../../lib/storage.js";
 import { Icon } from "../ui.jsx";
 
-const isPhone = () => /iphone|ipod|android/i.test(navigator.userAgent);
+const platform = () => (/iphone|ipad|ipod/i.test(navigator.userAgent) ? "ios" : /android/i.test(navigator.userAgent) ? "android" : "other");
+const HOW = {
+  ios: "Open the file from the banner or your Downloads, then tap Add All.",
+  android: "Open the file from your notifications or the Files app and choose your calendar. If nothing opens it, open Google Calendar on a computer and use Import.",
+  other: "Open the file to add the alarms to your calendar app.",
+};
 
 // In the phone app: real notifications. In a browser: calendar alarms.
-export default function Reminders({ plan, code, storeKey }) {
-  const [on, setOn] = usePersistentState(`edt.alarms.${storeKey}`, false);
+export default function Reminders({ plan: shared, id, code }) {
+  const [on, setOn] = usePersistentState(`edt.alarms.${id}`, false);
+  const [generic, setGeneric] = usePersistentState("edt.genericReminders", false);
   const [message, setMessage] = useState("");
+  const [saved, setSaved] = useState(false);
 
-  // The app schedules about two weeks at a time, so top up on every open.
+  // Ongoing drops never end, so the app keeps a rolling window of reminders.
+  const plan = useMemo(() => {
+    const start = parseISO(shared.start);
+    const last = courseLastDay(shared.entries);
+    return { ...shared, start, days: last == null ? Math.max(0, daysBetween(start, new Date())) + 400 : last + 1 };
+  }, [shared]);
+
   useEffect(() => {
     if (!isNative || !on) return;
-    const refresh = () => scheduleReminders(plan);
+    const refresh = () => scheduleReminders(plan, { generic });
     refresh();
     return onAppResume(refresh);
-  }, [plan, on]);
+  }, [plan, on, generic]);
 
   const turnOn = async () => {
-    const result = await scheduleReminders(plan, { ask: true });
+    const result = await scheduleReminders(plan, { ask: true, generic });
     setOn(result.ok);
     setMessage(result.denied ? "Notifications are off for this app. Turn them on in your phone's Settings, then try again." : "");
   };
@@ -29,44 +44,54 @@ export default function Reminders({ plan, code, storeKey }) {
     await cancelReminders();
     setOn(false);
   };
+  const download = () => {
+    downloadFile("eye-drop-reminders.ics", buildICS({ ...plan, id, generic }), "text/calendar");
+    setSaved(true);
+  };
 
   return (
-    <section className="card card-b stack" style={{ gap: 12 }} aria-labelledby="rem-h">
-      <h2 id="rem-h" className="pt-h2">
-        Reminders
-      </h2>
-      {isNative && on && (
-        <>
-          <p>Reminders are on. Your phone will alert you at each dose time.</p>
-          <button className="btn" onClick={turnOff}>
-            Turn reminders off
-          </button>
-        </>
-      )}
-      {isNative && !on && (
-        <>
-          <p>Get an alert on this phone at each dose time.</p>
-          <button className="btn primary" onClick={turnOn}>
-            {Icon.bell} Turn on reminders
-          </button>
-        </>
-      )}
-      {!isNative && (
+    <section className="pt-card" aria-labelledby="rem-h">
+      <h2 id="rem-h">Reminders</h2>
+      {isNative ? (
+        on ? (
+          <>
+            <p>Reminders are on. Your phone will alert you at each dose time.</p>
+            <button className="btn" onClick={turnOff}>
+              Turn reminders off
+            </button>
+          </>
+        ) : (
+          <>
+            <p>Get an alert on this phone at each dose time.</p>
+            <button className="btn primary" onClick={turnOn}>
+              {Icon.bell} Turn on reminders
+            </button>
+          </>
+        )
+      ) : (
         <>
           <p>Add an alarm to your phone&apos;s calendar for every dose in this plan.</p>
-          <button className="btn primary" onClick={() => downloadFile("eye-drop-reminders.ics", buildICS(plan), "text/calendar")}>
+          <button className="btn primary" onClick={download}>
             {Icon.bell} Add alarms to my calendar
           </button>
-          <p className="small muted">Open the file that downloads and choose Add All.</p>
-          {isPhone() && (
+          {saved && (
+            <p className="pt-note" role="status">
+              The calendar file is saved. {HOW[platform()]}
+            </p>
+          )}
+          {platform() !== "other" && (
             <a className="small" href={`${APP_SCHEME}://p/${code}`}>
               Have the Eye Drop Tracker app? Open this plan in the app
             </a>
           )}
         </>
       )}
+      <label className="check">
+        <input type="checkbox" checked={generic} onChange={(e) => setGeneric(e.target.checked)} />
+        <span>Hide drug names in reminders</span>
+      </label>
       {message && (
-        <p className="notice warn small" role="alert">
+        <p className="notice warn" role="alert">
           {message}
         </p>
       )}

@@ -1,8 +1,6 @@
 import { WEEKDAYS, daysBetween, fmtShort } from "../../lib/dates.js";
-import { dosesOnDay } from "../../lib/regimen.js";
+import { EYES, dosesOnDay } from "../../lib/regimen.js";
 import { Boxes, Chip } from "../ui.jsx";
-
-const EYE_WORD = { OD: "Right", OS: "Left", OU: "Both" };
 
 // One day: a tick box per dose for each drug, plus markers on the days a
 // drug starts, changes frequency or stops.
@@ -20,14 +18,15 @@ function DayCell({ label, dayIndex, items }) {
         if (!n)
           return (
             <div className="dose stop" key={index}>
-              <Chip n={index + 1} style={chip} /> Stop
+              <Chip n={index + 1} style={chip} /> <span className="sr-only">{entry.brand}</span> Stop
             </div>
           );
         const change = dayIndex === 0 ? null : !prev ? "start" : prev !== n ? `${n < prev ? "↓" : "↑"}${n}x` : null;
         return (
           <div className="dose" key={index}>
             <Chip n={index + 1} style={chip} />
-            <span className="eye">{EYE_WORD[entry.eye]}</span>
+            <span className="sr-only">{entry.brand}</span>
+            <span className="eye">{EYES[entry.eye].short}</span>
             <Boxes n={n} />
             {change && <span className="change">{change}</span>}
           </div>
@@ -39,7 +38,7 @@ function DayCell({ label, dayIndex, items }) {
 
 export default function CalendarGrid({ weeks, items, start, lastIndex, month, rowHeight }) {
   return (
-    <div className="cal-wrap" style={{ "--row-h": `${rowHeight}px` }}>
+    <div className="cal-wrap" style={{ "--row-h": `${rowHeight}px` }} tabIndex={0} role="region" aria-label="Calendar">
       <table className="cal">
         <thead>
           <tr>

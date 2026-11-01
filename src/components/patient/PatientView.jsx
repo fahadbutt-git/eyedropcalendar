@@ -1,165 +1,267 @@
 import { useEffect, useMemo, useState } from "react";
 import { WEEKDAYS, addDays, daysBetween, fmtLong, fmtShort, parseISO, toISO } from "../../lib/dates.js";
-import { scheduleSpan } from "../../lib/calendar.js";
-import { doseGroups } from "../../lib/doses.js";
-import { isNative } from "../../lib/native.js";
-import { EYES, dosesOnDay } from "../../lib/regimen.js";
+import { courseLastDay } from "../../lib/calendar.js";
+import { changeNotes, dayName } from "../../lib/changes.js";
+import { doseGroups, medOf } from "../../lib/doses.js";
+import { planId } from "../../lib/hash.js";
+import { cancelReminders, isNative, onAppResume } from "../../lib/native.js";
+import { EYES } from "../../lib/regimen.js";
 import { fmtTime } from "../../lib/times.js";
 import { patientInstruction } from "../../lib/wording.js";
 import { usePersistentState } from "../../lib/storage.js";
-import { CapDot, Icon, chipStyle } from "../ui.jsx";
+import { CapDot, Icon } from "../ui.jsx";
 import InstallTip from "./InstallTip.jsx";
 import Reminders from "./Reminders.jsx";
 
-// Ticked doses are stored per day as { "<drug index>-<dose number>": true }.
-const doseKey = (index, dose) => `${index}-${dose}`;
+// Check marks are stored per plan and per date as { "<brand>|<eye>|<dose>": time }.
+const doseKey = ({ entry, dose }) => `${entry.brand}|${entry.eye}|${dose}`;
+const ADVICE = { suspension: "Shake first.", gel: "Use last." };
+const WAIT_MS = 5 * 60 * 1000;
+const isObject = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
 
-function DoseButton({ entry, med, chip, done, onToggle }) {
-  return (
-    <button className={`dose-card ${done ? "is-done" : ""}`} onClick={onToggle} aria-pressed={done}>
-      <span className="bar" style={{ background: chip.background, border: chip.border }} />
-      <span className="dose-text">
-        <span className="n">{entry.brand}</span>
-        <span className="d">
-          {entry.drops} drop{entry.drops > 1 ? "s" : ""} in {entry.eye === "OU" ? "" : "the "}
-          {EYES[entry.eye].long}
-          {med?.form === "suspension" && ". Shake first."}
-        </span>
-      </span>
-      <span className={`tick ${done ? "done" : ""}`} aria-hidden="true">
-        {done && Icon.check}
-      </span>
-      <span className="sr-only">{done ? "Done. Tap to undo." : "Tap when done."}</span>
-    </button>
-  );
+// The current time, refreshed every 30 seconds and whenever the phone wakes
+// the app, so "today" is always the real today.
+function useNow() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const tick = () => setNow(new Date());
+    const timer = setInterval(tick, 30000);
+    const onVisible = () => document.visibilityState === "visible" && tick();
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", tick);
+    const stop = onAppResume(tick);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", tick);
+      stop();
+    };
+  }, []);
+  return now;
 }
 
-function weekSummary(entries, start, today, taken) {
-  let due = 0;
-  let got = 0;
-  for (let i = Math.max(0, today - 7); i < today; i++) {
-    const ticks = taken[toISO(addDays(start, i))] || {};
-    entries.forEach((e, index) => {
-      for (let d = 0; d < dosesOnDay(e, i); d++) {
-        due++;
-        if (ticks[doseKey(index, d)]) got++;
-      }
-    });
-  }
-  return { due, got };
+function doseLabel({ entry, med }) {
+  return [`${entry.drops} drop${entry.drops > 1 ? "s" : ""}, ${EYES[entry.eye].long}.`, ADVICE[med?.form]].filter(Boolean).join(" ");
 }
 
 export default function PatientView({ plan: shared, code }) {
-  const start = parseISO(shared.start);
-  const span = scheduleSpan(shared.entries, 3, start);
-  const plan = useMemo(() => ({ ...shared, start, days: span.days }), [code]); // eslint-disable-line react-hooks/exhaustive-deps
-  const storeKey = code.slice(0, 48);
-  const today = daysBetween(start, new Date());
-  const [day, setDay] = useState(Math.min(Math.max(today, 0), span.days - 1));
-  const [taken, setTaken] = usePersistentState(`edt.taken.${storeKey}`, {}, { check: (v) => (v && typeof v === "object" ? v : null) });
+  const id = useMemo(() => planId(code), [code]);
+  const start = useMemo(() => parseISO(shared.start), [shared.start]);
+  const lastDay = courseLastDay(shared.entries);
+  const now = useNow();
+  const today = daysBetween(start, now);
+  const [view, setView] = useState(null);
+  const day = view ?? Math.max(0, today);
+  const [taken, setTaken] = usePersistentState(`edt.taken.${id}`, {}, { check: isObject });
+  const [firstSeen] = usePersistentState(`edt.seen.${id}`, toISO(now));
   const [large, setLarge] = usePersistentState("edt.largeText", false);
+  const [undo, setUndo] = useState(null);
+  const [waitFrom, setWaitFrom] = useState(null);
 
+  // Remember this plan for the home screen icon. In the phone app, a new
+  // plan replaces the old plan's reminders.
   useEffect(() => {
     try {
+      const previous = localStorage.getItem("edt.patientPlan");
+      if (isNative && previous && previous !== code) cancelReminders();
       localStorage.setItem("edt.patientPlan", code);
     } catch {
       // Without storage the plan simply opens from the link each time.
     }
   }, [code]);
+  useEffect(() => document.body.classList.toggle("large-text", large), [large]);
   useEffect(() => {
-    document.body.classList.toggle("large-text", large);
-  }, [large]);
+    if (!undo) return;
+    const t = setTimeout(() => setUndo(null), 10000);
+    return () => clearTimeout(t);
+  }, [undo]);
 
   const date = addDays(start, day);
-  const ticks = taken[toISO(date)] || {};
-  const toggle = (key) => setTaken({ ...taken, [toISO(date)]: { ...ticks, [key]: !ticks[key] } });
-  const groups = doseGroups(shared.entries, shared.formulary, day, shared.wake, shared.bed);
-  const total = groups.reduce((n, g) => n + g.items.length, 0);
-  const done = groups.reduce((n, g) => n + g.items.filter((it) => ticks[doseKey(it.index, it.dose)]).length, 0);
-  const week = weekSummary(shared.entries, start, Math.min(today, span.days), taken);
-  const medOf = (entry) => shared.formulary.find((m) => m.brand === entry.brand);
+  const iso = toISO(date);
+  const ticks = taken[iso] || {};
+  const finished = lastDay != null && day > lastDay;
+  const future = day > today;
+  const groups = finished ? [] : doseGroups(shared.entries, shared.formulary, day, shared.wake, shared.bed);
+  const all = groups.flatMap((g) => g.items.map((it) => ({ ...it, time: g.time })));
+  const done = all.filter((it) => ticks[doseKey(it)]).length;
+
+  const setTick = (it, on) =>
+    setTaken((prev) => {
+      const dayTicks = { ...(prev[iso] || {}) };
+      if (on) dayTicks[doseKey(it)] = Date.now();
+      else delete dayTicks[doseKey(it)];
+      return { ...prev, [iso]: dayTicks };
+    });
+  const toggle = (it) => {
+    const on = !ticks[doseKey(it)];
+    setTick(it, on);
+    setUndo({ it, on, iso });
+    if (on && day === today) setWaitFrom(Date.now());
+  };
+
+  // The first dose still to do today, shown large at the top.
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  const next = day === today && !finished ? all.find((it) => !ticks[doseKey(it)]) : null;
+  const waitLeft = waitFrom ? Math.max(0, WAIT_MS - (now - waitFrom)) : 0;
+  const nextIsSoon = next && waitLeft > 0 && all.some((it) => ticks[doseKey(it)] && it.time === next.time);
+
+  const upcoming = changeNotes(shared.entries, start, Math.max(1, today + 1), Math.max(1, today + 7), { thisWeek: false });
+  const counted = Math.max(0, daysBetween(start, parseISO(firstSeen)));
+  let due = 0;
+  let got = 0;
+  for (let i = Math.max(counted, today - 7); i < Math.min(today, (lastDay ?? today) + 1); i++) {
+    const t = taken[toISO(addDays(start, i))] || {};
+    for (const g of doseGroups(shared.entries, shared.formulary, i, shared.wake, shared.bed))
+      for (const it of g.items) {
+        due++;
+        if (t[doseKey(it)]) got++;
+      }
+  }
+
+  const heading = day === today ? "Today" : day === today + 1 ? "Tomorrow" : day === today - 1 ? "Yesterday" : WEEKDAYS[date.getDay()];
 
   return (
-    <div className="pt stack">
-      <div className="pt-top">
-        <h1>My eye drops</h1>
+    <div className="pt">
+      <div className="pt-head">
+        <div>
+          <h1>
+            {heading}, {fmtShort(date)}
+          </h1>
+          <p className="mono" aria-live="polite">
+            {all.length ? `${done} of ${all.length} done` : finished ? "Course finished" : "No drops this day"}
+          </p>
+        </div>
         <button className="btn sm" onClick={() => setLarge(!large)} aria-pressed={large}>
-          {large ? "Smaller text" : "Larger text"}
+          Larger text
         </button>
       </div>
 
-      {today < 0 && <div className="notice info">Your drops start on {fmtLong(start)}.</div>}
-      {today >= span.days && <div className="notice info">This plan has finished. Follow your clinic&apos;s advice for what comes next.</div>}
+      {today < 0 && view == null && (
+        <p className="pt-note">
+          Your drops start on {fmtLong(start)}. There is nothing to take until then.
+        </p>
+      )}
+      {finished && (
+        <p className="pt-note">
+          This course of drops ended on {dayName(addDays(start, lastDay))}. Follow your clinic&apos;s advice about what comes next.
+        </p>
+      )}
 
-      <section className="card" aria-labelledby="day-h">
+      {next && (
+        <section className="next" aria-labelledby="next-h">
+          <h2 id="next-h">
+            {nextIsSoon ? "Wait, then" : next.time <= minutes ? "Due now" : "Next"} · <span className="mono">{fmtTime(next.time)}</span>
+          </h2>
+          <div className="next-name">{next.entry.brand}</div>
+          <div>{doseLabel(next)}</div>
+          <CapDot cap={next.med?.cap} named />
+          {nextIsSoon ? (
+            <p className="next-wait" role="timer">
+              Wait <span className="mono">{Math.ceil(waitLeft / 60000)} min</span> so the last drop can soak in.
+            </p>
+          ) : null}
+          <button className="btn next-btn" onClick={() => toggle(next)}>
+            I have put it in
+          </button>
+        </section>
+      )}
+
+      <section className="pt-day" aria-labelledby="day-h">
         <div className="daybar">
-          <button className="btn icon" disabled={day <= 0} onClick={() => setDay(day - 1)} aria-label="Previous day">
+          <button className="btn icon" disabled={day <= 0} onClick={() => setView(day - 1)} aria-label="Previous day">
             ‹
           </button>
-          <div className="daybar-mid">
-            <div id="day-h" className="daybar-day">
-              {day === today ? "Today" : WEEKDAYS[date.getDay()]}, {fmtShort(date)}
-            </div>
-            <div className="small muted" aria-live="polite">
-              {total ? `${done} of ${total} done` : "No drops this day"}
-            </div>
-          </div>
-          <button className="btn icon" disabled={day >= span.days - 1} onClick={() => setDay(day + 1)} aria-label="Next day">
+          <h2 id="day-h">{dayName(date)}</h2>
+          <button className="btn icon" onClick={() => setView(day + 1)} aria-label="Next day" disabled={finished}>
             ›
           </button>
         </div>
-        {total > 0 && (
-          <div className="progress" aria-hidden="true">
-            <span style={{ width: `${(100 * done) / total}%` }} />
-          </div>
-        )}
-        {day !== today && today >= 0 && today < span.days && (
-          <button className="link-btn back-today" onClick={() => setDay(today)}>
+        {day !== Math.max(0, today) && (
+          <button className="link-btn back-today" onClick={() => setView(null)}>
             Back to today
           </button>
         )}
+        {future && all.length > 0 && <p className="pt-note small">You can tick these off on the day.</p>}
         {groups.map(({ time, items }) => (
-          <div key={time} className="time-group">
-            <div className="time-h">
+          <div key={time} className="time-group" role="group" aria-label={fmtTime(time)}>
+            <h3 className="time-h mono">
               {fmtTime(time)}
-              {items.length > 1 && <span> · wait 5 minutes between drops</span>}
-            </div>
-            {items.map(({ entry, index, dose }) => {
-              const key = doseKey(index, dose);
-              const med = medOf(entry);
+              {items.length > 1 && <span> · 5 minutes apart, in this order</span>}
+            </h3>
+            {items.map((it) => {
+              const isDone = !!ticks[doseKey(it)];
+              const label = `${it.entry.brand} at ${fmtTime(time)}, ${EYES[it.entry.eye].long}. ${isDone ? "Done" : "Not done yet"}`;
               return (
-                <DoseButton key={key} entry={entry} med={med} chip={chipStyle(index, med)} done={!!ticks[key]} onToggle={() => toggle(key)} />
+                <div key={doseKey(it)} className={`dose-row ${isDone ? "is-done" : ""} ${next && next.time === time && doseKey(next) === doseKey(it) ? "is-next" : ""}`}>
+                  <div className="dose-text">
+                    <span className="n">{it.entry.brand}</span>
+                    <span className="d">
+                      {doseLabel(it)} {it.med?.cap && <CapDot cap={it.med.cap} named />}
+                    </span>
+                  </div>
+                  <button className="tick" aria-pressed={isDone} aria-label={label} disabled={future} onClick={() => toggle({ ...it, time })}>
+                    {isDone && Icon.check}
+                  </button>
+                </div>
               );
             })}
           </div>
         ))}
       </section>
 
-      {week.due > 0 && (
-        <p className="small muted">
-          Last 7 days: {week.got} of {week.due} doses checked off.
+      {undo && (
+        <div className="toast" role="status">
+          <span>
+            {undo.it.entry.brand} marked {undo.on ? "done" : "not done"}.
+          </span>
+          <button
+            className="link-btn"
+            onClick={() => {
+              setTick(undo.it, !undo.on);
+              setUndo(null);
+              setWaitFrom(null);
+            }}
+          >
+            Undo
+          </button>
+        </div>
+      )}
+
+      {upcoming.length > 0 && (
+        <section className="pt-card" aria-labelledby="up-h">
+          <h2 id="up-h">Coming up</h2>
+          <ul>
+            {upcoming.map((n) => (
+              <li key={n}>{n}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {due > 0 && (
+        <p className="pt-note small">
+          Last {Math.min(7, today - counted)} days: {got} of {due} drops ticked off.
         </p>
       )}
 
-      <Reminders plan={plan} code={code} storeKey={storeKey} />
+      <Reminders plan={shared} id={id} code={code} />
       {!isNative && <InstallTip />}
 
-      <section className="card card-b stack" style={{ gap: 14 }} aria-labelledby="mine-h">
-        <h2 id="mine-h" className="pt-h2">
-          My drops
-        </h2>
+      <section className="pt-card" aria-labelledby="mine-h">
+        <h2 id="mine-h">My drops</h2>
         {shared.entries.map((e, i) => {
-          const med = medOf(e);
+          const med = medOf(shared.formulary, e);
           return (
             <div key={i} className="drug">
               <div className="drug-name">
-                <CapDot cap={med?.cap} /> <b>{e.brand}</b> <span className="muted">{med?.generic}</span>
+                <b>{e.brand}</b> <span>{med?.generic}</span>
               </div>
+              <CapDot cap={med?.cap} named />
               <div>{patientInstruction(e, med?.qhs, start)}</div>
             </div>
           );
         })}
-        <p className="small muted">Follow your eye doctor if their instructions differ from this plan. Your check marks stay on this phone only.</p>
+        <p className="small">Follow your eye doctor if their instructions differ from this plan. Your check marks stay on this phone.</p>
       </section>
     </div>
   );

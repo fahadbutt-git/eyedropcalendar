@@ -4,8 +4,8 @@ import { MONTHS, addDays, fmtShort } from "../../lib/dates.js";
 // Height budget in CSS pixels (7.75 in of printable height at 96 px per inch).
 const PAGE = 745;
 const SIZES = {
-  standard: { header: 78, thead: 32, compactRow: 24, fullRow: 60, cols: 3, dayLabel: 28, dose: 19, instructions: 195, maxWeeks: 5 },
-  large: { header: 92, thead: 42, compactRow: 34, fullRow: 84, cols: 2, dayLabel: 42, dose: 31, instructions: 390, maxWeeks: 2 },
+  standard: { header: 84, thead: 32, compactRow: 26, fullRow: 66, cols: 3, dayLabel: 28, dose: 21, perLine: 5, instructions: 210, maxWeeks: 5 },
+  large: { header: 98, thead: 42, compactRow: 36, fullRow: 92, cols: 2, dayLabel: 42, dose: 32, perLine: 3, instructions: 400, maxWeeks: 2 },
 };
 
 function monthWeeks(year, month) {
@@ -27,13 +27,16 @@ function weeksFrom(start, end) {
 // a page and the plan fills most of its first and last month. Otherwise pages
 // hold whole weeks starting from the week of the start date, spread evenly.
 // The legend and instructions share page 1 when they fit, or get a cover page.
-export function buildPages({ size, start, span, count }) {
+// `peaks` holds each drug's highest number of doses in a day, so drugs with
+// many doses get the extra lines their tick boxes wrap onto.
+export function buildPages({ size, start, span, peaks }) {
+  const count = peaks.length;
   const z = SIZES[size];
   const base = PAGE - z.header - z.thead - 16;
   const legendRows = Math.ceil(count / z.cols);
   const calendarOnly = base - legendRows * z.compactRow;
   const withInstructions = base - legendRows * z.fullRow - z.instructions;
-  const rowNeed = z.dayLabel + count * z.dose;
+  const rowNeed = z.dayLabel + peaks.reduce((h, p) => h + z.dose * Math.max(1, Math.ceil(p / z.perLine)), 0);
   const fitWeeks = Math.max(1, Math.floor(calendarOnly / rowNeed));
 
   let pages = null;

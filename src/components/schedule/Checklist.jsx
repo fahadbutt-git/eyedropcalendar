@@ -1,8 +1,6 @@
 import { WEEKDAYS, addDays, fmtShort } from "../../lib/dates.js";
-import { dosesOnDay } from "../../lib/regimen.js";
+import { EYES, dosesOnDay } from "../../lib/regimen.js";
 import { Boxes, Chip } from "../ui.jsx";
-
-const EYE_WORD = { OD: "right", OS: "left", OU: "both" };
 
 // The same plan as a table: one row per day, one column per drug.
 export default function Checklist({ items, start, days }) {
@@ -14,7 +12,7 @@ export default function Checklist({ items, start, days }) {
           {items.map(({ entry, index, chip }) => (
             <th key={index} scope="col">
               <span className="row" style={{ justifyContent: "center", gap: 6 }}>
-                <Chip n={index + 1} style={chip} /> {entry.brand}, {EYE_WORD[entry.eye]}
+                <Chip n={index + 1} style={chip} /> {entry.brand}, {EYES[entry.eye].long}
               </span>
             </th>
           ))}
@@ -31,7 +29,7 @@ export default function Checklist({ items, start, days }) {
               </th>
               {items.map(({ entry, index }) => {
                 const n = dosesOnDay(entry, day);
-                return <td key={index}>{n ? <Boxes n={n} /> : <span className="muted">none</span>}</td>;
+                return <td key={index}>{n ? <Boxes n={n} /> : <span className="none">none</span>}</td>;
               })}
               <td />
             </tr>
