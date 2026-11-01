@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { codeFromUrl } from "../../lib/share.js";
 
-export default function PatientWelcome({ onCode, codeFromUrl }) {
+// First screen of the phone app before a plan has been opened.
+
+export default function PatientWelcome({ onCode }) {
   const [text, setText] = useState("");
   const [error, setError] = useState("");
   const open = (e) => {

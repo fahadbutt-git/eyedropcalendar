@@ -1,11 +1,15 @@
 // Run with: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { toEntries, newSlot, dosesOnDay, lastDayIndex, sigText, patientInstruction, doseTimes, fmtTime, dropWarnings } from "../src/lib/regimen.js";
+import { toEntries, newSlot, dosesOnDay, lastDayIndex } from "../src/lib/regimen.js";
+import { sigText, patientInstruction } from "../src/lib/wording.js";
+import { doseTimes, fmtTime } from "../src/lib/times.js";
+import { dropWarnings } from "../src/lib/checks.js";
 import { SEED_FORMULARY, DRUG_CLASSES } from "../src/data/formulary.js";
 import { scheduleSpan } from "../src/lib/calendar.js";
 import { buildICS } from "../src/lib/ics.js";
 import { encodeRegimen, decodeRegimen } from "../src/lib/share.js";
+import { cleanFormulary } from "../src/lib/validate.js";
 
 const s = (o) => ({ ...newSlot(), ...o });
 const taper = [{ freq: 4, days: 7 }, { freq: 3, days: 7 }, { freq: 2, days: 7 }, { freq: 1, days: 7 }];
@@ -40,12 +44,12 @@ test("fixed course and delayed start", () => {
 
 test("sig and patient wording", () => {
   const x = s({ brand: "Xalatan", eye: "OU", freq: 1 });
-  assert.equal(sigText(x, "OU", true), "Instill 1 drop in both eyes (OU) once daily at bedtime.");
+  assert.equal(sigText(x, true), "Instill 1 drop in both eyes (OU) once daily at bedtime.");
   assert.equal(patientInstruction(x, true), "1 drop in both eyes, once a day at bedtime.");
   const pf = s({ brand: "Pred Forte", eye: "OS", mode: "taper", steps: taper.slice(0, 2) });
-  assert.equal(sigText(pf, "OS"), "Instill 1 drop in the left eye (OS) 4 times daily for 7 days, then 3 times daily for 7 days, then stop.");
+  assert.equal(sigText(pf), "Instill 1 drop in the left eye (OS) 4 times daily for 7 days, then 3 times daily for 7 days, then stop.");
   const late = s({ brand: "Combigan", eye: "OD", startDay: 3 });
-  assert.equal(sigText(late, "OD", false, new Date(2026, 10, 2)), "Starting Nov 4, instill 1 drop in the right eye (OD) twice daily.");
+  assert.equal(sigText(late, false, new Date(2026, 10, 2)), "Starting Nov 4, instill 1 drop in the right eye (OD) twice daily.");
 });
 
 test("dose times", () => {
@@ -96,4 +100,38 @@ test("formulary entries are complete", () => {
     assert.ok([1, 2, 3, 4, 5, 6, 8].includes(m.freq), m.brand);
   }
   assert.equal(SEED_FORMULARY.find((m) => m.brand === "Simbrinza").lu, "393");
+});
+
+test("malformed or oversized phone links are rejected", () => {
+  const bad = [
+    "", "!!!", "x".repeat(5000),
+    btoa(JSON.stringify({ v: 1, s: "2026-13-40", w: "08:00", b: "22:00", e: [] })),
+    btoa(JSON.stringify({ v: 1, s: "2026-11-02", w: "08:00", b: "22:00", e: [["X", "", "", "solution", 0, "OD", 1, "d", 4, 99999, 1, 0]] })),
+    btoa(JSON.stringify({ v: 1, s: "2026-11-02", w: "08:00", b: "22:00", e: [["X", "", "", "solution", 0, "ZZ", 1, "o", 2, 7, 1, 0]] })),
+  ].map((c) => c.replace(/=+$/, ""));
+  for (const code of bad) {
+    let durationOk = true;
+    try {
+      const plan = decodeRegimen(code);
+      durationOk = plan.entries.every((e) => e.durationDays <= 365);
+    } catch {
+      continue;
+    }
+    assert.ok(durationOk, code);
+  }
+});
+
+test("imported formularies are cleaned", () => {
+  const list = cleanFormulary([
+    { brand: " Test ", generic: "<b>x</b>", cls: ["PGA", "NOPE"], freq: 99, cap: "neon", lu: 123, extra: "dropped" },
+    { brand: "test" },
+    { generic: "no brand" },
+  ]);
+  assert.equal(list.length, 1);
+  assert.deepEqual(list[0].cls, ["PGA"]);
+  assert.equal(list[0].freq, 2);
+  assert.equal(list[0].cap, "");
+  assert.equal(list[0].lu, "");
+  assert.ok(!("extra" in list[0]));
+  assert.equal(cleanFormulary("nonsense"), null);
 });

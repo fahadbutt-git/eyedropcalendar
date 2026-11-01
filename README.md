@@ -2,7 +2,8 @@
 
 A free, open-source tool that helps eye care teams turn a drop regimen into a patient calendar, a prescription and phone reminders in a few clicks.
 
-**Live:** [eyedroptracker.com](https://eyedroptracker.com)
+**Live:** [eyedroptracker.com](https://eyedroptracker.com)  
+**Licence:** Apache 2.0
 
 ## Why
 
@@ -14,7 +15,7 @@ Adherence to glaucoma and post-operative drops is poor, and complex regimens (se
 
 ## How it works
 
-1. **Patient and drops.** Enter the patient, then add each drop and choose the eye: right, left or both. How often and how many drops fill in from the formulary and can be changed. Each drop is ongoing, runs for a set number of days, or tapers.
+1. **Patient and drops.** Enter the patient, then add each drop and choose the eye: right, left or both. How often and how many drops fill in from the formulary and can be changed. Each drop is ongoing, a fixed course of days, or a taper.
 2. **Calendar.** Print a calendar the patient ticks off. A QR code on the sheet opens the plan on their phone.
 3. **Prescription.** Print a prescription with the full sig for every drug.
 
@@ -70,14 +71,16 @@ This is a clinical aid. It does not replace clinical judgement. Verify every pre
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # dosing, tapers, sig text, dose times, alarms, phone link
+npm test           # dosing, tapers, wording, dose times, alarms, links, validation
+npm run lint
 npm run build
-npm run deploy     # publishes the website to GitHub Pages (eyedroptracker.com)
 ```
+
+The website is hosted on Vercel and deploys automatically when `main` is pushed. `vercel.json` sets the security headers (content security policy, no framing, no referrer).
 
 ### Phone app (iOS and Android)
 
-The phone app is the same code wrapped with [Capacitor](https://capacitorjs.com). It adds dose notifications that work without the calendar, and opens plan links from the QR code (`eyedroptracker://p/...`).
+The phone app is for patients. It is the same code wrapped with [Capacitor](https://capacitorjs.com) and always opens the patient view. It adds dose notifications and opens plan links from the QR code (`eyedroptracker://p/...`).
 
 ```bash
 npm run app:android   # builds, syncs and opens Android Studio
@@ -90,19 +93,41 @@ Publishing needs an Apple Developer account (US$99 a year) and a Google Play dev
 
 ```
 src/
-  App.jsx                  clinician steps, patient view and routing
-  config.js                site name, authors and contact email
-  data/formulary.js        default drug list (bump FORMULARY_VERSION when it changes)
-  lib/regimen.js           dosing, tapers, sig text, dose times, duplicate checks
-  lib/calendar.js          schedule length
-  lib/ics.js               calendar alarm file
-  lib/share.js             phone link encoding
-  lib/native.js            phone app notifications and links
-  components/              pages
-tests/                     automated checks of the clinical logic
-android/, ios/             phone app projects
-public/                    icons, web app manifest, offline support, CNAME
+  App.jsx                    routing: clinician steps, patient view, phone app
+  config.js                  name, authors, contact, repository
+  data/formulary.js          default drug list (bump FORMULARY_VERSION when it changes)
+  lib/
+    dates.js                 local calendar dates
+    regimen.js               drop model and doses per day
+    wording.js               prescription sig and patient wording
+    times.js                 suggested dose times
+    checks.js                duplicate therapy warnings
+    calendar.js              how many days a schedule covers
+    doses.js                 doses grouped by time (phone view, alarms, notifications)
+    ics.js                   calendar alarm file
+    share.js                 phone link encoding and decoding
+    validate.js              checks on links, imported files and stored data
+    native.js                phone app notifications and links
+    storage.js, download.js  browser storage and file saving
+  components/
+    drops/                   step 1: patient, drop list, taper editor
+    schedule/                step 2: calendar pages, checklist, legend, instructions
+    rx/                      step 3: prescription form and sheet
+    formulary/               formulary table and editor
+    patient/                 phone view, reminders, install tip, app welcome
+    ui.jsx                   shared small pieces
+tests/                       automated checks
+android/, ios/               phone app projects
+public/                      icons, web app manifest, offline support
 ```
+
+## Security
+
+- No server, accounts, analytics or third-party scripts.
+- Patient details stay in the browser tab and are cleared when it closes.
+- The phone link carries the drug plan only, in the URL fragment, which browsers never send to a server.
+- Links, imported formularies and stored data are validated and size-limited before use.
+- The site sends a strict content security policy and refuses to be framed.
 
 ## Contributing
 
@@ -111,6 +136,10 @@ Issues and pull requests are welcome, especially formulary corrections, translat
 ## Contact
 
 eyedroptracker@gmail.com
+
+## Licence
+
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 ## Authors
 
