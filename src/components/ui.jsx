@@ -81,7 +81,9 @@ export function Choice({ legend, value, options, onChange, hideLegend = false, c
 // Out-of-range input is shown as an error rather than silently changed.
 export function NumberInput({ value, onChange, min = 1, max = 365, label, className = "", ...rest }) {
   const [text, setText] = useState(String(value));
-  useEffect(() => setText(String(value)), [value]);
+  useEffect(() => {
+    setText(String(value));
+  }, [value]);
   const n = Number(text);
   const valid = /^\d+$/.test(text) && n >= min && n <= max;
   return (

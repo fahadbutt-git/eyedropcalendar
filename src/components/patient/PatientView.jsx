@@ -69,7 +69,9 @@ export default function PatientView({ plan: shared, code }) {
       // Without storage the plan simply opens from the link each time.
     }
   }, [code]);
-  useEffect(() => document.body.classList.toggle("large-text", large), [large]);
+  useEffect(() => {
+    document.body.classList.toggle("large-text", large);
+  }, [large]);
   useEffect(() => {
     if (!undo) return;
     const t = setTimeout(() => setUndo(null), 10000);

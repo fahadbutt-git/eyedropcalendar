@@ -97,6 +97,16 @@ class ErrorBoundary extends Component {
       }
       window.location.reload();
     };
+    if (this.props.patient)
+      return (
+        <main className="empty" id="main">
+          <h1>Something went wrong</h1>
+          <p>Your drop plan and check marks are safe on this phone. Tap below to open it again.</p>
+          <button className="btn primary" onClick={() => window.location.reload()}>
+            Open my drops again
+          </button>
+        </main>
+      );
     return (
       <main className="empty" id="main">
         <h1>Something went wrong</h1>
@@ -316,5 +326,5 @@ export default function App() {
       stop();
     };
   }, []);
-  return <ErrorBoundary>{route ? <PatientApp route={route} /> : <ClinicianApp />}</ErrorBoundary>;
+  return <ErrorBoundary patient={!!route}>{route ? <PatientApp route={route} /> : <ClinicianApp />}</ErrorBoundary>;
 }
