@@ -6,15 +6,12 @@ import { encodeRegimen, patientLink } from "../../lib/share.js";
 import { isClockTime } from "../../lib/times.js";
 import { Field, Icon, chipStyle, printSheets } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
-import { useFit } from "../useFit.js";
 import { buildPages } from "./layout.js";
 import Legend from "./Legend.jsx";
 import CalendarGrid from "./CalendarGrid.jsx";
 import DailyChart, { chartPages } from "./DailyChart.jsx";
 import Checklist from "./Checklist.jsx";
 
-// Letter landscape, less the print margins, in CSS pixels.
-const SHEET_WIDTH = 990;
 
 export const PAGE_TYPES = [
   ["calendar", "Month calendar", "A tick box for each dose on a calendar page"],
@@ -43,7 +40,7 @@ function useQrCode(text, enabled) {
 
 // Start date and dose times only change when the new value is complete and
 // valid, so clearing a field can never break the page.
-function Settings({ s, setSettings, span, sheetCount, count, link, print, go }) {
+function Settings({ s, setSettings, span, sheetCount, count, link, qr, print, go }) {
   const [copied, setCopied] = useState(false);
   const [times, setTimes] = useState({ wake: s.wake, bed: s.bed });
   const [startText, setStartText] = useState(s.start);
@@ -136,8 +133,14 @@ function Settings({ s, setSettings, span, sheetCount, count, link, print, go }) 
         {fmtShort(parseISO(s.start))} to {fmtShort(span.end)}, {span.end.getFullYear()} · {span.days} days
       </p>
       <div className="link-box">
-        <h2 className="field-label">Patient phone link</h2>
-        <p className="hint">Holds the drops and dates only, never the patient&apos;s name or health details.</p>
+        <h2 className="field-label">Patient phone reminders</h2>
+        {qr && (
+          <div className="aside-qr">
+            <img src={qr} alt="QR code that opens this drop plan on a phone" />
+            <p>The patient can scan this now with their phone camera, or from the printed page.</p>
+          </div>
+        )}
+        <p className="hint">The link holds the drops and dates only, never the patient&apos;s name or health details.</p>
         <div className="row">
           <button className="btn sm" onClick={copy}>
             {copied ? "Copied" : "Copy link"}
@@ -170,7 +173,6 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
     [entries, formulary, s.start, s.wake, s.bed]
   );
   const qr = useQrCode(link, s.qr);
-  const [fitRef, scale] = useFit(SHEET_WIDTH);
 
   if (!entries.length)
     return (
@@ -184,7 +186,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
     );
 
   const peaks = entries.map((e) => Math.max(...Array.from({ length: span.days }, (_, i) => dosesOnDay(e, i))));
-  const cal = buildPages({ size, start, span, peaks });
+  const cal = buildPages({ size, start, span, peaks, qr: s.qr && !!qr });
   const chart = s.pages.chart ? chartPages({ items, entries, formulary, start, days: span.days, wake: s.wake, bed: s.bed, size }) : [];
   const sheetCount = (s.pages.calendar ? cal.pages.length : 0) + chart.length + (s.pages.checklist ? 1 : 0);
 
@@ -212,7 +214,14 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
           {withQr && (
             <div className="sheet-qr">
               <img src={qr} alt="QR code that opens this drop plan on a phone" />
-              <span>Scan for phone reminders</span>
+              <div>
+                <b>Reminders on your phone</b>
+                <ol>
+                  <li>Open your phone camera</li>
+                  <li>Point it at this square</li>
+                  <li>Tap the link that appears</li>
+                </ol>
+              </div>
             </div>
           )}
         </div>
@@ -232,14 +241,14 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
         sheetCount={sheetCount}
         count={entries.length}
         link={link}
+        qr={qr}
         print={() => printSheets("schedule")}
         go={go}
       />
-      <div className={`sched-print ${size}`} ref={fitRef}>
+      <div className={`sched-print ${size}`}>
         <div className="no-print">
           <Warnings warnings={warnings} compact />
         </div>
-        <div className="sheet-fit" style={{ "--fit": scale }}>
         {s.pages.calendar &&
           cal.pages.map((p, i) => (
             <section className="sheet" key={`cal-${p.title}`}>
@@ -265,7 +274,6 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
             <Checklist items={items} start={start} days={span.days} />
           </section>
         )}
-        </div>
       </div>
     </div>
   );

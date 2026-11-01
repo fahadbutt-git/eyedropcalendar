@@ -162,7 +162,7 @@ details.more[open] summary { margin-bottom: 8px; }
 .drop-n { font-family: var(--mono); font-size: 1.4rem; font-weight: 600; line-height: 1.4; }
 .drop-body { display: grid; gap: 14px; min-width: 0; }
 .drop-head { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
-.drop-head .picker { flex: 1 1 340px; }
+.drop-head .picker { flex: 1 1 20rem; }
 .drop-name { font-size: 1.2rem; font-weight: 700; }
 .drop-generic { font-weight: 400; color: var(--ink-2); font-size: 1rem; }
 .drop-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
@@ -215,15 +215,14 @@ dialog.modal::backdrop { background: rgba(17, 17, 17, 0.55); }
 dialog.modal .card-b { display: grid; gap: 14px; }
 
 /* ── Calendar step (screen) ────────────────────────────────────────── */
-.sched-layout, .rx-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; align-items: start; }
-.rx-layout { grid-template-columns: 340px minmax(0, 1fr); }
+.sched-layout, .rx-layout { display: grid; grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr); gap: 1.75rem; align-items: start; }
+.rx-layout { grid-template-columns: minmax(17rem, 22rem) minmax(0, 1fr); }
 .sched-aside { display: grid; gap: 18px; padding-right: 24px; border-right: 1px solid var(--ink); }
+.aside-qr { display: grid; grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr); gap: 0.75rem; align-items: center; border: 3px solid var(--ink); padding: 0.6rem; }
+.aside-qr img { width: 100%; height: auto; image-rendering: pixelated; display: block; }
+.aside-qr p { font-size: 0.9rem; font-weight: 600; }
 .link-box { display: grid; gap: 8px; border-top: 1px solid var(--ink); padding-top: 16px; }
 .sched-print { display: grid; gap: 24px; min-width: 0; }
-/* Printed pages are previewed at their real width, scaled to fit. */
-.sheet-fit { zoom: var(--fit, 1); display: grid; gap: 24px; justify-content: start; }
-.sched-print .sheet { width: 990px; }
-.rx-print .rx-sheet { width: 816px; max-width: none; }
 .rx-print { min-width: 0; display: grid; gap: 24px; align-content: start; }
 .rx-prescriber { max-width: 8.5in; width: 100%; }
 .ph { color: #767676; font-weight: 400; font-style: italic; }
@@ -231,111 +230,102 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .rx-prescriber .card-b > .field:last-child { grid-column: 1 / -1; }
 
 /* ── Printed sheets (shared) ───────────────────────────────────────── */
-.sheet { background: #fff; border: 1px solid var(--ink); padding: 26px 30px; display: flex; flex-direction: column; font-family: var(--read); font-size: 0.9rem; }
-.sheet-h { display: flex; justify-content: space-between; gap: 16px; align-items: flex-end; border-bottom: 4px solid var(--ink); padding-bottom: 10px; margin-bottom: 12px; }
-.kicker { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
-.sheet-h h2 { font-size: 1.55rem; font-weight: 800; line-height: 1.15; }
-.who { text-align: right; font-size: 0.85rem; line-height: 1.35; }
-.who-name { font-weight: 800; font-size: 1.05rem; }
-.legend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 22px; margin-bottom: 12px; }
-.legend-item { display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: start; line-height: 1.35; }
-.legend-item b { font-size: 1rem; }
-.legend.compact { gap: 4px 22px; margin-bottom: 8px; }
+/* Every size on a sheet is a multiple of --s, which follows the width the
+   sheet has: a desktop window, a tablet, a phone or the printed page. The
+   same rules therefore fit every screen and print without fixed widths. */
+.sched-print, .rx-print { container-type: inline-size; --s: clamp(0.62rem, 1.45cqi, 0.95rem); }
+.sched-print.large { --s: clamp(0.75rem, 1.9cqi, 1.25rem); }
+.sheet { background: #fff; border: 1px solid var(--ink); padding: calc(var(--s) * 1.806) calc(var(--s) * 2.083); display: flex; flex-direction: column; font-family: var(--read); font-size: var(--s); }
+.sheet-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: calc(var(--s) * 0.833) calc(var(--s) * 1.111); align-items: flex-end; border-bottom: calc(var(--s) * 0.278) solid var(--ink); padding-bottom: calc(var(--s) * 0.694); margin-bottom: calc(var(--s) * 0.833); }
+.kicker { font-size: calc(var(--s) * 0.764); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.sheet-h h2 { font-size: calc(var(--s) * 1.667); font-weight: 800; line-height: 1.15; }
+.who { text-align: right; font-size: calc(var(--s) * 0.903); line-height: 1.35; }
+.who-name { font-weight: 800; font-size: calc(var(--s) * 1.042); }
+.sheet-h-right { display: flex; gap: calc(var(--s) * 1.111); align-items: flex-end; margin-left: auto; }
+/* The QR box is the one thing on the page that should catch the eye. */
+.sheet-qr { display: grid; grid-template-columns: auto auto; gap: calc(var(--s) * 0.694); align-items: center; border: calc(var(--s) * 0.208) solid var(--ink); padding: calc(var(--s) * 0.556) calc(var(--s) * 0.833) calc(var(--s) * 0.556) calc(var(--s) * 0.556); background: #fff; }
+.sheet-qr img { width: calc(var(--s) * 7.222); height: calc(var(--s) * 7.222); image-rendering: pixelated; display: block; }
+.sheet-qr b { display: block; font-size: calc(var(--s) * 1.042); line-height: 1.2; margin-bottom: calc(var(--s) * 0.278); }
+.sheet-qr ol { margin: 0; padding-left: calc(var(--s) * 1.111); font-size: calc(var(--s) * 0.799); line-height: 1.35; }
+.legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--s) * 17.361)), 1fr)); gap: calc(var(--s) * 0.556) calc(var(--s) * 1.528); margin-bottom: calc(var(--s) * 0.833); }
+.legend-item { display: grid; grid-template-columns: calc(var(--s) * 1.667) minmax(0, 1fr); gap: calc(var(--s) * 0.556); align-items: start; line-height: 1.35; }
+.legend-item b { font-size: calc(var(--s) * 1.042); }
+.legend.compact { gap: calc(var(--s) * 0.278) calc(var(--s) * 1.528); margin-bottom: calc(var(--s) * 0.556); grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--s) * 13.889)), 1fr)); }
 .legend.compact .legend-item { align-items: center; }
 .legend-eye { font-weight: 700; }
-.legend-times { font-family: var(--mono); font-size: 0.8rem; }
-.legend-sub { font-size: 0.8rem; color: var(--ink-2); }
-.chip { width: 22px; height: 22px; display: inline-grid; place-items: center; font-weight: 800; font-size: 0.75rem; flex: none; border-radius: 3px; }
+.legend-times, .legend-sub { font-size: calc(var(--s) * 0.833); }
+.legend-sub { color: var(--ink-2); }
+.sheet .cap-name { font-size: inherit; }
+.sheet .cap, .rx-sheet .cap { width: 1em; height: 1em; }
+.chip { width: calc(var(--s) * 1.528); height: calc(var(--s) * 1.528); display: inline-grid; place-items: center; font-weight: 800; font-size: calc(var(--s) * 0.764); font-style: normal; flex: none; border-radius: 3px; }
 
 .cal-wrap { flex: 1; min-height: 0; }
 .cal { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
-.cal th { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px; border: 2px solid var(--ink); background: var(--paper); }
-.cal td { border: 1.5px solid var(--ink); vertical-align: top; padding: 4px 6px 5px; height: 96px; }
+.cal th { font-size: calc(var(--s) * 0.764); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: calc(var(--s) * 0.347); border: 2px solid var(--ink); background: var(--paper); overflow: hidden; }
+.cal td { border: 1.5px solid var(--ink); vertical-align: top; padding: calc(var(--s) * 0.278) calc(var(--s) * 0.347) calc(var(--s) * 0.347); height: calc(var(--s) * 6.667); overflow: hidden; }
 .cal td.out { background: var(--paper); }
 .cal td.inactive { background: #f7f6f2; }
 .cal td.inactive .dnum { color: #5c5c5c; }
-.cal .dnum { font-weight: 800; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; line-height: 1.3; }
-.cal .flag { font-size: 0.65rem; font-weight: 800; color: #fff; background: var(--ink); padding: 0 5px; text-transform: uppercase; letter-spacing: 0.06em; }
-.cal .dose { display: grid; grid-template-columns: 18px minmax(0, 1fr); align-items: center; column-gap: 6px; font-size: 0.75rem; line-height: 1.15; margin-top: 4px; }
-.cal .dose .chip { width: 18px; height: 18px; font-size: 0.65rem; border-radius: 2px; }
-.cal .change { grid-column: 2; font-size: 0.65rem; font-weight: 700; color: var(--ink-2); }
-.cal .stop { font-size: 0.75rem; font-weight: 800; color: var(--maroon); }
-.boxes { display: inline-flex; flex-wrap: wrap; gap: 3px; vertical-align: middle; }
-.boxes i { width: 13px; height: 13px; border: 1.5px solid var(--ink); display: inline-block; background: #fff; }
+.cal .dnum { font-weight: 800; font-size: calc(var(--s) * 0.972); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0 calc(var(--s) * 0.278); line-height: 1.3; }
+.cal .flag { font-size: calc(var(--s) * 0.66); font-weight: 800; color: #fff; background: var(--ink); padding: 0 calc(var(--s) * 0.347); text-transform: uppercase; letter-spacing: 0.06em; }
+.cal .dose { display: grid; grid-template-columns: calc(var(--s) * 1.25) minmax(0, 1fr); align-items: center; column-gap: calc(var(--s) * 0.417); font-size: calc(var(--s) * 0.764); line-height: 1.15; margin-top: calc(var(--s) * 0.278); }
+.cal .dose .chip { width: calc(var(--s) * 1.25); height: calc(var(--s) * 1.25); font-size: calc(var(--s) * 0.66); border-radius: 2px; }
+.cal .change { grid-column: 2; font-size: calc(var(--s) * 0.66); font-weight: 700; color: var(--ink-2); }
+.cal .stop { font-size: calc(var(--s) * 0.764); font-weight: 800; color: var(--maroon); }
+.boxes { display: inline-flex; flex-wrap: wrap; gap: calc(var(--s) * 0.208); vertical-align: middle; }
+.boxes i { width: calc(var(--s) * 0.903); height: calc(var(--s) * 0.903); border: 1.5px solid var(--ink); display: inline-block; background: #fff; }
 
-.week-band { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 24px; padding: 8px 12px; margin-bottom: 10px; background: var(--ink); color: #fff; font-size: 0.95rem; font-weight: 700; }
+.week-band { list-style: none; display: flex; flex-wrap: wrap; gap: calc(var(--s) * 0.278) calc(var(--s) * 1.667); padding: calc(var(--s) * 0.556) calc(var(--s) * 0.833); margin-bottom: calc(var(--s) * 0.694); background: var(--ink); color: #fff; font-size: calc(var(--s) * 0.972); font-weight: 700; }
 .chart { width: 100%; border-collapse: collapse; table-layout: fixed; border: 2px solid var(--ink); }
-.chart th, .chart td { border-left: 1px solid var(--ink); }
-.chart thead th { padding: 6px 4px; font-size: 0.9rem; font-weight: 800; text-align: center; border-bottom: 3px solid var(--ink); background: var(--paper); line-height: 1.15; }
-.chart thead th span { display: block; font-weight: 400; font-size: 0.8rem; }
+.chart th, .chart td { border-left: 1px solid var(--ink); overflow: hidden; }
+.chart thead th { padding: calc(var(--s) * 0.417) calc(var(--s) * 0.278); font-size: calc(var(--s) * 0.903); font-weight: 800; text-align: center; border-bottom: 3px solid var(--ink); background: var(--paper); line-height: 1.15; }
+.chart thead th span { display: block; font-weight: 400; font-size: calc(var(--s) * 0.799); }
 .chart thead th.off { color: #5c5c5c; }
-.chart .c-time { width: 5.5rem; text-align: left; padding: 4px 8px; font-weight: 600; font-size: 0.9rem; }
-.chart .c-drop { width: 15rem; text-align: left; padding: 4px 8px; }
-.chart .c-drop-in { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; line-height: 1.2; }
-.chart tbody tr { border-bottom: 1px dotted var(--line); height: 40px; }
+.chart .c-time { width: 11%; text-align: left; padding: calc(var(--s) * 0.278) calc(var(--s) * 0.556); font-weight: 600; font-size: calc(var(--s) * 0.903); }
+.chart .c-drop { width: 27%; text-align: left; padding: calc(var(--s) * 0.278) calc(var(--s) * 0.556); }
+.chart .c-drop-in { display: flex; align-items: center; gap: calc(var(--s) * 0.556); font-size: calc(var(--s) * 0.833); line-height: 1.2; }
+.chart tbody tr { border-bottom: 1px dotted var(--line); height: calc(var(--s) * 2.778); }
 .chart tbody tr.end { border-bottom: 2px solid var(--ink); }
 .chart td.due, .chart td.none { text-align: center; vertical-align: middle; }
 .chart td.none { background: #f7f6f2; }
-.chart .box { display: inline-block; width: 28px; height: 28px; border: 2.5px solid var(--ink); background: #fff; }
-.chart-foot { margin-top: 10px; font-size: 0.85rem; }
+.chart .box { display: inline-block; width: calc(var(--s) * 1.944); height: calc(var(--s) * 1.944); border: calc(var(--s) * 0.174) solid var(--ink); background: #fff; }
+.chart-foot { margin-top: calc(var(--s) * 0.694); font-size: calc(var(--s) * 0.833); }
 
-.tbl-sched { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-.tbl-sched th, .tbl-sched td { border: 1px solid var(--ink); padding: 5px 8px; font-size: 0.8rem; text-align: center; }
+.tbl-sched { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: calc(var(--s) * 0.278); }
+.tbl-sched th, .tbl-sched td { border: 1px solid var(--ink); padding: calc(var(--s) * 0.347) calc(var(--s) * 0.556); font-size: calc(var(--s) * 0.799); text-align: center; overflow-wrap: anywhere; }
 .tbl-sched thead th { background: var(--paper); font-weight: 700; }
-.tbl-sched tbody th { text-align: left; font-weight: 600; white-space: nowrap; }
-.tbl-sched .boxes i { width: 15px; height: 15px; }
+.tbl-sched tbody th { text-align: left; font-weight: 600; }
+.tbl-sched .boxes i { width: calc(var(--s) * 1.042); height: calc(var(--s) * 1.042); }
 .tbl-sched .none { color: #5c5c5c; }
 
-.sheet-h-right { display: flex; gap: 16px; align-items: flex-end; }
-.sheet-qr { display: grid; justify-items: end; gap: 2px; font-size: 0.65rem; font-weight: 700; white-space: nowrap; }
-.sheet-qr img { width: 72px; height: 72px; image-rendering: pixelated; }
-
-/* Large print for low vision: bigger type, 9 mm boxes, eye still written. */
-.sched-print.large .sheet { font-size: 1.15rem; }
-.sched-print.large .sheet-h h2 { font-size: 2rem; }
-.sched-print.large .legend { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; }
-.sched-print.large .legend-item { grid-template-columns: 32px 1fr; }
-.sched-print.large .chip { width: 30px; height: 30px; font-size: 1rem; }
-.sched-print.large .cal th { font-size: 1rem; padding: 8px; }
-.sched-print.large .cal td { border-width: 2px; height: 160px; }
-.sched-print.large .cal .dnum { font-size: 1.4rem; }
-.sched-print.large .cal .dose { font-size: 1rem; grid-template-columns: 26px minmax(0, 1fr); column-gap: 8px; margin-top: 6px; }
-.sched-print.large .cal .dose .chip { width: 26px; height: 26px; font-size: 0.9rem; }
-.sched-print.large .boxes { gap: 4px; }
-.sched-print.large .boxes i { width: 22px; height: 22px; border-width: 2px; }
-.sched-print.large .chart tbody tr { height: 56px; }
-.sched-print.large .chart .c-drop { width: 18rem; font-size: 1rem; }
-.sched-print.large .chart .c-time { width: 7rem; font-size: 1.1rem; }
-.sched-print.large .chart thead th { font-size: 1.1rem; }
-.sched-print.large .chart .box { width: 36px; height: 36px; border-width: 3px; }
-.sched-print.large .week-band { font-size: 1.2rem; }
-.sched-print.large .tbl-sched th, .sched-print.large .tbl-sched td { font-size: 1.05rem; padding: 8px; }
-.sched-print.large .tbl-sched .boxes i { width: 22px; height: 22px; }
+/* Large print for low vision: --s is larger, and the calendar cell is taller. */
+.sched-print.large .cal td { border-width: 2px; height: calc(var(--s) * 7.639); }
+.sched-print.large .boxes i, .sched-print.large .chart .box { border-width: 2px; }
 
 /* ── Prescription ──────────────────────────────────────────────────── */
 .rx-items { display: grid; gap: 12px; }
 .rx-item-row { display: grid; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--line-2); }
 .rx-item-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .rx-item-row.off b { color: var(--ink-3); text-decoration: line-through; }
-.rx-sheet { background: #fff; border: 1px solid var(--ink); width: 100%; max-width: 8.5in; padding: 0.6in 0.65in; display: flex; flex-direction: column; font-size: 0.875rem; }
-.rx-head { display: flex; justify-content: space-between; gap: 20px; border-bottom: 3px solid var(--ink); padding-bottom: 12px; }
-.rx-head .prescriber b { font-size: 1.1rem; display: block; }
-.rx-head .clinic { text-align: right; font-size: 0.8rem; }
+.rx-sheet { background: #fff; border: 1px solid var(--ink); width: 100%; max-width: 8.5in; padding: calc(var(--s) * 4.028) calc(var(--s) * 4.306); display: flex; flex-direction: column; font-size: calc(var(--s) * 0.97); }
+.rx-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: calc(var(--s) * 0.833) calc(var(--s) * 1.389); border-bottom: 3px solid var(--ink); padding-bottom: calc(var(--s) * 0.833); }
+.rx-head .prescriber b { font-size: 1.25em; display: block; }
+.rx-head .clinic { text-align: right; font-size: 0.92em; }
 .rx-head .clinic-name { font-weight: 700; }
-.rx-pt { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; padding: 14px 0; border-bottom: 1px solid var(--ink); }
-.rx-pt .lbl { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; display: block; color: var(--ink-2); }
-.rx-symbol { font-family: Georgia, "Times New Roman", serif; font-size: 2.2rem; font-weight: 700; font-style: italic; margin: 14px 0 4px; }
-.rx-item { padding: 10px 0 12px; border-bottom: 1px dashed var(--line); display: grid; gap: 4px; }
-.rx-item .name { font-weight: 700; font-size: 1rem; }
-.rx-item .meta { display: flex; gap: 24px; flex-wrap: wrap; font-size: 0.8rem; }
-.rx-notes { margin-top: 12px; }
-.rx-foot { margin-top: auto; padding-top: 48px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px; }
-.sig-block { display: grid; gap: 2px; justify-items: start; }
-.sig-img { height: 56px; width: auto; max-width: 280px; }
-.sig-pad, .sig-saved { display: grid; gap: 8px; }
+.rx-pt { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12em), 1fr)); gap: 0.6em 1.7em; padding: 1em 0; border-bottom: 1px solid var(--ink); }
+.rx-pt .lbl { font-size: 0.8em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; display: block; color: var(--ink-2); }
+.rx-symbol { font-family: Georgia, "Times New Roman", serif; font-size: 2.5em; font-weight: 700; font-style: italic; margin: 0.4em 0 0.1em; }
+.rx-item { padding: 0.7em 0 0.85em; border-bottom: 1px dashed var(--line); display: grid; gap: 0.3em; }
+.rx-item .name { font-weight: 700; font-size: 1.15em; }
+.rx-item .meta { display: flex; gap: 0.4em 1.7em; flex-wrap: wrap; font-size: 0.92em; }
+.rx-notes { margin-top: 0.85em; }
+.rx-foot { margin-top: auto; padding-top: 3.4em; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1.7em; }
+.sig-block { display: grid; gap: 2px; justify-items: start; width: min(100%, 20em); }
+.sig-img { height: 4em; width: auto; max-width: 100%; }
+.sig-pad, .sig-saved { display: grid; gap: 0.5rem; }
 .sig-pad canvas { width: 100%; aspect-ratio: 480 / 150; border: 1px dashed var(--ink); background: #fff; touch-action: none; cursor: crosshair; }
-.sig-saved img { max-width: 100%; height: 80px; border: 1px solid var(--line-2); background: #fff; }
-.sig-line { width: 280px; max-width: 100%; border-top: 1.5px solid var(--ink); padding-top: 5px; font-size: 0.75rem; }
+.sig-saved img { max-width: 100%; height: 5rem; border: 1px solid var(--line-2); background: #fff; }
+.sig-line { width: 100%; border-top: 1.5px solid var(--ink); padding-top: 0.35em; font-size: 0.85em; }
 
 /* ── Patient phone view ────────────────────────────────────────────── */
 .pt { max-width: 560px; margin: 0 auto; width: 100%; display: grid; gap: 18px; font-family: var(--read); font-size: 1.1rem; }
@@ -435,8 +425,6 @@ dialog.modal .card-b { display: grid; gap: 14px; }
   .cal td, .sched-print.large .cal td { height: auto; }
   .cal tbody tr { height: var(--row-h, auto); }
   .cal, .chart { min-width: 0; }
-  .sheet-fit { zoom: 1; display: block; }
-  .sched-print .sheet, .rx-print .rx-sheet { width: auto; }
   .cal-wrap { padding-bottom: 4px; }
   .rx-sheet { page: rx; border: 0; padding: 0; min-height: 10in; max-width: none; }
   body.print-rx .sched-print, body.print-schedule .rx-print { display: none !important; }

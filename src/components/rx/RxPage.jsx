@@ -3,7 +3,6 @@ import { Field, Icon, printSheets } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
 import PrescriptionSheet from "./PrescriptionSheet.jsx";
 import SignaturePad from "./SignaturePad.jsx";
-import { useFit } from "../useFit.js";
 import { usePersistentState } from "../../lib/storage.js";
 
 // Every prescriber is a physician, so "Dr." is added unless already typed.
@@ -112,7 +111,6 @@ function ItemRow({ entry, med, opt, setOpt }) {
 
 export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, rx, setRx, start, warnings, go }) {
   const [signature, setSignature] = usePersistentState("edt.signature.v1", "", { check: isSignature });
-  const [fitRef, scale] = useFit(816);
   if (!entries.length)
     return (
       <div className="card card-b empty">
@@ -182,8 +180,7 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
           {Icon.print} Print prescription
         </button>
       </aside>
-      <div className="rx-print" ref={fitRef}>
-        <div className="sheet-fit" style={{ "--fit": scale }}>
+      <div className="rx-print">
         <PrescriptionSheet
           items={items}
           prescriber={{ ...prescriber, name: drName(prescriber.name) }}
@@ -193,7 +190,6 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
           start={start}
           signature={rx.esign ? signature : ""}
         />
-        </div>
         <div className="no-print rx-prescriber">
           <PrescriberForm prescriber={prescriber} setPrescriber={setPrescriber} signature={signature} setSignature={setSignature} />
         </div>
