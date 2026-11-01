@@ -48,7 +48,11 @@ export default function DropRow({ index, drop, formulary, startDate, update, rem
               autoFocus
               onPick={(brand) => {
                 setChanging(false);
-                if (brand !== name) update({ brand, ...freshPlan(formulary.find((m) => m.brand === brand)) });
+                // A fixed course or taper is kept when the drug changes, so a
+                // plan is never silently dropped. An ongoing drop takes the new
+                // drug's usual frequency.
+                if (brand !== name)
+                  update(drop.mode === "ongoing" ? { brand, freq: formulary.find((m) => m.brand === brand)?.freq ?? drop.freq } : { brand });
               }}
               onCancel={() => setChanging(false)}
             />

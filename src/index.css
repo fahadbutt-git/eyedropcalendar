@@ -25,7 +25,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-padding-block: 6rem; }
 html, body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 100%; line-height: 1.5; }
-#root { min-height: 100vh; display: flex; flex-direction: column; }
+#root { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
 button, input, select, textarea { font: inherit; color: inherit; }
 a { color: var(--navy); text-underline-offset: 3px; }
 a:hover { color: var(--ink); }
@@ -35,6 +35,8 @@ a:hover { color: var(--ink); }
 .skip:focus { left: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .mono { font-variant-numeric: tabular-nums; }
+.muted { color: var(--ink-3); }
+.gen { color: var(--ink-2); }
 .small { font-size: 0.875rem; }
 .hint { display: block; font-size: 0.875rem; color: var(--ink-3); font-weight: 400; }
 .right { text-align: right; }
@@ -89,7 +91,7 @@ input, select, textarea, button { max-width: 100%; }
 .input:focus-visible, .select:focus-visible, .textarea:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
 .input[aria-invalid="true"], .input.invalid { border: 2px solid var(--maroon); }
 .select:disabled, .input:disabled { background: var(--paper); color: var(--ink-3); }
-.input.sm, .select.sm { min-height: 40px; padding: 6px 8px; font-size: 0.95rem; }
+.input.sm, .select.sm { min-height: 2.5rem; padding: 0.375rem 0.5rem; font-size: 1rem; }
 .textarea { resize: vertical; }
 .num { width: 4.5rem; text-align: center; font-family: var(--mono); }
 .num-wrap { display: inline-flex; flex-direction: column; gap: 2px; }
@@ -189,7 +191,8 @@ details.more[open] summary { margin-bottom: 8px; }
 .taper-presets { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; font-size: 0.9rem; }
 .taper-presets .link-btn { font-size: 0.9rem; font-weight: 500; }
 .table-wrap { overflow-x: auto; position: relative; }
-.taper-table { width: 100%; border-collapse: collapse; min-width: 560px; }
+.taper-table { width: 100%; border-collapse: collapse; }
+.taper-table .select.sm { min-width: 0; width: 100%; }
 .taper-table th { text-align: left; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 12px; border-bottom: 1px solid var(--ink); }
 .taper-table td { padding: 4px 12px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
 .stop-row td { color: var(--maroon); border-bottom: 0; }
@@ -233,17 +236,17 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 /* Every size on a sheet is a multiple of --s, which follows the width the
    sheet has: a desktop window, a tablet, a phone or the printed page. The
    same rules therefore fit every screen and print without fixed widths. */
-.sched-print, .rx-print { container-type: inline-size; --s: clamp(0.62rem, 1.45cqi, 0.95rem); }
-.sched-print.large { --s: clamp(0.75rem, 1.9cqi, 1.25rem); }
+.sched-print, .rx-print { container-type: inline-size; --s: 0.9rem; --s: clamp(0.7rem, 1.45cqi, 0.95rem); }
+.sched-print.large { --s: 1.15rem; --s: clamp(0.8rem, 1.9cqi, 1.25rem); }
 .sheet { background: #fff; border: 1px solid var(--ink); padding: calc(var(--s) * 1.806) calc(var(--s) * 2.083); display: flex; flex-direction: column; font-family: var(--read); font-size: var(--s); }
 .sheet-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: calc(var(--s) * 0.833) calc(var(--s) * 1.111); align-items: flex-end; border-bottom: calc(var(--s) * 0.278) solid var(--ink); padding-bottom: calc(var(--s) * 0.694); margin-bottom: calc(var(--s) * 0.833); }
 .kicker { font-size: calc(var(--s) * 0.764); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
 .sheet-h h2 { font-size: calc(var(--s) * 1.667); font-weight: 800; line-height: 1.15; }
 .who { text-align: right; font-size: calc(var(--s) * 0.903); line-height: 1.35; }
 .who-name { font-weight: 800; font-size: calc(var(--s) * 1.042); }
-.sheet-h-right { display: flex; gap: calc(var(--s) * 1.111); align-items: flex-end; margin-left: auto; }
+.sheet-h-right { flex-wrap: wrap; justify-content: flex-end; max-width: 100%; display: flex; gap: calc(var(--s) * 1.111); align-items: flex-end; margin-left: auto; }
 /* The QR box is the one thing on the page that should catch the eye. */
-.sheet-qr { display: grid; grid-template-columns: auto auto; gap: calc(var(--s) * 0.694); align-items: center; border: calc(var(--s) * 0.208) solid var(--ink); padding: calc(var(--s) * 0.556) calc(var(--s) * 0.833) calc(var(--s) * 0.556) calc(var(--s) * 0.556); background: #fff; }
+.sheet-qr { display: grid; grid-template-columns: auto minmax(0, 1fr); max-width: 100%; gap: calc(var(--s) * 0.694); align-items: center; border: calc(var(--s) * 0.208) solid var(--ink); padding: calc(var(--s) * 0.556) calc(var(--s) * 0.833) calc(var(--s) * 0.556) calc(var(--s) * 0.556); background: #fff; }
 .sheet-qr img { width: calc(var(--s) * 7.222); height: calc(var(--s) * 7.222); image-rendering: pixelated; display: block; }
 .sheet-qr b { display: block; font-size: calc(var(--s) * 1.042); line-height: 1.2; margin-bottom: calc(var(--s) * 0.278); }
 .sheet-qr ol { margin: 0; padding-left: calc(var(--s) * 1.111); font-size: calc(var(--s) * 0.799); line-height: 1.35; }
@@ -281,7 +284,7 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .chart thead th { padding: calc(var(--s) * 0.417) calc(var(--s) * 0.278); font-size: calc(var(--s) * 0.903); font-weight: 800; text-align: center; border-bottom: 3px solid var(--ink); background: var(--paper); line-height: 1.15; }
 .chart thead th span { display: block; font-weight: 400; font-size: calc(var(--s) * 0.799); }
 .chart thead th.off { color: #5c5c5c; }
-.chart .c-time { width: 11%; text-align: left; padding: calc(var(--s) * 0.278) calc(var(--s) * 0.556); font-weight: 600; font-size: calc(var(--s) * 0.903); }
+.chart .c-time { width: 11%; text-align: left; white-space: normal; overflow-wrap: anywhere; padding: calc(var(--s) * 0.278) calc(var(--s) * 0.556); font-weight: 600; font-size: calc(var(--s) * 0.903); }
 .chart .c-drop { width: 27%; text-align: left; padding: calc(var(--s) * 0.278) calc(var(--s) * 0.556); }
 .chart .c-drop-in { display: flex; align-items: center; gap: calc(var(--s) * 0.556); font-size: calc(var(--s) * 0.833); line-height: 1.2; }
 .chart tbody tr { border-bottom: 1px dotted var(--line); height: calc(var(--s) * 2.778); }
@@ -333,7 +336,7 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .pt h2 { font-size: 1.2rem; font-weight: 800; }
 .pt .lede { margin-top: 6px; }
 .pt-steps { padding-left: 22px; display: grid; gap: 6px; }
-.pt-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; border-bottom: 4px solid var(--ink); padding-bottom: 10px; }
+.pt-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; border-bottom: 4px solid var(--ink); padding-bottom: 10px; }
 .pt-note { background: var(--paper); padding: 12px 14px; }
 .pt-card { display: grid; gap: 12px; border-top: 3px solid var(--ink); padding-top: 14px; }
 .next { background: var(--navy); color: #fff; padding: 18px; display: grid; gap: 8px; }
@@ -356,11 +359,12 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .dose-text { display: grid; gap: 2px; }
 .dose-text .n { font-weight: 800; font-size: 1.2rem; }
 .dose-text .d { font-size: 1rem; }
+.dose-text .missed { font-size: 0.95rem; font-weight: 700; color: var(--maroon); }
 .dose-row.is-done .n { text-decoration: line-through; text-decoration-thickness: 2px; }
 .tick { width: 56px; height: 56px; border: 3px solid var(--ink); background: #fff; display: grid; place-items: center; cursor: pointer; color: #fff; }
 .tick[aria-pressed="true"] { background: var(--ink); }
 .tick:disabled { border-style: dashed; cursor: not-allowed; }
-.toast { position: sticky; bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--ink); color: #fff; padding: 6px 8px 6px 16px; }
+.toast { position: sticky; bottom: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; font-size: 1rem; background: var(--ink); color: #fff; padding: 6px 8px 6px 16px; }
 .toast .link-btn { color: #fff; }
 .pt-card ul { padding-left: 20px; }
 .drug { display: grid; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--line-2); }
@@ -419,13 +423,20 @@ dialog.modal .card-b { display: grid; gap: 14px; }
   main { padding: 0; max-width: none; }
   .sched-layout, .rx-layout { display: block; }
   .sched-print { display: block; }
-  .sheet { border: 0; padding: 0; height: 7.75in; break-after: page; break-inside: avoid; overflow: hidden; }
-  .sheet.flow { height: auto; overflow: visible; }
+  /* Pages are sized to fit, and if an estimate is ever short the extra week
+     moves to the next sheet (with its day headings repeated) rather than
+     being cut off. Nothing on a sheet is ever hidden. */
+  .sheet { border: 0; padding: 0; min-height: 0; height: auto; break-after: page; overflow: visible; }
+  .cal thead, .chart thead, .tbl-sched thead { display: table-header-group; }
+  .cal tbody tr, .chart tbody tr, .tbl-sched tbody tr { break-inside: avoid; }
   .sheet:last-child { break-after: auto; }
   .cal td, .sched-print.large .cal td { height: auto; }
   .cal tbody tr { height: var(--row-h, auto); }
   .cal, .chart { min-width: 0; }
   .cal-wrap { padding-bottom: 4px; }
+  /* On paper the scale is fixed in inches, whatever the browser's text size. */
+  .sched-print, .rx-print { --s: 0.15in; }
+  .sched-print.large { --s: 0.195in; }
   .rx-sheet { page: rx; border: 0; padding: 0; min-height: 10in; max-width: none; }
   body.print-rx .sched-print, body.print-schedule .rx-print { display: none !important; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

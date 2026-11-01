@@ -76,9 +76,9 @@ export function Choice({ legend, value, options, onChange, hideLegend = false, c
   );
 }
 
-// A whole number field. It keeps what is typed while typing, so clearing
-// "7" and typing "21" gives 21, and only commits a value inside the range.
-// Out-of-range input is shown as an error rather than silently changed.
+// A whole number field. What is typed is only saved when the field is left
+// or Enter is pressed, so typing "400" can never save "40" on the way. A
+// number outside the range is not saved and stays marked until corrected.
 export function NumberInput({ value, onChange, min = 1, max = 365, label, className = "", ...rest }) {
   const [text, setText] = useState(String(value));
   useEffect(() => {
@@ -86,6 +86,7 @@ export function NumberInput({ value, onChange, min = 1, max = 365, label, classN
   }, [value]);
   const n = Number(text);
   const valid = /^\d+$/.test(text) && n >= min && n <= max;
+  const commit = () => valid && n !== value && onChange(n);
   return (
     <span className="num-wrap">
       <input
@@ -94,18 +95,14 @@ export function NumberInput({ value, onChange, min = 1, max = 365, label, classN
         aria-label={label}
         aria-invalid={!valid}
         value={text}
-        onChange={(e) => {
-          const t = e.target.value.replace(/[^\d]/g, "").slice(0, 3);
-          setText(t);
-          const v = Number(t);
-          if (t && v >= min && v <= max) onChange(v);
-        }}
-        onBlur={() => !valid && setText(String(value))}
+        onChange={(e) => setText(e.target.value.replace(/[^\d]/g, "").slice(0, 3))}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === "Enter" && commit()}
         {...rest}
       />
       {!valid && (
         <span className="num-error" role="alert">
-          {min} to {max}
+          Not saved: enter {min} to {max}
         </span>
       )}
     </span>

@@ -10,7 +10,7 @@ import { scheduleSpan, courseLastDay } from "../src/lib/calendar.js";
 import { buildICS } from "../src/lib/ics.js";
 import { encodeRegimen, decodeRegimen, codeFromUrl } from "../src/lib/share.js";
 import { cleanFormulary } from "../src/lib/validate.js";
-import { doseGroups, upcomingReminders } from "../src/lib/doses.js";
+import { doseGroups, upcomingReminders, doseDayIndex, minutesInto, nextDose } from "../src/lib/doses.js";
 import { planId } from "../src/lib/hash.js";
 import { changeNotes } from "../src/lib/changes.js";
 
@@ -85,8 +85,10 @@ test("calendar file has one alarm per dose time", () => {
   const e = toEntries([s({ brand: "Xalatan", freq: 1 }), s({ brand: "Cosopt", freq: 2 })]);
   const ics = buildICS({ entries: e, formulary: SEED_FORMULARY, start: new Date(2026, 10, 2), wake: "08:00", bed: "22:00", from: new Date(2026, 10, 1) });
   // Ongoing drops repeat daily with no end date.
-  assert.equal((ics.match(/BEGIN:VEVENT/g) || []).length, 3);
-  assert.equal((ics.match(/RRULE:FREQ=DAILY/g) || []).length, 3);
+  // Three repeating dose alarms for six months, plus one alert to renew them.
+  assert.equal((ics.match(/BEGIN:VEVENT/g) || []).length, 4);
+  assert.equal((ics.match(/RRULE:FREQ=DAILY;UNTIL=20270502T235900/g) || []).length, 3);
+  assert.match(ics, /Renew your eye drop alarms/);
   assert.match(ics, /DTSTART:20261102T220000/);
   assert.match(ics, /DTSTAMP:\d{8}T\d{6}Z/);
 });
@@ -221,6 +223,10 @@ test("pasted links are recognised even when wrapped or encoded", () => {
   assert.equal(codeFromUrl(url.replace("#", "%23")), code);
   assert.equal(codeFromUrl(code), code);
   assert.equal(codeFromUrl("hello"), null);
+  assert.equal(codeFromUrl("> " + url.slice(0, 30) + "\n> " + url.slice(30)), code);
+  assert.equal(codeFromUrl(url.slice(0, 30) + "=\n" + url.slice(30)), code);
+  assert.equal(codeFromUrl("Your plan: " + url + " Reply STOP to opt out"), code);
+  assert.equal(codeFromUrl(url.slice(0, 50) + "\u200B" + url.slice(50)), code);
 });
 
 test("safety checks", () => {
@@ -245,4 +251,52 @@ test("change notes name the day a drop changes or stops", () => {
 test("a warning that applies to both eyes is shown once", () => {
   const w = dropWarnings([s({ brand: "Azarga", eye: "OU" }), s({ brand: "Simbrinza", eye: "OU" })], SEED_FORMULARY, DRUG_CLASSES);
   assert.deepEqual(w, ["Azarga and Simbrinza both contain a carbonic anhydrase inhibitor (both eyes)."]);
+});
+
+test("links carry a check code: any change is refused", () => {
+  const code = encodeRegimen({ entries: toEntries([s({ brand: "Xalatan", freq: 1 })]), formulary: SEED_FORMULARY, start: "2026-11-02", wake: "08:00", bed: "22:00", nonce: "abcd1234" });
+  assert.doesNotThrow(() => decodeRegimen(code));
+  const o = JSON.parse(Buffer.from(code, "base64url").toString());
+  o.e[0][8] = 4;
+  assert.throws(() => decodeRegimen(Buffer.from(JSON.stringify(o)).toString("base64url")));
+  // A change is either refused or decodes to exactly the same plan (the last
+  // character of a code can carry unused padding bits).
+  const same = JSON.stringify(decodeRegimen(code));
+  for (let i = 0; i < code.length; i++)
+    for (const ch of "AZaz09-_") {
+      if (code[i] === ch) continue;
+      let plan = null;
+      try {
+        plan = decodeRegimen(code.slice(0, i) + ch + code.slice(i + 1));
+      } catch {
+        continue;
+      }
+      assert.equal(JSON.stringify(plan), same);
+    }
+});
+
+test("identical plans for two patients get different identities", () => {
+  const e = toEntries([s({ brand: "Xalatan", freq: 1 })]);
+  const a = encodeRegimen({ entries: e, formulary: SEED_FORMULARY, start: "2026-11-02", wake: "08:00", bed: "22:00", nonce: "aaaa1111" });
+  const b = encodeRegimen({ entries: e, formulary: SEED_FORMULARY, start: "2026-11-02", wake: "08:00", bed: "22:00", nonce: "bbbb2222" });
+  assert.notEqual(planId(a), planId(b));
+});
+
+test("after midnight the phone stays on the dose day", () => {
+  const start = new Date(2026, 10, 2);
+  assert.equal(doseDayIndex(start, new Date(2026, 10, 3, 0, 40), "08:00"), 0);
+  assert.equal(doseDayIndex(start, new Date(2026, 10, 3, 2, 30), "08:00"), 1);
+  assert.equal(doseDayIndex(start, new Date(2026, 10, 3, 7, 50), "20:00"), 0);
+  assert.equal(minutesInto(start, 0, new Date(2026, 10, 3, 0, 40)), 1480);
+});
+
+test("a missed dose is not offered when the next dose of that drug is due", () => {
+  const cosopt = s({ brand: "Cosopt", freq: 2 });
+  const items = [{ entry: cosopt, dose: 0, time: 480 }, { entry: cosopt, dose: 1, time: 1200 }];
+  const none = () => false;
+  assert.equal(nextDose(items, none, 1230).item.time, 1200);
+  assert.equal(nextDose(items, none, 1230).missed.size, 1);
+  assert.equal(nextDose(items, (it) => it.time === 1200, 1230).item, null);
+  const morning = nextDose(items, (it) => it.time === 480, 500);
+  assert.equal(morning.state, "later");
 });

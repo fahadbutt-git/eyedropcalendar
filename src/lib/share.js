@@ -3,6 +3,7 @@
 // only, never the patient's name, date of birth, healthcare number or address.
 import { isValidISO } from "./dates.js";
 import { MAX_DROPS, cleanEntry, cleanMed, isClockTime } from "./validate.js";
+import { planId } from "./hash.js";
 
 const toBase64Url = (s) =>
   btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -10,9 +11,16 @@ const fromBase64Url = (s) =>
   new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)));
 
 const MODES = { o: "ongoing", d: "duration", t: "taper" };
-const MAX_CODE = 4000;
+const MAX_CODE = 8000;
 
-export function encodeRegimen({ entries, formulary, start, wake, bed }) {
+// Version 2 links carry a per-patient code (n), so two patients on the same
+// plan never share check marks, and a check code (c) over everything else,
+// so a damaged or altered link is refused instead of showing a different plan.
+const sum = (o) => planId(JSON.stringify(o));
+const NONCE = /^[a-z0-9]{4,16}$/;
+export const newNonce = () => Math.random().toString(36).slice(2, 10).padEnd(8, "0");
+
+export function encodeRegimen({ entries, formulary, start, wake, bed, nonce = "" }) {
   const e = entries.map((x) => {
     const m = formulary.find((f) => f.brand === x.brand) || {};
     return [
@@ -21,14 +29,21 @@ export function encodeRegimen({ entries, formulary, start, wake, bed }) {
       x.mode === "taper" ? x.steps.map((s) => [s.freq, s.days]) : 0,
     ];
   });
-  return toBase64Url(JSON.stringify({ v: 1, s: start, w: wake, b: bed, e }));
+  const body = { v: 2, n: NONCE.test(nonce) ? nonce : "anon0000", s: start, w: wake, b: bed, e };
+  return toBase64Url(JSON.stringify({ ...body, c: sum(body) }));
 }
 
 // Throws on anything that is not a well-formed plan.
 export function decodeRegimen(code) {
   if (typeof code !== "string" || code.length > MAX_CODE || !/^[\w-]+$/.test(code)) throw new Error("Invalid link");
   const o = JSON.parse(fromBase64Url(code));
-  if (!o || o.v !== 1 || !isValidISO(o.s) || !isClockTime(o.w) || !isClockTime(o.b) || !Array.isArray(o.e)) {
+  if (o?.v === 2) {
+    const { c, ...body } = o;
+    if (typeof c !== "string" || c !== sum(body) || !NONCE.test(o.n)) throw new Error("Invalid plan");
+  }
+  const year = Number(String(o?.s).slice(0, 4));
+  if (!(year >= 2000 && year <= 2100) || o.w === o.b) throw new Error("Invalid plan");
+  if (!o || ![1, 2].includes(o.v) || !isValidISO(o.s) || !isClockTime(o.w) || !isClockTime(o.b) || !Array.isArray(o.e)) {
     throw new Error("Invalid plan");
   }
   if (!o.e.length || o.e.length > MAX_DROPS) throw new Error("Invalid plan");
@@ -48,22 +63,27 @@ export function decodeRegimen(code) {
     entries.push(entry);
     formulary.push(med);
   });
-  return { start: o.s, wake: o.w, bed: o.b, entries, formulary };
+  return { start: o.s, wake: o.w, bed: o.b, entries, formulary, nonce: o.v === 2 ? o.n : "" };
 }
 
 // Origin and path only, so nothing else from the clinician's address bar leaks.
 export const patientLink = (code) => `${window.location.origin}${window.location.pathname}#/p/${code}`;
 
-// Accepts a full link, a link an email client wrapped over two lines, an
-// encoded "#", or a bare code.
+// Accepts a full link, a link an email client wrapped, quoted ("> ") or
+// broke with "=" or a hyphen, an encoded "#", a bare code, and text before or
+// after the link (such as a text message footer).
 export function codeFromUrl(url) {
-  let s = String(url || "").replace(/\s+/g, "");
+  let s = String(url || "")
+    .replace(/[\u200B-\u200D\uFEFF\u00AD]/g, "")
+    .replace(/=\r?\n/g, "")
+    .replace(/\r?\n[ \t]*(?:>[ \t]?)*/g, "");
   try {
-    s = decodeURIComponent(s);
+    s = s.replace(/%23/gi, "#").replace(/%2F/gi, "/");
   } catch {
     // Leave it as typed.
   }
   const m = s.match(/(?:#\/p\/|:\/\/p\/|\/p\/)([\w-]+)/);
   if (m) return m[1];
-  return /^[\w-]{40,}$/.test(s) ? s : null;
+  const bare = s.trim();
+  return /^[\w-]{40,}$/.test(bare) ? bare : null;
 }

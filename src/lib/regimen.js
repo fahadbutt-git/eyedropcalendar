@@ -50,7 +50,7 @@ export const TAPER_PRESETS = [
       { freq: 1, days: 3 },
     ],
   },
-  { label: "Durezol: QID x14d, BID x14d", build: () => [{ freq: 4, days: 14 }, { freq: 2, days: 14 }] },
+  { label: "Durezol: QID x14d, then BID x14d (adjust to response)", build: () => [{ freq: 4, days: 14 }, { freq: 2, days: 14 }] },
 ];
 
 // A taper with no steps yet behaves as ongoing.
@@ -93,18 +93,18 @@ export function lastDayIndex(d) {
 const planKey = (d) =>
   JSON.stringify([d.brand, d.freq, d.drops, modeOf(d), d.durationDays, d.startDay, modeOf(d) === "taper" ? d.steps : []]);
 
+// Entries keep the order the drops were entered in, so drop 3 on screen is
+// number 3 on the calendar and the prescription.
 export function toEntries(drops) {
   const list = drops.filter((d) => d.brand).map((d) => ({ ...d, mode: modeOf(d) }));
-  const lefts = list.filter((d) => d.eye === "OS");
   const used = new Set();
   const out = [];
-  list
-    .filter((d) => d.eye !== "OS")
-    .forEach((d) => {
-      const match = d.eye === "OD" ? lefts.findIndex((l, i) => !used.has(i) && planKey(l) === planKey(d)) : -1;
-      if (match >= 0) used.add(match);
-      out.push({ ...d, eye: match >= 0 ? "OU" : d.eye });
-    });
-  lefts.forEach((l, i) => !used.has(i) && out.push(l));
+  list.forEach((d, i) => {
+    if (used.has(i)) return;
+    const other = d.eye === "OD" ? "OS" : d.eye === "OS" ? "OD" : null;
+    const match = other ? list.findIndex((x, j) => j > i && !used.has(j) && x.eye === other && planKey(x) === planKey(d)) : -1;
+    if (match >= 0) used.add(match);
+    out.push(match >= 0 ? { ...d, eye: "OU" } : d);
+  });
   return out;
 }

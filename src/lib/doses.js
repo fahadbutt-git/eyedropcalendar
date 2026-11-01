@@ -65,3 +65,40 @@ export const reminderText = (items, eyes, generic = false) => {
         .join("\n") + (items.length > 1 ? "\nWait 5 minutes between drops, in this order." : ""),
   };
 };
+
+// The dose day the patient is living in. A dose day starts 6 hours before
+// its first dose, so a 12:30 AM bedtime dose or a night shift's 8 AM dose
+// still belongs to the day it was planned on.
+const LEAD = 6 * 60;
+const wakeMinutes = (wake) => {
+  const [h, m] = String(wake || "08:00").split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+};
+export function doseDayIndex(start, now, wake) {
+  const shifted = new Date(now.getTime() - (wakeMinutes(wake) - LEAD) * 60000);
+  const a = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const b = new Date(shifted.getFullYear(), shifted.getMonth(), shifted.getDate());
+  return Math.round((b - a) / 864e5);
+}
+// Minutes since midnight of that dose day's date (can pass 1440).
+export const minutesInto = (start, dayIndex, now) => Math.round((now - doseMoment(start, dayIndex, 0)) / 60000);
+
+// The dose to put in front of the patient. A dose is due from its time on.
+// When a later dose of the same drug is already due, the earlier one is
+// missed and is not prompted, so two doses are never offered back to back.
+// Doses more than an hour away are shown as "next" without a button.
+export const SOON = 60;
+export function nextDose(items, isDone, minutes) {
+  const missed = new Set();
+  for (const it of items) {
+    if (isDone(it) || it.time > minutes) continue;
+    const later = items.some((o) => o.entry === it.entry && o.time > it.time && o.time <= minutes);
+    if (later) missed.add(it);
+  }
+  const open = items.filter((it) => !isDone(it) && !missed.has(it));
+  const due = open.find((it) => it.time <= minutes);
+  if (due) return { item: due, state: "due", missed };
+  const soon = open.find((it) => it.time <= minutes + SOON);
+  if (soon) return { item: soon, state: "soon", missed };
+  return { item: open[0] || null, state: open[0] ? "later" : "none", missed };
+}

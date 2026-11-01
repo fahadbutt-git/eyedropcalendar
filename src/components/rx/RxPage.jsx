@@ -14,7 +14,8 @@ export const drName = (name) => {
 const isSignature = (v) => (typeof v === "string" && /^data:image\/png;base64,[\w+/=]+$/.test(v) && v.length < 300000 ? v : "");
 
 const REFILLS = [0, 1, 2, 3, 4, 5, 6, 11];
-const DEFAULTS = { include: true, disp: "1 bottle", refills: 0, lu: "" };
+// Dispense is a real quantity (such as "5 mL"), entered for each drug.
+const DEFAULTS = { include: true, disp: "", refills: 0, lu: "" };
 // Choices are stored by the drop's own id, so changing its eye keeps them.
 const keyOf = (e) => e.id;
 
@@ -32,11 +33,14 @@ function PrescriberForm({ prescriber, setPrescriber, signature, setSignature }) 
             <span className="prefix" aria-hidden="true">
               Dr.
             </span>
-            <input className="input" aria-label="Prescriber name and credentials, after Dr." placeholder="Jane Smith, MD FRCSC" {...bind("name")} />
+            <input className="input" aria-label="Prescriber name and credentials, after Dr." placeholder="Jane Smith, MD FRCSC"
+              value={prescriber.name}
+              onChange={(e) => setPrescriber({ ...prescriber, name: e.target.value.replace(/^\s*dr\.?\s+/i, "") })}
+            />
           </span>
         </Field>
-        <Field label="Licence number">
-          <input className="input" placeholder="CPSO 123456" {...bind("license")} />
+        <Field label="CPSO number">
+          <input className="input" inputMode="numeric" placeholder="123456" {...bind("license")} />
         </Field>
         <Field label="Clinic or practice name" optional>
           <input className="input" {...bind("clinic")} />
@@ -81,7 +85,7 @@ function ItemRow({ entry, med, opt, setOpt }) {
       </label>
       <div className="rx-item-fields">
         <Field label="Dispense">
-          <input className="input sm" disabled={!opt.include} value={opt.disp} maxLength={40} onChange={(e) => setOpt({ disp: e.target.value })} />
+          <input className="input sm" disabled={!opt.include} value={opt.disp} maxLength={40} placeholder="e.g. 5 mL" onChange={(e) => setOpt({ disp: e.target.value })} />
         </Field>
         <Field label="Refills">
           <select className="select sm" disabled={!opt.include} value={opt.refills} onChange={(e) => setOpt({ refills: Number(e.target.value) })}>
@@ -135,7 +139,8 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
 
   const missing = [
     !prescriber.name && "prescriber name",
-    !prescriber.license && "licence number",
+    !prescriber.license && "CPSO number",
+    ...items.filter((it) => !it.disp.trim()).map((it) => `quantity for ${it.entry.brand}`),
     !patient.name && "patient name",
     !(prescriber.street && prescriber.city) && "practice address",
     !patient.dob && "date of birth",
@@ -145,6 +150,7 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
 
   return (
     <div className="rx-layout">
+      <h1 className="sr-only">Prescription</h1>
       <aside className="stack no-print">
         <Warnings warnings={warnings} compact />
         <section className="card">

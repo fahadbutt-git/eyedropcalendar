@@ -69,6 +69,7 @@ export function cleanEntry(e, { strict = false } = {}) {
     ? e.steps.slice(0, 10).map((s) => ({ freq: oneOf(s?.freq, FREQ_OPTIONS, null), days: intIn(s?.days, 1, MAX_DAYS, null) }))
     : [];
   if (mode === "taper" && steps.some((s) => s.freq == null || s.days == null)) return null;
+  if (strict && mode === "taper" && !steps.length) return null;
   if (steps.reduce((n, s) => n + (s.days || 0), 0) > MAX_DAYS) return null;
   const out = {
     brand,

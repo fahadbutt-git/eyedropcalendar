@@ -4,7 +4,7 @@ import { DRUG_CLASSES, FORMULARY_VERSION, SEED_FORMULARY } from "./data/formular
 import { dropWarnings } from "./lib/checks.js";
 import { isValidISO, parseISO, toISO } from "./lib/dates.js";
 import { toEntries } from "./lib/regimen.js";
-import { codeFromUrl, decodeRegimen } from "./lib/share.js";
+import { codeFromUrl, decodeRegimen, newNonce } from "./lib/share.js";
 import { isNative, onPlanLink } from "./lib/native.js";
 import { usePersistentState } from "./lib/storage.js";
 import { isClockTime } from "./lib/times.js";
@@ -32,6 +32,7 @@ const defaultSettings = () => ({
   pages: { calendar: true, chart: false, checklist: false },
   qr: true,
   large: false,
+  nonce: newNonce(),
 });
 
 // Stored settings are repaired field by field, so a bad value can never break a page.
@@ -47,6 +48,7 @@ function checkSettings(s) {
     pages: { calendar: pages.calendar === true, chart: pages.chart === true, checklist: pages.checklist === true },
     qr: s.qr !== false,
     large: s.large === true,
+    nonce: typeof s.nonce === "string" && /^[a-z0-9]{4,16}$/.test(s.nonce) ? s.nonce : d.nonce,
   };
 }
 const checkDrops = (list) =>
@@ -147,7 +149,7 @@ function readPatientRoute() {
   try {
     return { code, plan: decodeRegimen(code) };
   } catch {
-    return { invalid: true };
+    return { invalid: true, installed };
   }
 }
 
@@ -168,6 +170,22 @@ function PatientApp({ route }) {
           <div className="pt">
             <h1>This link did not open</h1>
             <p>The link is damaged or out of date. Scan the QR code on your printed calendar again, or ask your eye clinic for a new one.</p>
+            {route.installed && (
+              <button
+                className="btn primary"
+                onClick={() => {
+                  try {
+                    localStorage.removeItem("edt.patientPlan");
+                  } catch {
+                    // Nothing stored.
+                  }
+                  window.location.hash = "";
+                  window.dispatchEvent(new HashChangeEvent("hashchange"));
+                }}
+              >
+                Enter a new link
+              </button>
+            )}
           </div>
         )}
         {route.plan && <PatientView key={route.code} plan={route.plan} code={route.code} />}
@@ -201,6 +219,11 @@ function ClinicianApp() {
   const [drops, setDrops] = usePersistentState("edt.drops", [], { ...session, check: checkDrops });
   const [settings, setSettings] = usePersistentState("edt.schedule.v3", defaultSettings, { ...session, check: checkSettings });
   const [rx, setRx] = usePersistentState("edt.rx", { date: toISO(new Date()), notes: "", items: {} }, session);
+  // Any change to the drops or patient means the prescription has not been
+  // reviewed in its new form, so the electronic signature comes off.
+  useEffect(() => {
+    setRx((r) => (r.esign ? { ...r, esign: false } : r));
+  }, [drops, patient, setRx]);
   const entries = useMemo(() => toEntries(drops), [drops]);
   const warnings = useMemo(() => dropWarnings(drops, formulary.list, DRUG_CLASSES, { dob: patient.dob }), [drops, formulary.list, patient.dob]);
   const mainRef = useRef(null);
@@ -287,7 +310,13 @@ function ClinicianApp() {
           />
         )}
         {tab === "formulary" && (
-          <FormularyPage formulary={formulary.list} setFormulary={formulary.save} restore={formulary.restore} outdated={formulary.outdated} />
+          <FormularyPage
+            formulary={formulary.list}
+            setFormulary={formulary.save}
+            restore={formulary.restore}
+            outdated={formulary.outdated}
+            inUse={drops.map((d) => d.brand)}
+          />
         )}
       </main>
       <Footer />

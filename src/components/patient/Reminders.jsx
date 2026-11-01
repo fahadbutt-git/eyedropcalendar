@@ -45,7 +45,9 @@ export default function Reminders({ plan: shared, id, code }) {
     setOn(false);
   };
   const download = () => {
-    downloadFile("eye-drop-reminders.ics", buildICS({ ...plan, id, generic }), "text/calendar");
+    // Events are named for the patient, so a new plan from the clinic updates
+    // the same alarms rather than adding a second set.
+    downloadFile("eye-drop-reminders.ics", buildICS({ ...plan, id: shared.nonce ? `p-${shared.nonce}` : id, generic }), "text/calendar");
     setSaved(true);
   };
 
@@ -76,7 +78,7 @@ export default function Reminders({ plan: shared, id, code }) {
           </button>
           {saved && (
             <p className="pt-note" role="status">
-              The calendar file is saved. {HOW[platform()]}
+              The calendar file is saved. {HOW[platform()]} If your drops change, delete the old &quot;Eye drops&quot; alarms first.
             </p>
           )}
           {platform() !== "other" && (

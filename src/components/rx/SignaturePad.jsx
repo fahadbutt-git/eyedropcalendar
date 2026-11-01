@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 
 // Draw a signature once. It is saved as an image on this device only and is
 // never sent anywhere. The prescriber applies it to each prescription.
-const W = 480;
-const H = 150;
+// Drawn at twice the display size so the printed signature stays sharp.
+const W = 960;
+const H = 300;
 
 export default function SignaturePad({ signature, setSignature }) {
   const canvas = useRef(null);
@@ -15,7 +16,7 @@ export default function SignaturePad({ signature, setSignature }) {
     if (!editing) return;
     const c = canvas.current;
     const ctx = c.getContext("2d");
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.strokeStyle = "#111111";

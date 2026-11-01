@@ -30,8 +30,9 @@ export default function MedPicker({ formulary, onPick, onCancel, label, autoFocu
   const onKey = (e) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setOpen(true);
-      setActive((i) => Math.min(i + 1, matches.length - 1));
+      // The first press only opens the list, on the top match.
+      if (!open) setOpen(true);
+      else setActive((i) => Math.min(i + 1, matches.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActive((i) => Math.max(i - 1, 0));
@@ -39,6 +40,7 @@ export default function MedPicker({ formulary, onPick, onCancel, label, autoFocu
       e.preventDefault();
       choose(matches[active]);
     } else if (e.key === "Escape") {
+      setActive(0);
       if (open) setOpen(false);
       else onCancel?.();
     }

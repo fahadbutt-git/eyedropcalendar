@@ -19,23 +19,32 @@ export const PAGE_TYPES = [
   ["checklist", "Checklist", "A plain table, one row per day"],
 ];
 
+// Medium error correction survives a creased or smudged page. A very long
+// plan falls back to low correction, and if it still does not fit the QR is
+// left off and the clinician is told to share the link instead.
 function useQrCode(text, enabled) {
   const [src, setSrc] = useState("");
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     let live = true;
     if (!enabled || !text) {
       setSrc("");
+      setFailed(false);
       return;
     }
     import("qrcode")
-      .then((QR) => QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "L" }))
-      .then((url) => live && setSrc(url))
-      .catch(() => live && setSrc(""));
+      .then((QR) =>
+        QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "M" }).catch(() =>
+          QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "L" })
+        )
+      )
+      .then((url) => live && (setSrc(url), setFailed(false)))
+      .catch(() => live && (setSrc(""), setFailed(true)));
     return () => {
       live = false;
     };
   }, [text, enabled]);
-  return src;
+  return [src, failed];
 }
 
 // Start date and dose times only change when the new value is complete and
@@ -70,6 +79,7 @@ function Settings({ s, setSettings, span, sheetCount, count, link, qr, print, go
     <aside className="sched-aside no-print" aria-label="Calendar settings">
       <Field label="Start date">
         <input className="input mono" type="date" value={startText} aria-invalid={startText !== s.start} onChange={(e) => setStart(e.target.value)} />
+        {startText !== s.start && <span className="num-error">Incomplete date. Still using {fmtShort(parseISO(s.start))}, {s.start.slice(0, 4)}.</span>}
       </Field>
       {span.hasOngoing && (
         <Field label="Print ongoing drops for">
@@ -169,10 +179,10 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
     return { entry, index, med, chip: chipStyle(med) };
   });
   const link = useMemo(
-    () => (entries.length ? patientLink(encodeRegimen({ entries, formulary, start: s.start, wake: s.wake, bed: s.bed })) : ""),
-    [entries, formulary, s.start, s.wake, s.bed]
+    () => (entries.length ? patientLink(encodeRegimen({ entries, formulary, start: s.start, wake: s.wake, bed: s.bed, nonce: s.nonce })) : ""),
+    [entries, formulary, s.start, s.wake, s.bed, s.nonce]
   );
-  const qr = useQrCode(link, s.qr);
+  const [qr, qrFailed] = useQrCode(link, s.qr);
 
   if (!entries.length)
     return (
@@ -186,9 +196,15 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
     );
 
   const peaks = entries.map((e) => Math.max(...Array.from({ length: span.days }, (_, i) => dosesOnDay(e, i))));
-  const cal = buildPages({ size, start, span, peaks, qr: s.qr && !!qr });
+  const changes = entries.map((e) => e.mode !== "ongoing" || e.startDay > 1);
+  const cal = buildPages({ size, start, span, peaks, changes, qr: s.qr && !!qr });
   const chart = s.pages.chart ? chartPages({ items, entries, formulary, start, days: span.days, wake: s.wake, bed: s.bed, size }) : [];
-  const sheetCount = (s.pages.calendar ? cal.pages.length : 0) + chart.length + (s.pages.checklist ? 1 : 0);
+  // The checklist flows onto more pages when the plan is long.
+  const checklistPages = s.pages.checklist ? Math.ceil(span.days / (s.large ? 14 : 22)) : 0;
+  // The full legend (doses, times, taper steps, shake well) always prints:
+  // on calendar page 1 when it fits, otherwise on a page of its own first.
+  const legendPage = !(s.pages.calendar && cal.combined) && (s.pages.calendar || chart.length > 0 || s.pages.checklist);
+  const sheetCount = (legendPage ? 1 : 0) + (s.pages.calendar ? cal.pages.length : 0) + chart.length + checklistPages;
 
   const dob = patient.dob && isValidISO(patient.dob) ? parseISO(patient.dob) : null;
   // The first printed page carries the QR code in its top right corner.
@@ -234,6 +250,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
 
   return (
     <div className="sched-layout">
+      <h1 className="sr-only">Calendar</h1>
       <Settings
         s={s}
         setSettings={setSettings}
@@ -248,7 +265,18 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
       <div className={`sched-print ${size}`}>
         <div className="no-print">
           <Warnings warnings={warnings} compact />
+          {qrFailed && (
+            <p className="notice warn small" role="status">
+              This plan is too long for a QR code. Use Copy link and send it to the patient instead.
+            </p>
+          )}
         </div>
+        {legendPage && (
+          <section className="sheet flow">
+            {header("Eye drop plan", "Your drops and when to use them")}
+            {legend}
+          </section>
+        )}
         {s.pages.calendar &&
           cal.pages.map((p, i) => (
             <section className="sheet" key={`cal-${p.title}`}>

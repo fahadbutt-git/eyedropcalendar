@@ -24,7 +24,7 @@ function SortHeader({ id, label, sort, setSort }) {
   );
 }
 
-export default function FormularyPage({ formulary, setFormulary, restore, outdated }) {
+export default function FormularyPage({ formulary, setFormulary, restore, outdated, inUse = [] }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState({ key: "brand", dir: 1 });
   const [editing, setEditing] = useState(null);
@@ -150,7 +150,13 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
                       </button>
                       <button
                         className="btn sm danger"
-                        onClick={() => window.confirm(`Remove ${m.brand} from the formulary?`) && setFormulary(formulary.filter((x) => x.id !== m.id))}
+                        onClick={() =>
+                          window.confirm(
+                            inUse.includes(m.brand)
+                              ? `${m.brand} is in the current patient's plan. Removing it drops its bedtime timing, cap colour, formulation and cautions from that plan. Remove it anyway?`
+                              : `Remove ${m.brand} from the formulary?`
+                          ) && setFormulary(formulary.filter((x) => x.id !== m.id))
+                        }
                       >
                         Delete<span className="sr-only"> {m.brand}</span>
                       </button>

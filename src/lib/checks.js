@@ -1,6 +1,6 @@
 // Safety checks shown beside the drop list and repeated on the print steps.
 // They are prompts for the prescriber, never blocks.
-import { totalDays } from "./regimen.js";
+import { modeOf, totalDays } from "./regimen.js";
 
 const IGNORED = new Set(["OTHER", "LUB"]);
 const GLAUCOMA = new Set(["PGA", "BB", "CAI", "AA", "MIO"]);
@@ -61,7 +61,10 @@ export function dropWarnings(drops, formulary, classNames, { dob = "", today = n
   for (const d of active) {
     const med = medOf(d);
     if (!med) continue;
-    const peak = d.mode === "taper" ? Math.max(...d.steps.map((s) => s.freq)) : d.freq;
+    const mode = modeOf(d);
+    const peak = mode === "taper" ? Math.max(...d.steps.map((s) => s.freq)) : d.freq;
+    if (mode === "ongoing" && med.cls.some((c) => ["STER", "NSAID", "ABX", "CYC"].includes(c)))
+      all.push(`${d.brand} is set to ongoing. Steroids, NSAIDs, antibiotics and cycloplegics usually have a set course or taper.`);
     if (med.maxFreq && peak > med.maxFreq)
       all.push(`${d.brand} is set to ${peak} times a day. The label maximum is ${med.maxFreq === 1 ? "once" : `${med.maxFreq} times`} a day.`);
     if (d.drops > 1) all.push(`${d.brand} is set to ${d.drops} drops each time. One drop is usually enough.`);

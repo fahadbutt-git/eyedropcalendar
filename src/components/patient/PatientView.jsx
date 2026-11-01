@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { WEEKDAYS, addDays, daysBetween, fmtLong, fmtShort, parseISO, toISO } from "../../lib/dates.js";
 import { courseLastDay } from "../../lib/calendar.js";
 import { changeNotes, dayName } from "../../lib/changes.js";
-import { doseGroups, medOf } from "../../lib/doses.js";
+import { doseDayIndex, doseGroups, medOf, minutesInto, nextDose } from "../../lib/doses.js";
 import { planId } from "../../lib/hash.js";
 import { cancelReminders, isNative, onAppResume } from "../../lib/native.js";
 import { EYES } from "../../lib/regimen.js";
@@ -16,7 +16,8 @@ import Reminders from "./Reminders.jsx";
 // Check marks are stored per plan and per date as { "<brand>|<eye>|<dose>": time }.
 const doseKey = ({ entry, dose }) => `${entry.brand}|${entry.eye}|${dose}`;
 const ADVICE = { suspension: "Shake first.", gel: "Use last." };
-const WAIT_MS = 5 * 60 * 1000;
+// Five minutes between drops, ten before a gel.
+const waitFor = (it) => (it?.med?.form === "gel" ? 10 : 5) * 60 * 1000;
 const isObject = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
 
 // The current time, refreshed every 30 seconds and whenever the phone wakes
@@ -49,8 +50,12 @@ export default function PatientView({ plan: shared, code }) {
   const start = useMemo(() => parseISO(shared.start), [shared.start]);
   const lastDay = courseLastDay(shared.entries);
   const now = useNow();
-  const today = daysBetween(start, now);
+  // "Today" is the dose day, so doses after midnight stay with their day.
+  const today = doseDayIndex(start, now, shared.wake);
   const [view, setView] = useState(null);
+  const [lastTap, setLastTap] = useState(0);
+  // A new day always opens on today, even if an earlier day was being viewed.
+  useEffect(() => setView(null), [today]);
   const day = view ?? Math.max(0, today);
   const [taken, setTaken] = usePersistentState(`edt.taken.${id}`, {}, { check: isObject });
   const [firstSeen] = usePersistentState(`edt.seen.${id}`, toISO(now));
@@ -87,12 +92,13 @@ export default function PatientView({ plan: shared, code }) {
   const all = groups.flatMap((g) => g.items.map((it) => ({ ...it, time: g.time })));
   const done = all.filter((it) => ticks[doseKey(it)]).length;
 
-  const setTick = (it, on) =>
+  // Ticks are written to the day they belong to, which Undo also uses.
+  const setTick = (it, on, dayIso = iso) =>
     setTaken((prev) => {
-      const dayTicks = { ...(prev[iso] || {}) };
+      const dayTicks = { ...(prev[dayIso] || {}) };
       if (on) dayTicks[doseKey(it)] = Date.now();
       else delete dayTicks[doseKey(it)];
-      return { ...prev, [iso]: dayTicks };
+      return { ...prev, [dayIso]: dayTicks };
     });
   const toggle = (it) => {
     const on = !ticks[doseKey(it)];
@@ -101,17 +107,27 @@ export default function PatientView({ plan: shared, code }) {
     if (on && day === today) setWaitFrom(Date.now());
   };
 
-  // The first dose still to do today, shown large at the top.
-  const minutes = now.getHours() * 60 + now.getMinutes();
-  const next = day === today && !finished ? all.find((it) => !ticks[doseKey(it)]) : null;
-  const waitLeft = waitFrom ? Math.max(0, WAIT_MS - (now - waitFrom)) : 0;
+  // The dose to put in front of the patient (see nextDose for the rules).
+  const minutes = minutesInto(start, day, now);
+  const pick = day === today && !finished ? nextDose(all, (it) => !!ticks[doseKey(it)], minutes) : { item: null, state: "none", missed: new Set() };
+  const next = pick.item;
+  const isMissed = (it, time) => [...pick.missed].some((m) => m.time === time && doseKey(m) === doseKey(it));
+  const waitLeft = waitFrom ? Math.max(0, waitFor(next) - (now - waitFrom)) : 0;
   const nextIsSoon = next && waitLeft > 0 && all.some((it) => ticks[doseKey(it)] && it.time === next.time);
+  // A second tap in quick succession is ignored, so a double tap cannot tick two doses.
+  const tapNext = () => {
+    if (Date.now() - lastTap < 1500) return;
+    setLastTap(Date.now());
+    toggle(next);
+  };
 
   const upcoming = changeNotes(shared.entries, start, Math.max(1, today + 1), Math.max(1, today + 7), { thisWeek: false });
   const counted = Math.max(0, daysBetween(start, parseISO(firstSeen)));
   let due = 0;
   let got = 0;
+  let daysCounted = 0;
   for (let i = Math.max(counted, today - 7); i < Math.min(today, (lastDay ?? today) + 1); i++) {
+    daysCounted++;
     const t = taken[toISO(addDays(start, i))] || {};
     for (const g of doseGroups(shared.entries, shared.formulary, i, shared.wake, shared.bed))
       for (const it of g.items) {
@@ -152,19 +168,21 @@ export default function PatientView({ plan: shared, code }) {
       {next && (
         <section className="next" aria-labelledby="next-h">
           <h2 id="next-h">
-            {nextIsSoon ? "Wait, then" : next.time <= minutes ? "Due now" : "Next"} · <span className="mono">{fmtTime(next.time)}</span>
+            {nextIsSoon ? "Wait, then" : pick.state === "due" ? "Due now" : "Next"} · <span className="mono">{fmtTime(next.time)}</span>
           </h2>
           <div className="next-name">{next.entry.brand}</div>
           <div>{doseLabel(next)}</div>
           <CapDot cap={next.med?.cap} named />
           {nextIsSoon ? (
             <p className="next-wait" role="timer">
-              Wait <span className="mono">{Math.ceil(waitLeft / 60000)} min</span> so the last drop can soak in.
+              Wait <span className="mono">{Math.max(1, Math.round(waitLeft / 60000))} min</span> so the last drop can soak in.
             </p>
           ) : null}
-          <button className="btn next-btn" onClick={() => toggle(next)}>
-            I have put it in
-          </button>
+          {pick.state !== "later" && (
+            <button className="btn next-btn" onClick={tapNext} aria-label={`I have put in ${next.entry.brand}, ${EYES[next.entry.eye].long}`}>
+              I have put it in
+            </button>
+          )}
         </section>
       )}
 
@@ -192,7 +210,8 @@ export default function PatientView({ plan: shared, code }) {
             </h3>
             {items.map((it) => {
               const isDone = !!ticks[doseKey(it)];
-              const label = `${it.entry.brand} at ${fmtTime(time)}, ${EYES[it.entry.eye].long}. ${isDone ? "Done" : "Not done yet"}`;
+              const missed = !isDone && isMissed(it, time);
+              const label = `${it.entry.brand} at ${fmtTime(time)}, ${dayName(date)}, ${EYES[it.entry.eye].long}. ${isDone ? "Done" : missed ? "Missed" : "Not done yet"}`;
               return (
                 <div key={doseKey(it)} className={`dose-row ${isDone ? "is-done" : ""} ${next && next.time === time && doseKey(next) === doseKey(it) ? "is-next" : ""}`}>
                   <div className="dose-text">
@@ -200,6 +219,7 @@ export default function PatientView({ plan: shared, code }) {
                     <span className="d">
                       {doseLabel(it)} {it.med?.cap && <CapDot cap={it.med.cap} named />}
                     </span>
+                    {missed && <span className="missed">Missed. Do not double up: take the next dose at its time.</span>}
                   </div>
                   <button className="tick" aria-pressed={isDone} aria-label={label} disabled={future} onClick={() => toggle({ ...it, time })}>
                     {isDone && Icon.check}
@@ -219,7 +239,7 @@ export default function PatientView({ plan: shared, code }) {
           <button
             className="link-btn"
             onClick={() => {
-              setTick(undo.it, !undo.on);
+              setTick(undo.it, !undo.on, undo.iso);
               setUndo(null);
               setWaitFrom(null);
             }}
@@ -242,7 +262,7 @@ export default function PatientView({ plan: shared, code }) {
 
       {due > 0 && (
         <p className="pt-note small">
-          Last {Math.min(7, today - counted)} days: {got} of {due} drops ticked off.
+          Last {daysCounted === 1 ? "day" : `${daysCounted} days`}: {got} of {due} drops ticked off.
         </p>
       )}
 

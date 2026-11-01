@@ -4,8 +4,8 @@ import { MONTHS, addDays, fmtShort } from "../../lib/dates.js";
 // Height budget in CSS pixels (7.75 in of printable height at 96 px per inch).
 const PAGE = 745;
 const SIZES = {
-  standard: { header: 112, qr: 40, thead: 32, compactRow: 26, fullRow: 66, cols: 3, dayLabel: 28, dose: 21, perLine: 7, maxWeeks: 5 },
-  large: { header: 124, qr: 56, thead: 42, compactRow: 36, fullRow: 92, cols: 2, dayLabel: 42, dose: 32, perLine: 4, maxWeeks: 2 },
+  standard: { header: 112, qr: 40, thead: 32, compactRow: 26, fullRow: 70, cols: 3, dayLabel: 28, dose: 21, perLine: 6, maxWeeks: 5 },
+  large: { header: 124, qr: 56, thead: 42, compactRow: 36, fullRow: 96, cols: 2, dayLabel: 42, dose: 32, perLine: 4, maxWeeks: 2 },
 };
 
 function monthWeeks(year, month) {
@@ -29,15 +29,17 @@ function weeksFrom(start, end) {
 // Page 1 carries the full legend when it fits, otherwise the short one.
 // `peaks` holds each drug's highest number of doses in a day, so drugs with
 // many doses get the extra lines their tick boxes wrap onto.
-export function buildPages({ size, start, span, peaks, qr = false }) {
+// `changes` marks drugs that start, change or stop, which adds a line for the
+// "Now 3x" or "Stop" marker on those days.
+export function buildPages({ size, start, span, peaks, changes = [], qr = false }) {
   const count = peaks.length;
   const z = SIZES[size];
-  const base = PAGE - z.header - z.thead - 16;
+  const base = PAGE - z.header - z.thead - 28;
   const legendRows = Math.ceil(count / z.cols);
   const calendarOnly = base - legendRows * z.compactRow;
   // The QR box makes the first page header taller.
   const withLegend = base - legendRows * z.fullRow - (qr ? z.qr : 0);
-  const rowNeed = z.dayLabel + peaks.reduce((h, p) => h + z.dose * Math.max(1, Math.ceil(p / z.perLine)), 0);
+  const rowNeed = z.dayLabel + peaks.reduce((h, p, i) => h + z.dose * (Math.max(1, Math.ceil(p / z.perLine)) + (changes[i] ? 1 : 0)), 0);
   const fitWeeks = Math.max(1, Math.floor(calendarOnly / rowNeed));
 
   let pages = null;
