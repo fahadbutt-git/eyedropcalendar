@@ -7,9 +7,9 @@ const PAGE = 745;
 // weeks a page holds, and how many tick boxes fit on a line in a day cell.
 // Heights below are in units of that scale, matching the sheet styles.
 export const PRINT_SIZES = {
-  standard: { s: 0.17 * 96, maxWeeks: 2, perLine: 4, cols: 3, dose: 1.95, months: false, label: "Two weeks a page", hint: "Clear and roomy. The default" },
-  large: { s: 0.22 * 96, maxWeeks: 1, perLine: 3, cols: 2, dose: 1.95, months: false, label: "Large print, one week a page", hint: "For low vision" },
-  compact: { s: 0.15 * 96, maxWeeks: 5, perLine: 6, cols: 3, dose: 1.46, months: true, label: "A month a page", hint: "Fewest pages, smallest print" },
+  standard: { s: 0.17 * 96, maxWeeks: 2, perLine: 4, cols: 3, dose: 1.95, months: false, marks: "roomy", label: "Two weeks a page", hint: "Clear and roomy. The default" },
+  large: { s: 0.22 * 96, maxWeeks: 1, perLine: 3, cols: 2, dose: 1.95, months: false, marks: "roomy", label: "Large print, one week a page", hint: "For low vision" },
+  compact: { s: 0.15 * 96, maxWeeks: 5, perLine: 6, cols: 3, dose: 1.46, months: true, marks: "small", label: "A month a page", hint: "Fewest pages, smallest print" },
 };
 const UNITS = { header: 7.8, qr: 2.8, thead: 2.2, compactRow: 1.9, fullRow: 4.9, dayLabel: 1.95 };
 const sizeOf = (size) => {
@@ -73,7 +73,7 @@ export function buildPages({ size, start, span, peaks, changes = [], qr = false 
     p.rowHeight = Math.max(rowNeed, Math.floor(room / p.weeks.length) - 2);
   });
   // One size of marks across every page, so the pages look alike.
-  const marks = z.months ? { scale: 1, perLine: z.perLine } : fitMarks(z, peaks, changes, Math.min(...pages.map((p) => p.rowHeight)));
+  const marks = fitMarks(z, peaks, changes, Math.min(...pages.map((p) => p.rowHeight)));
   pages.forEach((p) => Object.assign(p, marks));
   return { pages, combined };
 }
@@ -82,13 +82,18 @@ export function buildPages({ size, start, span, peaks, changes = [], qr = false 
 // padding), with a little kept spare.
 const cellWidth = (z) => ((10.3 * 96) / 7 - 0.75 * z.s) * 0.95;
 // In units of the sheet scale: a tick box with its gap, the marker with its
-// gap and the row's padding, one dose line, and a "Now 3x" note.
-const BOX = 1.37, MARK = 2.55, LINE = 1.98, NOTE = 0.95;
+// gap and the row's padding, one dose line, and a "Now 3x" note. The month
+// page starts from smaller marks so a whole month fits.
+const MARKS = {
+  roomy: { box: 1.37, mark: 2.55, line: 1.98, note: 0.95 },
+  small: { box: 1.11, mark: 2.1, line: 1.6, note: 0.8 },
+};
 
 // Grows the marks and tick boxes in each day cell to fill the room the page
 // leaves, so a sparse plan prints large while a busy one still fits. Tries
 // each number of boxes per line and keeps whichever allows the biggest marks.
 export function fitMarks(z, peaks, changes, rowHeight) {
+  const { box: BOX, mark: MARK, line: LINE, note: NOTE } = MARKS[z.marks];
   let best = { scale: 1, perLine: z.perLine };
   for (let per = 1; per <= 6; per++) {
     const lines = peaks.reduce((h, p, i) => h + LINE + (Math.max(1, Math.ceil(p / per)) - 1) * BOX + (changes[i] ? NOTE : 0), 0);

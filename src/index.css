@@ -289,11 +289,12 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .cal .boxes i { width: calc(var(--u) * 1.15); height: calc(var(--u) * 1.15); border-width: 2px; }
 /* A month a page: the original, smaller marks so a whole month fits. */
 .compact .cal .dnum { font-size: calc(var(--s) * 0.972); }
-.compact .cal .dose { grid-template-columns: calc(var(--s) * 1.25) minmax(0, 1fr); font-size: calc(var(--s) * 0.764); }
-.compact .cal .dose .chip { width: calc(var(--s) * 1.25); height: calc(var(--s) * 1.25); font-size: calc(var(--s) * 0.66); }
-.compact .cal .change { font-size: calc(var(--s) * 0.66); }
-.compact .cal .stop { font-size: calc(var(--s) * 0.764); }
-.compact .cal .boxes i { width: calc(var(--s) * 0.903); height: calc(var(--s) * 0.903); border-width: 1.5px; }
+.compact .cal .dose { grid-template-columns: calc(var(--u) * 1.25) minmax(0, 1fr); font-size: calc(var(--u) * 0.764); column-gap: calc(var(--u) * 0.35); }
+.compact .cal .dose .chip { width: calc(var(--u) * 1.25); height: calc(var(--u) * 1.25); font-size: calc(var(--u) * 0.66); }
+.compact .cal .change { font-size: calc(var(--u) * 0.66); }
+.compact .cal .stop { font-size: calc(var(--u) * 0.764); }
+.compact .cal .boxes { gap: calc(var(--u) * 0.208); max-width: calc(var(--u) * 1.11 * var(--per, 6)); }
+.compact .cal .boxes i { width: calc(var(--u) * 0.903); height: calc(var(--u) * 0.903); border-width: 2px; }
 .boxes { display: inline-flex; flex-wrap: wrap; gap: calc(var(--s) * 0.208); vertical-align: middle; }
 .boxes i { width: calc(var(--s) * 0.903); height: calc(var(--s) * 0.903); border: 1.5px solid var(--ink); display: inline-block; background: #fff; }
 
