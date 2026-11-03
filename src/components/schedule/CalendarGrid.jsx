@@ -11,7 +11,7 @@ function DayCell({ label, dayIndex, items }) {
         <span>{label}</span>
         {dayIndex === 0 && <span className="flag">Start</span>}
       </div>
-      {items.map(({ entry, index, chip }) => {
+      {items.map(({ entry, index, chip, tint }) => {
         const n = dosesOnDay(entry, dayIndex);
         const prev = dayIndex > 0 ? dosesOnDay(entry, dayIndex - 1) : 0;
         if (!n && !prev) return null;
@@ -23,7 +23,7 @@ function DayCell({ label, dayIndex, items }) {
           );
         const change = dayIndex === 0 ? null : !prev ? "Start" : prev !== n ? `Now ${n}x` : null;
         return (
-          <div className="dose" key={index}>
+          <div className="dose" key={index} style={tint ? { background: tint } : undefined}>
             <Chip n={index + 1} style={chip} />
             <span className="sr-only">
               {entry.brand}, {EYES[entry.eye].long}
@@ -37,9 +37,9 @@ function DayCell({ label, dayIndex, items }) {
   );
 }
 
-export default function CalendarGrid({ weeks, items, start, lastIndex, month, rowHeight }) {
+export default function CalendarGrid({ weeks, items, start, lastIndex, month, rowHeight, scale = 1, perLine = 6 }) {
   return (
-    <div className="cal-wrap" style={{ "--row-h": `${rowHeight}px` }} tabIndex={0} role="region" aria-label="Calendar">
+    <div className="cal-wrap" style={{ "--row-h": `${rowHeight}px`, "--k": scale, "--per": perLine }} tabIndex={0} role="region" aria-label="Calendar">
       <table className="cal">
         <thead>
           <tr>

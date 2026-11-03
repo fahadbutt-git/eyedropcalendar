@@ -5,7 +5,7 @@ import { EYES } from "../../lib/regimen.js";
 import { fmtTime } from "../../lib/times.js";
 import { Chip } from "../ui.jsx";
 
-const ROWS_PER_PAGE = { standard: 13, large: 9 };
+const ROWS_PER_PAGE = { standard: 11, large: 7, compact: 13 };
 // One page per week (more if the rows do not fit): a row for each drug at
 // each time of day, and a tick box for each day it is due.
 export function chartPages({ items, entries, formulary, start, days, wake, bed, size }) {
@@ -25,7 +25,7 @@ export function chartPages({ items, entries, formulary, start, days, wake, bed, 
     }
     const sorted = [...rows.values()].sort((a, b) => a.time - b.time || a.order - b.order);
     const notes = changeNotes(entries, start, first, last);
-    const per = ROWS_PER_PAGE[size];
+    const per = ROWS_PER_PAGE[size] || ROWS_PER_PAGE.standard;
     for (let r = 0; r < Math.max(1, sorted.length); r += per) {
       pages.push({ week: first / 7 + 1, first, last, cols, rows: sorted.slice(r, r + per), notes: r === 0 ? notes : [], part: r / per });
     }
@@ -72,7 +72,7 @@ export default function DailyChart({ page, start, lastIndex }) {
                 <th scope="row" className="c-time mono">
                   {rows[r - 1]?.time === time ? "" : fmtTime(time)}
                 </th>
-                <td className="c-drop">
+                <td className="c-drop" style={item.tint ? { background: item.tint } : undefined}>
                   <div className="c-drop-in">
                     <Chip n={item.index + 1} style={item.chip} />
                     <span>

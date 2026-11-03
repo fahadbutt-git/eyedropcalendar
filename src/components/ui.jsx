@@ -42,6 +42,13 @@ export function chipStyle(med) {
   };
 }
 
+// A light wash of the bottle's cap colour behind a row, so a glance at the
+// sheet matches the bottle in hand. White caps get no wash.
+export const capTint = (med) => {
+  const c = CAP_COLOURS[med?.cap];
+  return c && med.cap !== "white" ? `${c.hex}33` : null;
+};
+
 export const Chip = ({ n, style }) => (
   <span className="chip" style={style} aria-hidden="true">
     {n}

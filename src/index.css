@@ -241,7 +241,9 @@ dialog.modal .card-b { display: grid; gap: 14px; }
    sheet has: a desktop window, a tablet, a phone or the printed page. The
    same rules therefore fit every screen and print without fixed widths. */
 .sched-print, .rx-print { container-type: inline-size; --s: 0.9rem; --s: clamp(0.7rem, 1.45cqi, 0.95rem); }
-.sched-print.large { --s: 1.15rem; --s: clamp(0.8rem, 1.9cqi, 1.25rem); }
+/* On screen each print size keeps the proportions it has on paper. */
+.sched-print.standard { --s: 1rem; --s: clamp(0.75rem, 1.65cqi, 1.1rem); }
+.sched-print.large { --s: 1.25rem; --s: clamp(0.85rem, 2.14cqi, 1.4rem); }
 .sheet { background: #fff; border: 1px solid var(--ink); padding: calc(var(--s) * 1.806) calc(var(--s) * 2.083); display: flex; flex-direction: column; font-family: var(--read); font-size: var(--s); }
 .sheet-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: calc(var(--s) * 0.833) calc(var(--s) * 1.111); align-items: flex-end; border-bottom: calc(var(--s) * 0.278) solid var(--ink); padding-bottom: calc(var(--s) * 0.694); margin-bottom: calc(var(--s) * 0.833); }
 .kicker { font-size: calc(var(--s) * 0.764); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
@@ -260,6 +262,7 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .legend.compact { gap: calc(var(--s) * 0.278) calc(var(--s) * 1.528); margin-bottom: calc(var(--s) * 0.556); grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--s) * 13.889)), 1fr)); }
 .legend.compact .legend-item { align-items: center; }
 .legend-eye { font-weight: 700; }
+.legend-cap { font-weight: 700; }
 .legend-times, .legend-sub { font-size: calc(var(--s) * 0.833); }
 .legend-sub { color: var(--ink-2); }
 .sheet .cap-name { font-size: inherit; }
@@ -273,12 +276,24 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .cal td.out { background: var(--paper); }
 .cal td.inactive { background: #f7f6f2; }
 .cal td.inactive .dnum { color: #5c5c5c; }
-.cal .dnum { font-weight: 800; font-size: calc(var(--s) * 0.972); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0 calc(var(--s) * 0.278); line-height: 1.3; }
+.cal .dnum { font-weight: 800; font-size: calc(var(--s) * 1.05); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0 calc(var(--s) * 0.278); line-height: 1.3; }
 .cal .flag { font-size: calc(var(--s) * 0.66); font-weight: 800; color: #fff; background: var(--ink); padding: 0 calc(var(--s) * 0.347); text-transform: uppercase; letter-spacing: 0.06em; }
-.cal .dose { display: grid; grid-template-columns: calc(var(--s) * 1.25) minmax(0, 1fr); align-items: center; column-gap: calc(var(--s) * 0.417); font-size: calc(var(--s) * 0.764); line-height: 1.15; margin-top: calc(var(--s) * 0.278); }
-.cal .dose .chip { width: calc(var(--s) * 1.25); height: calc(var(--s) * 1.25); font-size: calc(var(--s) * 0.66); border-radius: 2px; }
-.cal .change { grid-column: 2; font-size: calc(var(--s) * 0.66); font-weight: 700; color: var(--ink-2); }
-.cal .stop { font-size: calc(var(--s) * 0.764); font-weight: 800; color: var(--maroon); }
+/* --k scales the marks to fill each day cell (see fitMarks), and --per sets
+   how many tick boxes sit on a line. */
+.cal-wrap { --u: calc(var(--s) * var(--k, 1)); }
+.cal .dose { display: grid; grid-template-columns: calc(var(--u) * 1.5) minmax(0, 1fr); align-items: center; column-gap: calc(var(--u) * 0.417); font-size: calc(var(--u) * 0.9); line-height: 1.15; margin-top: calc(var(--s) * 0.278); padding: calc(var(--u) * 0.1) calc(var(--u) * 0.15); border-radius: 3px; }
+.cal .dose .chip { width: calc(var(--u) * 1.5); height: calc(var(--u) * 1.5); font-size: calc(var(--u) * 0.8); border-radius: 2px; }
+.cal .change { grid-column: 2; font-size: calc(var(--u) * 0.78); font-weight: 700; color: var(--ink-2); }
+.cal .stop { font-size: calc(var(--u) * 0.9); font-weight: 800; color: var(--maroon); }
+.cal .boxes { gap: calc(var(--u) * 0.22); max-width: calc(var(--u) * 1.37 * var(--per, 6)); }
+.cal .boxes i { width: calc(var(--u) * 1.15); height: calc(var(--u) * 1.15); border-width: 2px; }
+/* A month a page: the original, smaller marks so a whole month fits. */
+.compact .cal .dnum { font-size: calc(var(--s) * 0.972); }
+.compact .cal .dose { grid-template-columns: calc(var(--s) * 1.25) minmax(0, 1fr); font-size: calc(var(--s) * 0.764); }
+.compact .cal .dose .chip { width: calc(var(--s) * 1.25); height: calc(var(--s) * 1.25); font-size: calc(var(--s) * 0.66); }
+.compact .cal .change { font-size: calc(var(--s) * 0.66); }
+.compact .cal .stop { font-size: calc(var(--s) * 0.764); }
+.compact .cal .boxes i { width: calc(var(--s) * 0.903); height: calc(var(--s) * 0.903); border-width: 1.5px; }
 .boxes { display: inline-flex; flex-wrap: wrap; gap: calc(var(--s) * 0.208); vertical-align: middle; }
 .boxes i { width: calc(var(--s) * 0.903); height: calc(var(--s) * 0.903); border: 1.5px solid var(--ink); display: inline-block; background: #fff; }
 
@@ -439,8 +454,9 @@ dialog.modal .card-b { display: grid; gap: 14px; }
   .cal, .chart { min-width: 0; }
   .cal-wrap { padding-bottom: 4px; }
   /* On paper the scale is fixed in inches, whatever the browser's text size. */
-  .sched-print, .rx-print { --s: 0.15in; }
-  .sched-print.large { --s: 0.195in; }
+  .sched-print, .rx-print, .sched-print.compact { --s: 0.15in; }
+  .sched-print.standard { --s: 0.17in; }
+  .sched-print.large { --s: 0.22in; }
   .rx-sheet { page: rx; border: 0; padding: 0; min-height: 10in; max-width: none; }
   body.print-rx .sched-print, body.print-schedule .rx-print { display: none !important; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

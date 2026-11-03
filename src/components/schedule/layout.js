@@ -3,9 +3,18 @@ import { MONTHS, addDays, fmtShort } from "../../lib/dates.js";
 
 // Height budget in CSS pixels (7.75 in of printable height at 96 px per inch).
 const PAGE = 745;
-const SIZES = {
-  standard: { header: 112, qr: 40, thead: 32, compactRow: 26, fullRow: 70, cols: 3, dayLabel: 28, dose: 21, perLine: 6, maxWeeks: 5 },
-  large: { header: 124, qr: 56, thead: 42, compactRow: 36, fullRow: 96, cols: 2, dayLabel: 42, dose: 32, perLine: 4, maxWeeks: 2 },
+// Each print size: its scale on paper (--s, in px at 96 per inch), how many
+// weeks a page holds, and how many tick boxes fit on a line in a day cell.
+// Heights below are in units of that scale, matching the sheet styles.
+export const PRINT_SIZES = {
+  standard: { s: 0.17 * 96, maxWeeks: 2, perLine: 4, cols: 3, dose: 1.95, months: false, label: "Two weeks a page", hint: "Clear and roomy. The default" },
+  large: { s: 0.22 * 96, maxWeeks: 1, perLine: 3, cols: 2, dose: 1.95, months: false, label: "Large print, one week a page", hint: "For low vision" },
+  compact: { s: 0.15 * 96, maxWeeks: 5, perLine: 6, cols: 3, dose: 1.46, months: true, label: "A month a page", hint: "Fewest pages, smallest print" },
+};
+const UNITS = { header: 7.8, qr: 2.8, thead: 2.2, compactRow: 1.9, fullRow: 4.9, dayLabel: 1.95 };
+const sizeOf = (size) => {
+  const p = PRINT_SIZES[size] || PRINT_SIZES.standard;
+  return { ...p, ...Object.fromEntries(Object.entries(UNITS).map(([k, v]) => [k, v * p.s])), dose: p.dose * p.s };
 };
 
 function monthWeeks(year, month) {
@@ -33,7 +42,7 @@ function weeksFrom(start, end) {
 // "Now 3x" or "Stop" marker on those days.
 export function buildPages({ size, start, span, peaks, changes = [], qr = false }) {
   const count = peaks.length;
-  const z = SIZES[size];
+  const z = sizeOf(size);
   const base = PAGE - z.header - z.thead - 28;
   const legendRows = Math.ceil(count / z.cols);
   const calendarOnly = base - legendRows * z.compactRow;
@@ -43,7 +52,7 @@ export function buildPages({ size, start, span, peaks, changes = [], qr = false 
   const fitWeeks = Math.max(1, Math.floor(calendarOnly / rowNeed));
 
   let pages = null;
-  if (size === "standard" && start.getDate() <= 7 && (span.months.length === 1 || span.end.getDate() >= 21)) {
+  if (z.months && start.getDate() <= 7 && (span.months.length === 1 || span.end.getDate() >= 21)) {
     const months = span.months.map(({ year, month }) => ({ title: `${MONTHS[month]} ${year}`, weeks: monthWeeks(year, month), month }));
     if (months.every((m) => m.weeks.length <= fitWeeks)) pages = months;
   }
@@ -63,5 +72,30 @@ export function buildPages({ size, start, span, peaks, changes = [], qr = false 
     const room = combined && i === 0 ? withLegend : calendarOnly - (qr && i === 0 ? z.qr : 0);
     p.rowHeight = Math.max(rowNeed, Math.floor(room / p.weeks.length) - 2);
   });
+  // One size of marks across every page, so the pages look alike.
+  const marks = z.months ? { scale: 1, perLine: z.perLine } : fitMarks(z, peaks, changes, Math.min(...pages.map((p) => p.rowHeight)));
+  pages.forEach((p) => Object.assign(p, marks));
   return { pages, combined };
+}
+
+// Printable width of a day cell in px (10.3 in across, 7 days, less the cell
+// padding), with a little kept spare.
+const cellWidth = (z) => ((10.3 * 96) / 7 - 0.75 * z.s) * 0.95;
+// In units of the sheet scale: a tick box with its gap, the marker with its
+// gap and the row's padding, one dose line, and a "Now 3x" note.
+const BOX = 1.37, MARK = 2.55, LINE = 1.98, NOTE = 0.95;
+
+// Grows the marks and tick boxes in each day cell to fill the room the page
+// leaves, so a sparse plan prints large while a busy one still fits. Tries
+// each number of boxes per line and keeps whichever allows the biggest marks.
+export function fitMarks(z, peaks, changes, rowHeight) {
+  let best = { scale: 1, perLine: z.perLine };
+  for (let per = 1; per <= 6; per++) {
+    const lines = peaks.reduce((h, p, i) => h + LINE + (Math.max(1, Math.ceil(p / per)) - 1) * BOX + (changes[i] ? NOTE : 0), 0);
+    const byWidth = cellWidth(z) / (z.s * (MARK + Math.min(per, Math.max(...peaks, 1)) * BOX));
+    const byHeight = (rowHeight - z.dayLabel) / (z.s * lines);
+    const scale = Math.min(2.2, byWidth, byHeight);
+    if (scale > best.scale + 0.01) best = { scale: Math.round(scale * 100) / 100, perLine: per };
+  }
+  return best;
 }

@@ -5,9 +5,13 @@ import { dosesOnDay } from "../../lib/regimen.js";
 import { chartNote } from "../../lib/chartNote.js";
 import { encodeRegimen, patientLink } from "../../lib/share.js";
 import { isClockTime } from "../../lib/times.js";
-import { CopyButton, Field, Icon, chipStyle, printSheets } from "../ui.jsx";
+import { CopyButton, Field, Icon, capTint, chipStyle, printSheets } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
-import { buildPages } from "./layout.js";
+import { PRINT_SIZES, buildPages } from "./layout.js";
+import { CAP_COLOURS } from "../../data/formulary.js";
+
+// Checklist rows that fit on a page at each print size.
+const CHECKLIST_ROWS = { standard: 19, large: 12, compact: 22 };
 import Legend from "./Legend.jsx";
 import CalendarGrid from "./CalendarGrid.jsx";
 import DailyChart, { chartPages } from "./DailyChart.jsx";
@@ -100,13 +104,18 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, pri
           </p>
         )}
       </fieldset>
-      <label className="check">
-        <input type="checkbox" checked={s.large} onChange={(e) => set({ large: e.target.checked })} />
-        <span>
-          <b>Large print</b>
-          <span className="hint">For low vision</span>
-        </span>
-      </label>
+      <fieldset className="choice-list">
+        <legend className="field-label">Print size</legend>
+        {Object.entries(PRINT_SIZES).map(([key, p]) => (
+          <label className="check" key={key}>
+            <input type="radio" name="print-size" checked={s.size === key} onChange={() => set({ size: key })} />
+            <span>
+              <b>{p.label}</b>
+              <span className="hint">{p.hint}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
       <label className="check">
         <input type="checkbox" checked={s.qr} onChange={(e) => set({ qr: e.target.checked })} />
         <span>
@@ -162,10 +171,10 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, pri
 export default function SchedulePage({ entries, formulary, patient, settings: s, setSettings, warnings, go }) {
   const start = parseISO(s.start);
   const span = scheduleSpan(entries, s.months, start);
-  const size = s.large ? "large" : "standard";
+  const size = s.size;
   const items = entries.map((entry, index) => {
     const med = formulary.find((m) => m.brand === entry.brand);
-    return { entry, index, med, chip: chipStyle(med) };
+    return { entry, index, med, chip: chipStyle(med), tint: capTint(med), capName: CAP_COLOURS[med?.cap]?.label || "" };
   });
   const link = useMemo(
     () => (entries.length ? patientLink(encodeRegimen({ entries, formulary, start: s.start, wake: s.wake, bed: s.bed, nonce: s.nonce })) : ""),
@@ -189,7 +198,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
   const cal = buildPages({ size, start, span, peaks, changes, qr: s.qr && !!qr });
   const chart = s.pages.chart ? chartPages({ items, entries, formulary, start, days: span.days, wake: s.wake, bed: s.bed, size }) : [];
   // The checklist flows onto more pages when the plan is long.
-  const checklistPages = s.pages.checklist ? Math.ceil(span.days / (s.large ? 14 : 22)) : 0;
+  const checklistPages = s.pages.checklist ? Math.ceil(span.days / CHECKLIST_ROWS[size]) : 0;
   // The full legend (doses, times, taper steps, shake well) always prints:
   // on calendar page 1 when it fits, otherwise on a page of its own first.
   const legendPage = !(s.pages.calendar && cal.combined) && (s.pages.calendar || chart.length > 0 || s.pages.checklist);
@@ -272,7 +281,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
             <section className="sheet" key={`cal-${p.title}`}>
               {header(cal.pages.length > 1 ? `Calendar, page ${i + 1} of ${cal.pages.length}` : "Eye drop calendar", p.title)}
               {cal.combined && i === 0 ? legend : compact}
-              <CalendarGrid weeks={p.weeks} items={items} start={start} lastIndex={span.days - 1} month={p.month} rowHeight={p.rowHeight} />
+              <CalendarGrid weeks={p.weeks} items={items} start={start} lastIndex={span.days - 1} month={p.month} rowHeight={p.rowHeight} scale={p.scale} perLine={p.perLine} />
             </section>
           ))}
         {chart.map((p) => (

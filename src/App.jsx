@@ -35,7 +35,7 @@ const defaultSettings = () => ({
   months: 1,
   pages: { calendar: true, chart: false, checklist: false },
   qr: true,
-  large: false,
+  size: "standard",
   nonce: newNonce(),
 });
 
@@ -51,7 +51,9 @@ function checkSettings(s) {
     months: [1, 2, 3].includes(Number(s.months)) ? Number(s.months) : 1,
     pages: { calendar: pages.calendar === true, chart: pages.chart === true, checklist: pages.checklist === true },
     qr: s.qr !== false,
-    large: s.large === true,
+    // "standard" is two weeks a page, "large" one week, "compact" a month.
+    // Older saved settings had only a large print tick box.
+    size: ["standard", "large", "compact"].includes(s.size) ? s.size : s.large === true ? "large" : "standard",
     nonce: typeof s.nonce === "string" && /^[a-z0-9]{4,16}$/.test(s.nonce) ? s.nonce : d.nonce,
   };
 }

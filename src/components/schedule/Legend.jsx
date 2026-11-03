@@ -1,7 +1,8 @@
 import { fmtTime, doseTimes } from "../../lib/times.js";
 import { EYES } from "../../lib/regimen.js";
 import { atBedtime, patientPlanText, patientStartText } from "../../lib/wording.js";
-import { CapDot, Chip } from "../ui.jsx";
+import { Chip } from "../ui.jsx";
+import { CAP_COLOURS } from "../../data/formulary.js";
 import { formInfo } from "../../data/forms.js";
 
 
@@ -16,6 +17,7 @@ export default function Legend({ items, start, wake, bed, compact = false }) {
           <div>
             <div>
               <b>{e.brand}</b> <span className="legend-eye">{EYES[e.eye].long}</span>
+              {med?.cap && <span className="legend-cap"> · {CAP_COLOURS[med.cap]?.label} cap</span>}
             </div>
             {!compact && (
               <>
@@ -27,11 +29,6 @@ export default function Legend({ items, start, wake, bed, compact = false }) {
                   )}
                 </div>
                 <div className="legend-sub">
-                  {med?.cap && (
-                    <>
-                      <CapDot cap={med.cap} named /> ·{" "}
-                    </>
-                  )}
                   {med?.generic}
                   {formInfo(med?.form).tag && ` · ${formInfo(med.form).tag.toLowerCase()}`}
                 </div>
