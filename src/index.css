@@ -368,6 +368,8 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .next-wait { background: #fff; color: var(--ink); padding: 8px 12px; font-weight: 700; }
 .next-btn { background: #fff; color: var(--navy); border-color: #fff; min-height: 60px; font-size: 1.25rem; font-weight: 800; margin-top: 6px; }
 .next-btn:hover { background: var(--paper); }
+.read-aloud { background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.85); min-height: 3rem; font-size: 1.05rem; }
+.read-aloud:hover { background: rgba(255, 255, 255, 0.12); }
 .daybar { display: grid; grid-template-columns: 3.25rem 1fr 3.25rem; align-items: center; gap: 8px; text-align: center; }
 .daybar h2 { font-size: 1.2rem; }
 .btn.icon { width: 3.25rem; height: 3.25rem; padding: 0; font-size: 1.8rem; line-height: 1; }
@@ -480,6 +482,11 @@ html.patient.large-text { font-size: 125%; }
 }
 
 .remove-alarms { margin-top: 10px; }
+.legal-links { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.legal-links a { display: inline-block; padding: 6px 0; }
+.terms-gate { max-width: 680px; }
+.terms-gate p { max-width: 64ch; }
+.urgent { font-weight: 700; }
 .remove-alarms h3 { margin-top: 8px; font-weight: 600; }
 .remove-alarms ol { padding-left: 1.3em; display: grid; gap: 4px; }
 .idle-notice { margin-bottom: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#1f3a5f" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <title>Accessibility · Eye Drop Tracker</title>
+    <style>
+      :root { color-scheme: light; }
+      body { margin: 0; background: #fff; color: #1b1f24; font: 1rem/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      header { border-bottom: 3px solid #1f3a5f; }
+      header a { display: block; max-width: 720px; margin: 0 auto; padding: 14px 20px; font-weight: 700; color: #1b1f24; text-decoration: none; }
+      main { max-width: 720px; margin: 0 auto; padding: 8px 20px 48px; }
+      h1 { font-size: 1.7rem; line-height: 1.25; margin: 24px 0 4px; }
+      h2 { font-size: 1.1rem; margin: 28px 0 6px; }
+      p, li { max-width: 66ch; }
+      ul { padding-left: 1.3em; }
+      .date { color: #545b64; margin-top: 0; }
+      a { color: #1f3a5f; }
+      nav { border-top: 1px solid #d9d5cb; margin-top: 36px; padding-top: 14px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+    </style>
+  </head>
+  <body>
+    <header><a href="/">Eye Drop Tracker</a></header>
+    <main>
+      <h1>Accessibility</h1>
+      <p class="date">Last updated 3 November 2026</p>
+
+      <p>Many people who use eye drops have reduced vision, so Eye Drop Tracker is built to be usable by them. We aim to meet the Web Content Accessibility Guidelines (WCAG) 2.1 at level AA, the standard used by Ontario's Accessibility for Ontarians with Disabilities Act.</p>
+
+      <h2>For patients</h2>
+      <ul>
+        <li>Every drop is shown with its cap colour, written in words as well as in colour, so it works for colour blindness and on black and white printers.</li>
+        <li>Printed plans come in three sizes: two weeks a page, large print at one week a page, and a month a page. Printouts use Atkinson Hyperlegible, a typeface designed for low vision.</li>
+        <li>The phone view follows the text size set on the phone, and the Larger text button makes everything bigger again.</li>
+        <li>Read it to me reads the next dose aloud with the phone's own voice.</li>
+        <li>Large tick boxes and buttons, a double tap guard and an undo button make it hard to tick the wrong dose.</li>
+      </ul>
+
+      <h2>For everyone</h2>
+      <ul>
+        <li>Works with screen readers (VoiceOver, TalkBack, NVDA) and with a keyboard alone.</li>
+        <li>High contrast throughout, and support for high contrast modes on Windows.</li>
+        <li>Nothing relies on colour alone, and pages reflow without sideways scrolling up to 200% zoom.</li>
+      </ul>
+
+      <h2>Known limits</h2>
+      <ul>
+        <li>Read it to me only appears on phones and browsers that have a voice installed on the device.</li>
+        <li>A month a page has the smallest print. Choose two weeks a page or large print for anyone with low vision.</li>
+      </ul>
+
+      <h2>Feedback</h2>
+      <p>If something is hard to use, or you need the plan in another format, please tell us at <a href="mailto:eyedroptracker@gmail.com">eyedroptracker@gmail.com</a>. We aim to reply within five business days.</p>
+
+      <nav aria-label="Legal"><a href="/terms.html">Terms of use</a><a href="/privacy.html">Privacy</a><a href="/accessibility.html">Accessibility</a><a href="/">Back to Eye Drop Tracker</a></nav>
+    </main>
+  </body>
+</html>

@@ -54,14 +54,14 @@ Scan the QR code on the calendar from your clinic and the app shows which drop i
 - Today's drops, in order, with a reminder to wait 5 minutes between drops
 - Tapers and courses that change on the right day
 - Cap colours to help you find the right bottle
-- Larger text option
+- Larger text that follows your phone's text size, and Read it to me for the next dose
 - Reminders can hide drug names on your lock screen
 
 No account, no ads and no tracking. Your plan and your check marks stay on your phone. The app does not give medical advice. Follow your eye doctor if their instructions differ from the plan.
 
 **Category:** Medical. **Keywords (Apple):** eye drops,glaucoma,reminder,taper,cataract,medication,ophthalmology,dose
 
-**Privacy policy URL:** https://eyedroptracker.com/privacy.html. **Support URL:** https://eyedroptracker.com
+**Privacy policy URL:** https://eyedroptracker.com/privacy.html. **Terms (license agreement):** https://eyedroptracker.com/terms.html. **Support URL:** https://eyedroptracker.com
 
 ### Privacy answers
 

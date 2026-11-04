@@ -131,6 +131,12 @@ export const Icon = {
   ),
   bell: svg(<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" />),
   check: svg(<path d="M20 6 9 17l-5-5" />, 26, 3.5),
+  speaker: svg(
+    <>
+      <path d="M11 5 6 9H2v6h4l5 4z" />
+      <path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" />
+    </>
+  ),
 };
 
 // Shows the matching print sheets while the print dialog is open.

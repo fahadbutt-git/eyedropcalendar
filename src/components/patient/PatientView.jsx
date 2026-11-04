@@ -4,6 +4,8 @@ import { courseLastDay } from "../../lib/calendar.js";
 import { changeNotes, dayName } from "../../lib/changes.js";
 import { doseDayIndex, doseGroups, medOf, minutesInto, nextDose } from "../../lib/doses.js";
 import { isNative, onAppResume } from "../../lib/native.js";
+import { canSpeak, onVoicesChanged, speak, stopSpeaking } from "../../lib/speech.js";
+import { CAP_COLOURS } from "../../data/formulary.js";
 import { patientKey } from "../../lib/patientStore.js";
 import { EYES } from "../../lib/regimen.js";
 import { fmtTime } from "../../lib/times.js";
@@ -39,6 +41,34 @@ function useNow() {
     };
   }, []);
   return now;
+}
+
+// What "Read it to me" says: when, which drug, which bottle, how much, where.
+function spokenDose({ entry, med, time }, when) {
+  const cap = CAP_COLOURS[med?.cap];
+  return [
+    `${when}, at ${fmtTime(time)}.`,
+    `${entry.brand}.`,
+    cap && `The ${cap.label.toLowerCase()} cap.`,
+    `${entry.drops} drop${entry.drops > 1 ? "s" : ""} in ${entry.eye === "OU" ? "both eyes" : `the ${EYES[entry.eye].long}`}.`,
+    formInfo(med?.form).advice,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+// A button that reads the dose aloud with the phone's own voice. It only
+// appears when the phone has a voice that works without the internet.
+function ReadAloud({ text }) {
+  const [ready, setReady] = useState(canSpeak);
+  useEffect(() => onVoicesChanged(() => setReady(canSpeak())), []);
+  useEffect(() => () => stopSpeaking(), []);
+  if (!ready) return null;
+  return (
+    <button className="btn read-aloud" onClick={() => speak(text)}>
+      {Icon.speaker} Read it to me
+    </button>
+  );
 }
 
 function doseLabel({ entry, med }) {
@@ -175,6 +205,7 @@ export default function PatientView({ plan: shared, code }) {
               I have put it in
             </button>
           )}
+          <ReadAloud text={spokenDose(next, nextIsSoon ? "Wait, then" : pick.state === "due" ? "Due now" : "Next")} />
         </section>
       )}
 
@@ -276,6 +307,10 @@ export default function PatientView({ plan: shared, code }) {
           );
         })}
         <p className="small">Follow your eye doctor if their instructions differ from this plan. Your check marks stay on this phone.</p>
+        <p className="small urgent">
+          If your eye becomes very painful or red, or your vision suddenly gets worse, contact your eye clinic right away or go to
+          the nearest emergency department.
+        </p>
       </section>
     </div>
   );

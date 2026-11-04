@@ -1,5 +1,6 @@
 import { Component, useEffect, useMemo, useRef, useState } from "react";
-import { APP_NAME, CONTACT_EMAIL, COPYRIGHT_YEAR, OWNERS, REPO_URL, SITE_URL } from "./config.js";
+import { APP_NAME, CONTACT_EMAIL, COPYRIGHT_YEAR, OWNERS, REPO_URL } from "./config.js";
+import TermsGate, { TERMS_VERSION, legalLink } from "./components/TermsGate.jsx";
 import { DRUG_CLASSES, FORMULARY_VERSION, SEED_FORMULARY } from "./data/formulary.js";
 import { dropWarnings } from "./lib/checks.js";
 import { isValidISO, parseISO, toISO } from "./lib/dates.js";
@@ -75,8 +76,12 @@ function Footer({ patientView }) {
             Open source
           </a>{" "}
           under the Apache 2.0 licence. No ads and no industry funding. Feedback and errors:{" "}
-          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.{" "}
-          <a href={`${isNative ? SITE_URL : ""}/privacy.html`}>Privacy</a>
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+        </p>
+        <p className="legal-links">
+          <a href={legalLink("terms")}>Terms of use</a>
+          <a href={legalLink("privacy")}>Privacy</a>
+          <a href={legalLink("accessibility")}>Accessibility</a>
         </p>
         {!patientView && (
           <p>
@@ -217,6 +222,7 @@ function useFormulary() {
 function ClinicianApp() {
   const session = { kind: "session" };
   const formulary = useFormulary();
+  const [terms, setTerms] = usePersistentState("edt.terms", "");
   const [tab, setTab] = usePersistentState("edt.tab", "regimen", { ...session, check: (t) => (TITLES[t] ? t : null) });
   const [prescriber, setPrescriber] = usePersistentState("edt.prescriber.v1", BLANK_PRESCRIBER);
   const [patient, setPatient] = usePersistentState("edt.patient", BLANK_PATIENT, session);
@@ -300,7 +306,8 @@ function ClinicianApp() {
         </nav>
       </Header>
       <main id="main" ref={mainRef} tabIndex={-1}>
-        {cleared && (
+        {terms !== TERMS_VERSION && <TermsGate onAccept={() => setTerms(TERMS_VERSION)} />}
+        {terms === TERMS_VERSION && cleared && (
           <p className="notice idle-notice" role="status">
             The last patient was cleared after 30 minutes without use.{" "}
             <button className="link-btn" onClick={() => setCleared(false)}>
@@ -308,7 +315,7 @@ function ClinicianApp() {
             </button>
           </p>
         )}
-        {tab === "regimen" && (
+        {terms === TERMS_VERSION && tab === "regimen" && (
           <RegimenPage
             patient={patient}
             setPatient={setPatient}
@@ -322,10 +329,10 @@ function ClinicianApp() {
             openPlan={openPlan}
           />
         )}
-        {tab === "schedule" && (
+        {terms === TERMS_VERSION && tab === "schedule" && (
           <SchedulePage entries={entries} formulary={formulary.list} patient={patient} settings={settings} setSettings={setSettings} warnings={warnings} go={go} />
         )}
-        {tab === "rx" && (
+        {terms === TERMS_VERSION && tab === "rx" && (
           <RxPage
             entries={entries}
             formulary={formulary.list}
@@ -339,7 +346,7 @@ function ClinicianApp() {
             go={go}
           />
         )}
-        {tab === "formulary" && (
+        {terms === TERMS_VERSION && tab === "formulary" && (
           <FormularyPage
             formulary={formulary.list}
             setFormulary={formulary.save}
