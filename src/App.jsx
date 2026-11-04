@@ -230,11 +230,21 @@ function ClinicianApp() {
   const [drops, setDrops] = usePersistentState("edt.drops", [], { ...session, check: checkDrops });
   const [settings, setSettings] = usePersistentState("edt.schedule.v3", defaultSettings, { ...session, check: checkSettings });
   const [rx, setRx] = usePersistentState("edt.rx", blankRx, session);
-  // Any change to the drops or patient means the prescription has not been
-  // reviewed in its new form, so the electronic signature comes off.
+  // A signature is drawn for one prescription and held in memory only, never
+  // in browser storage. Any change to the drops or patient means the
+  // prescription has not been reviewed in its new form, so it comes off.
+  const [signature, setSignature] = useState("");
+  useEffect(() => setSignature(""), [drops, patient]);
+  // Signatures saved by earlier versions are removed.
   useEffect(() => {
-    setRx((r) => (r.sig || r.esign ? { ...r, sig: "", esign: false } : r));
-  }, [drops, patient, setRx]);
+    try {
+      localStorage.removeItem("edt.signature.v1");
+    } catch {
+      // Nothing stored.
+    }
+    // eslint-disable-next-line no-unused-vars
+    setRx(({ sig, esign, ...r }) => r);
+  }, [setRx]);
   const entries = useMemo(() => toEntries(drops), [drops]);
   const warnings = useMemo(() => dropWarnings(drops, formulary.list, DRUG_CLASSES, { dob: patient.dob }), [drops, formulary.list, patient.dob]);
   const mainRef = useRef(null);
@@ -261,6 +271,7 @@ function ClinicianApp() {
     setPatient(BLANK_PATIENT);
     setDrops([]);
     setRx(blankRx());
+    setSignature("");
     setSettings(defaultSettings());
     go("regimen");
   };
@@ -274,6 +285,11 @@ function ClinicianApp() {
     clearPatient();
     setCleared(true);
   });
+  // The notice is for whoever comes back to the desk. It goes once a new
+  // patient is started.
+  useEffect(() => {
+    if (hasPatient) setCleared(false);
+  }, [hasPatient]);
 
   // A plan opened from a patient's link keeps its start date, dose times and
   // plan ID. Each drop gets a fresh row id for editing.
@@ -342,6 +358,8 @@ function ClinicianApp() {
             setPrescriber={setPrescriber}
             rx={rx}
             setRx={setRx}
+            signature={signature}
+            setSignature={setSignature}
             start={settings.start}
             warnings={warnings}
             go={go}

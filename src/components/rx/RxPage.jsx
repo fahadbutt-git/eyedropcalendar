@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { LU_CRITERIA, LU_NOT_MET } from "../../data/formulary.js";
 import { EYES } from "../../lib/regimen.js";
 import { Field, Icon, printSheets } from "../ui.jsx";
@@ -108,18 +107,11 @@ function ItemRow({ entry, med, opt, setOpt }) {
   );
 }
 
-export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, rx, setRx, start, warnings, go }) {
+export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, rx, setRx, signature: drawn, setSignature, start, warnings, go }) {
   // A signature is drawn for each prescription and never saved, as the
   // Ontario College of Pharmacists does not accept a stored signature image
-  // pasted onto prescriptions. Signatures saved by earlier versions are removed.
-  const signature = isSignature(rx.sig);
-  useEffect(() => {
-    try {
-      localStorage.removeItem("edt.signature.v1");
-    } catch {
-      // Nothing stored.
-    }
-  }, []);
+  // pasted onto prescriptions. It is held in memory by the clinician app.
+  const signature = isSignature(drawn);
   if (!entries.length)
     return (
       <div className="card card-b empty">
@@ -176,7 +168,7 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
               <span className="field-label">
                 Sign this prescription <em>(optional)</em>
               </span>
-              <SignaturePad signature={signature} setSignature={(sig) => setRx({ ...rx, sig })} />
+              <SignaturePad signature={signature} setSignature={setSignature} />
               <span className="field-hint">
                 Signing confirms you have reviewed this prescription. The signature is used for this prescription only, is not
                 saved, and comes off if the drops or patient change. Or leave it blank and sign the printout by hand.

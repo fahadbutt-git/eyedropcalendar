@@ -40,14 +40,22 @@ function weeksFrom(start, end) {
 // many doses get the extra lines their tick boxes wrap onto.
 // `changes` marks drugs that start, change or stop, which adds a line for the
 // "Now 3x" or "Stop" marker on those days.
-export function buildPages({ size, start, span, peaks, changes = [], qr = false }) {
+// `measured` holds the heights the sheet's header and legends actually take on
+// screen, in units of the sheet scale (see useSheetMeasure). They replace the
+// estimates once known, since long taper wording can wrap onto extra lines.
+export function buildPages({ size, start, span, peaks, changes = [], qr = false, measured = {} }) {
   const count = peaks.length;
   const z = sizeOf(size);
-  const base = PAGE - z.header - z.thead - 28;
   const legendRows = Math.ceil(count / z.cols);
-  const calendarOnly = base - legendRows * z.compactRow;
+  const header = measured.header ? measured.header * z.s : z.header;
   // The QR box makes the first page header taller.
-  const withLegend = base - legendRows * z.fullRow - (qr ? z.qr : 0);
+  const qrExtra = !qr ? 0 : measured.headerQr ? Math.max(0, measured.headerQr * z.s - header) : z.qr;
+  const fullLegend = measured.full ? measured.full * z.s : legendRows * z.fullRow;
+  const shortLegend = measured.compact ? measured.compact * z.s : legendRows * z.compactRow;
+  const thead = measured.thead ? measured.thead * z.s : z.thead;
+  const base = PAGE - header - thead - 28;
+  const calendarOnly = base - shortLegend;
+  const withLegend = base - fullLegend - qrExtra;
   const rowNeed = z.dayLabel + peaks.reduce((h, p, i) => h + z.dose * (Math.max(1, Math.ceil(p / z.perLine)) + (changes[i] ? 1 : 0)), 0);
   const fitWeeks = Math.max(1, Math.floor(calendarOnly / rowNeed));
 
@@ -69,8 +77,10 @@ export function buildPages({ size, start, span, peaks, changes = [], qr = false 
 
   const combined = pages[0].weeks.length * rowNeed <= withLegend;
   pages.forEach((p, i) => {
-    const room = combined && i === 0 ? withLegend : calendarOnly - (qr && i === 0 ? z.qr : 0);
-    p.rowHeight = Math.max(rowNeed, Math.floor(room / p.weeks.length) - 2);
+    const room = combined && i === 0 ? withLegend : calendarOnly - (i === 0 ? qrExtra : 0);
+    // A row never takes more than its share of the page; the marks shrink to
+    // fit instead (fitMarks), so a busy week cannot push onto another sheet.
+    p.rowHeight = Math.max(z.dayLabel * 2, Math.floor(room / p.weeks.length) - 2);
   });
   // One size of marks across every page, so the pages look alike.
   const marks = fitMarks(z, peaks, changes, Math.min(...pages.map((p) => p.rowHeight)));
@@ -89,18 +99,42 @@ const MARKS = {
   small: { box: 1.11, mark: 2.1, line: 1.6, note: 0.8 },
 };
 
-// Grows the marks and tick boxes in each day cell to fill the room the page
-// leaves, so a sparse plan prints large while a busy one still fits. Tries
-// each number of boxes per line and keeps whichever allows the biggest marks.
+// Sizes the marks and tick boxes in each day cell to fill the room the page
+// leaves: larger for a sparse plan, smaller (down to MIN_SCALE) for a busy
+// one, so it always fits. Tries each number of boxes per line and keeps
+// whichever allows the biggest marks.
+const MIN_SCALE = 0.6;
+// How many sheets the checklist table takes. Its column headings repeat on
+// every sheet, the first also carries the header and short legend, and a row
+// never splits across sheets. Measured heights are used when known,
+// otherwise a row count per size.
+const CHECKLIST_ROWS = { standard: 19, large: 12, compact: 22 };
+export function checklistPageCount({ size, days, measured = {} }) {
+  const z = sizeOf(size);
+  const { header, compact, chkHead, chkRows } = measured;
+  if (!chkHead || chkRows?.length !== days) return Math.ceil(days / CHECKLIST_ROWS[size]);
+  const head = chkHead * z.s;
+  let room = PAGE - ((header || 0) + (compact || 0)) * z.s - head - 28;
+  let pages = 1;
+  for (const h of chkRows) {
+    if (h * z.s > room) {
+      pages += 1;
+      room = PAGE - head;
+    }
+    room -= h * z.s;
+  }
+  return pages;
+}
+
 export function fitMarks(z, peaks, changes, rowHeight) {
   const { box: BOX, mark: MARK, line: LINE, note: NOTE } = MARKS[z.marks];
-  let best = { scale: 1, perLine: z.perLine };
+  let best = { scale: 0, perLine: z.perLine };
   for (let per = 1; per <= 6; per++) {
     const lines = peaks.reduce((h, p, i) => h + LINE + (Math.max(1, Math.ceil(p / per)) - 1) * BOX + (changes[i] ? NOTE : 0), 0);
     const byWidth = cellWidth(z) / (z.s * (MARK + Math.min(per, Math.max(...peaks, 1)) * BOX));
     const byHeight = (rowHeight - z.dayLabel) / (z.s * lines);
     const scale = Math.min(2.2, byWidth, byHeight);
-    if (scale > best.scale + 0.01) best = { scale: Math.round(scale * 100) / 100, perLine: per };
+    if (scale > best.scale + 0.01) best = { scale: Math.floor(scale * 100) / 100, perLine: per };
   }
-  return best;
+  return { ...best, scale: Math.max(MIN_SCALE, best.scale) };
 }

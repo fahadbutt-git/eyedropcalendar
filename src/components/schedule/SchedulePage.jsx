@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSheetMeasure } from "./useSheetMeasure.js";
 import { addDays, fmtShort, isValidISO, parseISO } from "../../lib/dates.js";
 import { scheduleSpan } from "../../lib/calendar.js";
 import { dosesOnDay } from "../../lib/regimen.js";
@@ -7,11 +8,10 @@ import { encodeRegimen, patientLink } from "../../lib/share.js";
 import { isClockTime } from "../../lib/times.js";
 import { CopyButton, Field, Icon, capTint, chipStyle, printSheets } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
-import { PRINT_SIZES, buildPages } from "./layout.js";
+import { PRINT_SIZES, buildPages, checklistPageCount } from "./layout.js";
 import { CAP_COLOURS } from "../../data/formulary.js";
 
 // Checklist rows that fit on a page at each print size.
-const CHECKLIST_ROWS = { standard: 19, large: 12, compact: 22 };
 import Legend from "./Legend.jsx";
 import CalendarGrid from "./CalendarGrid.jsx";
 import DailyChart, { chartPages } from "./DailyChart.jsx";
@@ -181,6 +181,8 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
     [entries, formulary, s.start, s.wake, s.bed, s.nonce]
   );
   const [qr, qrFailed] = useQrCode(link, s.qr);
+  const sheetsRef = useRef(null);
+  const measured = useSheetMeasure(sheetsRef, size, [entries, formulary, size, s.start, s.wake, s.bed, s.qr, qr, patient.name, patient.dob]);
 
   if (!entries.length)
     return (
@@ -195,10 +197,10 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
 
   const peaks = entries.map((e) => Math.max(...Array.from({ length: span.days }, (_, i) => dosesOnDay(e, i))));
   const changes = entries.map((e) => e.mode !== "ongoing" || e.startDay > 1);
-  const cal = buildPages({ size, start, span, peaks, changes, qr: s.qr && !!qr });
+  const cal = buildPages({ size, start, span, peaks, changes, qr: s.qr && !!qr, measured });
   const chart = s.pages.chart ? chartPages({ items, entries, formulary, start, days: span.days, wake: s.wake, bed: s.bed, size }) : [];
   // The checklist flows onto more pages when the plan is long.
-  const checklistPages = s.pages.checklist ? Math.ceil(span.days / CHECKLIST_ROWS[size]) : 0;
+  const checklistPages = s.pages.checklist ? checklistPageCount({ size, days: span.days, measured }) : 0;
   // The full legend (doses, times, taper steps, shake well) always prints:
   // on calendar page 1 when it fits, otherwise on a page of its own first.
   const legendPage = !(s.pages.calendar && cal.combined) && (s.pages.calendar || chart.length > 0 || s.pages.checklist);
@@ -261,7 +263,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
         print={() => printSheets("schedule")}
         go={go}
       />
-      <div className={`sched-print ${size}`}>
+      <div className={`sched-print ${size}`} ref={sheetsRef}>
         <div className="no-print">
           <Warnings warnings={warnings} compact />
           {qrFailed && (

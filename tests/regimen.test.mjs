@@ -321,7 +321,7 @@ test("a reopened plan keeps its start date and plan ID", async () => {
   assert.deepEqual(again.entries[0].steps, [{ freq: 4, days: 7 }, { freq: 3, days: 14 }]);
 });
 
-test("a changed plan keeps the patient's check marks", async () => {
+test("a changed plan keeps check marks, and another patient's plan starts fresh", async () => {
   const store = new Map();
   globalThis.localStorage = {
     getItem: (k) => (store.has(k) ? store.get(k) : null),
@@ -334,17 +334,22 @@ test("a changed plan keeps the patient's check marks", async () => {
     const code = encodeRegimen({ entries: [{ ...base, steps }], formulary: SEED_FORMULARY, start: "2026-11-02", wake: "08:00", bed: "22:00", nonce });
     return { code, plan: decodeRegimen(code) };
   };
+  const ticks = { "2026-11-02": { "Pred Forte|OD|0": 1 } };
   const a = make([{ freq: 4, days: 7 }, { freq: 2, days: 7 }], "pat00001");
   adoptPlan(a.code, a.plan);
-  store.set(`edt.taken.${patientKey(a.plan, a.code)}`, JSON.stringify({ "2026-11-02": { "Pred Forte|OD|0": 1 } }));
+  store.set(`edt.taken.${patientKey(a.plan, a.code)}`, JSON.stringify(ticks));
   store.set(`edt.alarms.${patientKey(a.plan, a.code)}`, "true");
-  // Re-entered at follow-up, so a new patient code.
-  const b = make([{ freq: 4, days: 7 }, { freq: 3, days: 14 }], "pat00002");
+  // Changed at follow-up with Change a plan, so the same patient code.
+  const b = make([{ freq: 4, days: 7 }, { freq: 3, days: 14 }], "pat00001");
   adoptPlan(b.code, b.plan);
   const kb = patientKey(b.plan, b.code);
-  assert.deepEqual(JSON.parse(store.get(`edt.taken.${kb}`)), { "2026-11-02": { "Pred Forte|OD|0": 1 } });
+  assert.deepEqual(JSON.parse(store.get(`edt.taken.${kb}`)), ticks);
   assert.equal(store.get(`edt.alarms.${kb}`), "true");
   assert.equal(store.get("edt.patientPlan"), b.code);
+  // A plan with another patient code, perhaps another person on this phone.
+  const c = make([{ freq: 4, days: 7 }], "pat00002");
+  adoptPlan(c.code, c.plan);
+  assert.equal(store.get(`edt.taken.${patientKey(c.plan, c.code)}`), undefined);
   delete globalThis.localStorage;
 });
 

@@ -399,9 +399,13 @@ dialog.modal .card-b { display: grid; gap: 14px; }
    adds a quarter on top. */
 html.patient { font-size: 100%; }
 html.patient.large-text { font-size: 125%; }
-@supports (font: -apple-system-body) {
-  html.patient { font: -apple-system-body; font-weight: 400; line-height: 1.5; }
-  html.patient.large-text { font: -apple-system-title2; font-weight: 400; line-height: 1.5; }
+/* Dynamic Type on iPhone. Desktop Safari maps these fonts to a small fixed
+   size, so they apply to touch screens only. */
+@media (pointer: coarse) {
+  @supports (font: -apple-system-body) {
+    html.patient { font: -apple-system-body; font-weight: 400; line-height: 1.5; }
+    html.patient.large-text { font: -apple-system-title2; font-weight: 400; line-height: 1.5; }
+  }
 }
 /* Cap colour is how many patients find the bottle, so it is shown at full
    size with a large swatch. */
@@ -481,6 +485,9 @@ html.patient.large-text { font-size: 125%; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
+/* Hidden copy of a sheet at its printed width, for measuring (useSheetMeasure). */
+.sheet-measure { position: absolute; left: -100000px; top: 0; visibility: hidden; pointer-events: none; }
+.sheet-measure .sheet { padding: 0; border: 0; }
 .remove-alarms { margin-top: 10px; }
 .legal-links { display: flex; flex-wrap: wrap; gap: 4px 18px; }
 .legal-links a { display: inline-block; padding: 6px 0; }

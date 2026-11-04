@@ -1,6 +1,9 @@
 // What the patient's phone keeps between visits. Check marks, the first day
-// the plan was seen and the reminder setting belong to the patient, not to one
-// version of the plan, so a changed plan from the clinic keeps them.
+// the plan was seen and the reminder setting are kept under the plan's patient
+// code, which stays the same when the clinic changes the plan (Change a plan
+// from an earlier visit), so a changed plan keeps them. A plan with a
+// different patient code starts fresh: it may be another person on the same
+// phone, and their doses must never show as taken.
 import { planId } from "./hash.js";
 import { decodeRegimen } from "./share.js";
 
@@ -54,7 +57,10 @@ export function adoptPlan(code, plan) {
   }
   if (!previous || previous === code) return;
   try {
-    carryOver(patientKey(decodeRegimen(previous), previous), patientKey(plan, code));
+    // Only an old-style link (no patient code) is brought over to its newer
+    // version. Same patient code needs nothing: the keys already match.
+    const old = decodeRegimen(previous);
+    if (!old.nonce && plan.nonce) carryOver(patientKey(old, previous), patientKey(plan, code));
   } catch {
     // The old plan no longer opens, so there is nothing to bring over.
   }
