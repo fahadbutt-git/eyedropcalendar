@@ -6,7 +6,7 @@ import { isNative } from "../lib/native.js";
 // plan has agreed to the terms. Bump TERMS_VERSION when the terms change
 // enough that people should agree again.
 export const TERMS_VERSION = "2026-11-03";
-export const legalLink = (page) => `${isNative ? SITE_URL : ""}/${page}.html`;
+export const legalLink = (page, ext = "html") => `${isNative ? SITE_URL : ""}/${page}.${ext}`;
 
 export default function TermsGate({ onAccept }) {
   const [agreed, setAgreed] = useState(false);

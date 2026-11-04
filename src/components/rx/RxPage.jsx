@@ -1,9 +1,10 @@
+import { useEffect } from "react";
+import { LU_CRITERIA, LU_NOT_MET } from "../../data/formulary.js";
 import { EYES } from "../../lib/regimen.js";
 import { Field, Icon, printSheets } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
 import PrescriptionSheet from "./PrescriptionSheet.jsx";
 import SignaturePad from "./SignaturePad.jsx";
-import { usePersistentState } from "../../lib/storage.js";
 
 // Every prescriber is a physician, so "Dr." is added unless already typed.
 export const drName = (name) => {
@@ -19,7 +20,7 @@ const DEFAULTS = { include: true, disp: "", refills: 0, lu: "" };
 // Choices are stored by the drop's own id, so changing its eye keeps them.
 const keyOf = (e) => e.id;
 
-function PrescriberForm({ prescriber, setPrescriber, signature, setSignature }) {
+function PrescriberForm({ prescriber, setPrescriber }) {
   const bind = (key) => ({ value: prescriber[key], onChange: (e) => setPrescriber({ ...prescriber, [key]: e.target.value }) });
   return (
     <section className="card">
@@ -59,13 +60,6 @@ function PrescriberForm({ prescriber, setPrescriber, signature, setSignature }) 
             <input className="input" type="tel" {...bind("fax")} />
           </Field>
         </div>
-        <div className="field">
-          <span className="field-label">
-            Electronic signature <em>(optional)</em>
-          </span>
-          <SignaturePad signature={signature} setSignature={setSignature} />
-          <span className="field-hint">Saved on this device only. You choose to apply it to each prescription.</span>
-        </div>
       </div>
     </section>
   );
@@ -98,13 +92,14 @@ function ItemRow({ entry, med, opt, setOpt }) {
         </Field>
         {codes.length > 0 && (
           <Field label="ODB LU code">
-            <select className="select sm" disabled={!opt.include} value={codes.includes(opt.lu) ? opt.lu : ""} onChange={(e) => setOpt({ lu: e.target.value })}>
-              <option value="">None</option>
+            <select className="select sm" disabled={!opt.include} value={codes.includes(opt.lu) || opt.lu === LU_NOT_MET ? opt.lu : ""} onChange={(e) => setOpt({ lu: e.target.value })}>
+              <option value="">None (ODB does not apply)</option>
               {codes.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {c}: {LU_CRITERIA[c] || "see the ODB formulary"}
                 </option>
               ))}
+              <option value={LU_NOT_MET}>Does not meet LU criteria</option>
             </select>
           </Field>
         )}
@@ -114,7 +109,17 @@ function ItemRow({ entry, med, opt, setOpt }) {
 }
 
 export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, rx, setRx, start, warnings, go }) {
-  const [signature, setSignature] = usePersistentState("edt.signature.v1", "", { check: isSignature });
+  // A signature is drawn for each prescription and never saved, as the
+  // Ontario College of Pharmacists does not accept a stored signature image
+  // pasted onto prescriptions. Signatures saved by earlier versions are removed.
+  const signature = isSignature(rx.sig);
+  useEffect(() => {
+    try {
+      localStorage.removeItem("edt.signature.v1");
+    } catch {
+      // Nothing stored.
+    }
+  }, []);
   if (!entries.length)
     return (
       <div className="card card-b empty">
@@ -133,7 +138,7 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
     .map((entry) => {
       const med = formulary.find((m) => m.brand === entry.brand);
       const opt = optOf(entry);
-      return { entry, med, ...opt, lu: med?.lu?.includes(opt.lu) ? opt.lu : "" };
+      return { entry, med, ...opt, lu: med?.lu?.includes(opt.lu) || (med?.lu?.length && opt.lu === LU_NOT_MET) ? opt.lu : "" };
     });
   const medOf = (e) => formulary.find((m) => m.brand === e.brand);
 
@@ -167,15 +172,16 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
               ))}
             </div>
             <p className="hint">Untick a drug the patient already has. Pick an LU code only when the Ontario Drug Benefit applies.</p>
-            {signature && (
-              <label className="check">
-                <input type="checkbox" checked={!!rx.esign} onChange={(e) => setRx({ ...rx, esign: e.target.checked })} />
-                <span>
-                  <b>Sign with my electronic signature</b>
-                  <span className="hint">I have reviewed this prescription and authorise it.</span>
-                </span>
-              </label>
-            )}
+            <div className="field">
+              <span className="field-label">
+                Sign this prescription <em>(optional)</em>
+              </span>
+              <SignaturePad signature={signature} setSignature={(sig) => setRx({ ...rx, sig })} />
+              <span className="field-hint">
+                Signing confirms you have reviewed this prescription. The signature is used for this prescription only, is not
+                saved, and comes off if the drops or patient change. Or leave it blank and sign the printout by hand.
+              </span>
+            </div>
             <Field label="Notes" optional>
               <textarea className="textarea" rows={3} maxLength={500} value={rx.notes} onChange={(e) => setRx({ ...rx, notes: e.target.value })} />
             </Field>
@@ -194,10 +200,10 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
           date={rx.date}
           notes={rx.notes}
           start={start}
-          signature={rx.esign ? signature : ""}
+          signature={signature}
         />
         <div className="no-print rx-prescriber">
-          <PrescriberForm prescriber={prescriber} setPrescriber={setPrescriber} signature={signature} setSignature={setSignature} />
+          <PrescriberForm prescriber={prescriber} setPrescriber={setPrescriber} />
         </div>
       </div>
     </div>

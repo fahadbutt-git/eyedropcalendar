@@ -82,6 +82,7 @@ function Footer({ patientView }) {
           <a href={legalLink("terms")}>Terms of use</a>
           <a href={legalLink("privacy")}>Privacy</a>
           <a href={legalLink("accessibility")}>Accessibility</a>
+          <a href={legalLink("licenses", "txt")}>Open source licences</a>
         </p>
         {!patientView && (
           <p>
@@ -232,7 +233,7 @@ function ClinicianApp() {
   // Any change to the drops or patient means the prescription has not been
   // reviewed in its new form, so the electronic signature comes off.
   useEffect(() => {
-    setRx((r) => (r.esign ? { ...r, esign: false } : r));
+    setRx((r) => (r.sig || r.esign ? { ...r, sig: "", esign: false } : r));
   }, [drops, patient, setRx]);
   const entries = useMemo(() => toEntries(drops), [drops]);
   const warnings = useMemo(() => dropWarnings(drops, formulary.list, DRUG_CLASSES, { dob: patient.dob }), [drops, formulary.list, patient.dob]);

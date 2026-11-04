@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
-// Draw a signature once. It is saved as an image on this device only and is
-// never sent anywhere. The prescriber applies it to each prescription.
+// The prescriber signs each prescription here, with a finger, stylus or mouse.
+// The signature belongs to this one prescription: it is never saved or sent,
+// and the prescription page clears it when the drops or patient change.
 // Drawn at twice the display size so the printed signature stays sharp.
 const W = 960;
 const H = 300;
@@ -11,6 +12,9 @@ export default function SignaturePad({ signature, setSignature }) {
   const drawing = useRef(false);
   const [dirty, setDirty] = useState(false);
   const [editing, setEditing] = useState(!signature);
+  useEffect(() => {
+    if (!signature) setEditing(true);
+  }, [signature]);
 
   useEffect(() => {
     if (!editing) return;
@@ -56,13 +60,13 @@ export default function SignaturePad({ signature, setSignature }) {
   if (!editing)
     return (
       <div className="sig-saved">
-        <img src={signature} alt="Your saved signature" />
+        <img src={signature} alt="Your signature on this prescription" />
         <div className="row">
           <button className="btn sm" onClick={() => setEditing(true)}>
-            Redraw
+            Sign again
           </button>
-          <button className="btn sm danger" onClick={() => window.confirm("Delete your saved signature from this device?") && (setSignature(""), setEditing(true))}>
-            Delete
+          <button className="btn sm danger" onClick={() => (setSignature(""), setEditing(true))}>
+            Remove
           </button>
         </div>
       </div>
@@ -86,7 +90,7 @@ export default function SignaturePad({ signature, setSignature }) {
           Clear
         </button>
         <button className="btn sm primary" onClick={save} disabled={!dirty}>
-          Save signature
+          Sign prescription
         </button>
         {signature && (
           <button className="btn sm ghost" onClick={() => setEditing(false)}>

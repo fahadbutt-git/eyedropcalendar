@@ -53,6 +53,20 @@ export const CAP_COLOURS = {
 
 export { FORMS } from "./forms.js";
 
+// ODB Limited Use reason-for-use codes and their criteria, from the Ontario
+// Drug Benefit e-Formulary (checked November 2026). The prescriber decides
+// whether the patient meets them.
+export const LU_CRITERIA = {
+  171: "First line, beta blocker not tolerated or contraindicated",
+  172: "Second line, inadequate response to a beta blocker",
+  387: "Added to a beta blocker in an urgent situation",
+  310: "Second line, after beta blocker monotherapy",
+  393: "Initial therapy in an urgent situation",
+  466: "Second line, after brinzolamide or brimonidine alone",
+};
+// Written on the prescription when ODB applies but the criteria are not met.
+export const LU_NOT_MET = "not-met";
+
 // ODB Limited Use codes, by product type.
 const LU_SINGLE = ["171", "172", "387"];
 const LU_COMBO = ["310", "393"];

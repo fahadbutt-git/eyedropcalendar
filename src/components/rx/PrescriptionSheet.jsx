@@ -1,4 +1,5 @@
 import { fmtLong, parseISO } from "../../lib/dates.js";
+import { LU_NOT_MET } from "../../data/formulary.js";
 import { sigText } from "../../lib/wording.js";
 
 // Missing details show as grey placeholders on screen and print blank.
@@ -61,9 +62,14 @@ export default function PrescriptionSheet({ items, prescriber, patient, date, no
             <span>
               <b>Refills:</b> {refills || "none"}
             </span>
-            {lu && (
+            {lu && lu !== LU_NOT_MET && (
               <span>
                 <b>LU code:</b> {lu}
+              </span>
+            )}
+            {lu === LU_NOT_MET && (
+              <span>
+                <b>Does not meet LU criteria</b>
               </span>
             )}
           </div>

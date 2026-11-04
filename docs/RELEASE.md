@@ -57,7 +57,9 @@ Scan the QR code on the calendar from your clinic and the app shows which drop i
 - Larger text that follows your phone's text size, and Read it to me for the next dose
 - Reminders can hide drug names on your lock screen
 
-No account, no ads and no tracking. Your plan and your check marks stay on your phone. The app does not give medical advice. Follow your eye doctor if their instructions differ from the plan.
+No account, no ads and no tracking. Your plan and your check marks stay on your phone. The app does not give medical advice. Always check with your eye doctor, and follow their instructions if they differ from the plan.
+
+Eye Drop Tracker is not a medical device and does not diagnose, treat, cure, or prevent any medical condition.
 
 **Category:** Medical. **Keywords (Apple):** eye drops,glaucoma,reminder,taper,cataract,medication,ophthalmology,dose
 
