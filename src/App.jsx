@@ -160,8 +160,11 @@ function readPatientRoute() {
 
 function PatientApp({ route }) {
   const open = (code) => (window.location.hash = `#/p/${code}`);
+  // The patient pages follow the phone's own text size (see .patient in the styles).
   useEffect(() => {
     document.title = `My eye drops · ${APP_NAME}`;
+    document.documentElement.classList.add("patient");
+    return () => document.documentElement.classList.remove("patient");
   }, []);
   return (
     <>

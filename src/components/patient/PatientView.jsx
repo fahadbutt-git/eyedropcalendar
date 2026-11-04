@@ -64,7 +64,7 @@ export default function PatientView({ plan: shared, code }) {
   const [waitFrom, setWaitFrom] = useState(null);
 
   useEffect(() => {
-    document.body.classList.toggle("large-text", large);
+    document.documentElement.classList.toggle("large-text", large);
   }, [large]);
   useEffect(() => {
     if (!undo) return;
@@ -138,7 +138,10 @@ export default function PatientView({ plan: shared, code }) {
             {all.length ? `${done} of ${all.length} done` : finished ? "Course finished" : "No drops this day"}
           </p>
         </div>
-        <button className="btn sm" onClick={() => setLarge(!large)} aria-pressed={large}>
+        <button className="btn text-size" onClick={() => setLarge(!large)} aria-pressed={large}>
+          <span aria-hidden="true" className="aa">
+            Aa
+          </span>
           Larger text
         </button>
       </div>

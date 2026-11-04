@@ -324,6 +324,8 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 /* Large print for low vision: --s is larger, and the calendar cell is taller. */
 .sched-print.large .cal td { border-width: 2px; height: calc(var(--s) * 7.639); }
 .sched-print.large .boxes i, .sched-print.large .chart .box { border-width: 2px; }
+/* Large print: no secondary text drops below about 15 pt on paper. */
+.sched-print.large :is(.kicker, .legend-times, .legend-sub, .chart-foot, .chart .c-drop-in, .chart thead th span, .tbl-sched th, .tbl-sched td, .sheet-qr ol, .cal th, .week-band) { font-size: calc(var(--s) * 0.95); }
 
 /* ── Prescription ──────────────────────────────────────────────────── */
 .rx-items { display: grid; gap: 12px; }
@@ -366,22 +368,22 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .next-wait { background: #fff; color: var(--ink); padding: 8px 12px; font-weight: 700; }
 .next-btn { background: #fff; color: var(--navy); border-color: #fff; min-height: 60px; font-size: 1.25rem; font-weight: 800; margin-top: 6px; }
 .next-btn:hover { background: var(--paper); }
-.daybar { display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; gap: 8px; text-align: center; }
+.daybar { display: grid; grid-template-columns: 3.25rem 1fr 3.25rem; align-items: center; gap: 8px; text-align: center; }
 .daybar h2 { font-size: 1.2rem; }
-.btn.icon { width: 52px; height: 52px; padding: 0; font-size: 1.8rem; line-height: 1; }
+.btn.icon { width: 3.25rem; height: 3.25rem; padding: 0; font-size: 1.8rem; line-height: 1; }
 .back-today { justify-self: center; }
 .pt-day { display: grid; gap: 10px; }
 .time-group { border-top: 2px solid var(--ink); }
 .time-h { padding: 8px 0 4px; font-size: 1.05rem; font-weight: 600; }
-.time-h span { font-family: var(--read); font-weight: 400; font-size: 0.9rem; }
-.dose-row { display: grid; grid-template-columns: minmax(0, 1fr) 60px; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line-2); }
+.time-h span { font-family: var(--read); font-weight: 400; font-size: 1rem; }
+.dose-row { display: grid; grid-template-columns: minmax(0, 1fr) 3.75rem; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line-2); }
 .dose-row.is-next { background: var(--maroon-bg); box-shadow: -10px 0 0 var(--maroon-bg), 10px 0 0 var(--maroon-bg); }
 .dose-text { display: grid; gap: 2px; }
 .dose-text .n { font-weight: 800; font-size: 1.2rem; }
 .dose-text .d { font-size: 1rem; }
 .dose-text .missed { font-size: 0.95rem; font-weight: 700; color: var(--maroon); }
 .dose-row.is-done .n { text-decoration: line-through; text-decoration-thickness: 2px; }
-.tick { width: 56px; height: 56px; border: 3px solid var(--ink); background: #fff; display: grid; place-items: center; cursor: pointer; color: #fff; }
+.tick { width: 3.5rem; height: 3.5rem; border: 3px solid var(--ink); background: #fff; display: grid; place-items: center; cursor: pointer; color: #fff; }
 .tick[aria-pressed="true"] { background: var(--ink); }
 .tick:disabled { border-style: dashed; cursor: not-allowed; }
 .toast { position: sticky; bottom: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; font-size: 1rem; background: var(--ink); color: #fff; padding: 6px 8px 6px 16px; }
@@ -389,12 +391,26 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .pt-card ul { padding-left: 20px; }
 .drug { display: grid; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--line-2); }
 .drug-name span { color: var(--ink-2); }
-.large-text .pt { font-size: 1.4rem; }
-.large-text .pt h1 { font-size: 2.2rem; }
-.large-text .dose-text .n { font-size: 1.6rem; }
-.large-text .dose-text .d { font-size: 1.3rem; }
-.large-text .tick { width: 68px; height: 68px; }
-.large-text .dose-row { grid-template-columns: minmax(0, 1fr) 72px; }
+/* Patient pages scale as a whole from the root text size, so every word,
+   tick box and button grows together. They follow the phone's own text size
+   setting (Dynamic Type on iPhone, font size on Android), and Larger text
+   adds a quarter on top. */
+html.patient { font-size: 100%; }
+html.patient.large-text { font-size: 125%; }
+@supports (font: -apple-system-body) {
+  html.patient { font: -apple-system-body; font-weight: 400; line-height: 1.5; }
+  html.patient.large-text { font: -apple-system-title2; font-weight: 400; line-height: 1.5; }
+}
+/* Cap colour is how many patients find the bottle, so it is shown at full
+   size with a large swatch. */
+.pt .cap { width: 1.15em; height: 1.15em; }
+.pt .cap-name { font-size: 1em; font-weight: 600; }
+.pt .cap-wrap { gap: 0.35em; }
+.pt .check { min-height: 2.75rem; align-items: center; }
+.pt .check input { width: 1.5rem; height: 1.5rem; margin-top: 0; }
+.pt .small, .pt .hint { font-size: 1rem; }
+.text-size .aa { font-weight: 800; font-size: 1.15em; letter-spacing: -0.02em; }
+.btn[aria-pressed="true"] { background: var(--ink); color: #fff; }
 
 /* ── Responsive ────────────────────────────────────────────────────── */
 @media screen and (max-width: 1000px) {
