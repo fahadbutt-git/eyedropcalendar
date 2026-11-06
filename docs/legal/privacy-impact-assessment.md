@@ -1,6 +1,6 @@
 # Privacy impact assessment and threat risk assessment
 
-Eye Drop Tracker and Eye Drop Tracker for Oscar. Template for clinics, completed by the makers. Version 1.1, 6 November 2026, for extension 0.3.0.
+Eye Drop Tracker and Eye Drop Tracker for Oscar. Template for clinics, completed by the makers. Version 1.1, 6 November 2026, for extension 0.4.0.
 
 The clinic, as health information custodian, adopts or adapts this assessment and signs it in section 9. It follows the structure of the Information and Privacy Commissioner of Ontario's Planning for Success: Privacy Impact Assessment Guide. Sections marked "Clinic to complete" need the clinic's own answers.
 
@@ -32,7 +32,7 @@ The clinic, as health information custodian, adopts or adapts this assessment an
 | Drops, eyes, frequency, taper, dates | Typed or read from chart | Browser tab, plan link | Tab as above. Link as long as kept | Indirect only in the link |
 | Random patient code | Generated | Plan link, patient phone | As long as kept | Not identifying alone |
 | Chart notes, medication list (read only) | Clinic's Oscar | Extension panel in the Oscar tab | Not stored. Gone when the panel closes | Direct |
-| Hand-off of drops, name, date of birth | Extension | Chrome session storage | Deleted on hand-off. Tab and patient number until tab close or 2 hours | Direct |
+| Hand-off of drops, source sentences (200 characters each), name, date of birth | Extension | Chrome session storage | Deleted on hand-off. Tab and patient number until tab close or 2 hours | Direct |
 | Chart note written back | Extension | Clinic's Oscar | Clinic's retention rules | Direct |
 | Doses ticked, reminder setting | Patient | Patient's phone | Until the patient removes them | Not linked to identity off the phone |
 | Prescriber name, licence number, clinic address | Typed | Browser local storage | Until cleared | Clinician identity |
@@ -40,8 +40,8 @@ The clinic, as health information custodian, adopts or adapts this assessment an
 ## 4. Data flows
 
 1. The clinician opens a patient's encounter in Oscar and opens the extension. The extension reads that patient's notes and medication list through Oscar's own interface with the clinician's login.
-2. The clinician selects the drops and opens Eye Drop Tracker. Drops, name and date of birth pass inside the same browser to the Eye Drop Tracker tab.
-3. The clinician confirms every drop. The calendar, prescription and plan link are made in the browser.
+2. The clinician selects the drops and opens Eye Drop Tracker. Drops, the sentence each was read from, and the name and date of birth pass inside the same browser to the Eye Drop Tracker tab.
+3. The clinician ticks each drop as checked against its source sentence. The calendar, prescription and plan link are made in the browser.
 4. The clinician prints, hands the calendar to the patient, and the patient scans the QR code. The plan opens on the patient's phone from the link. No server receives it.
 5. The clinician clicks Add to Oscar chart. The extension writes an unsigned note to the same patient and the clinician signs it in Oscar.
 

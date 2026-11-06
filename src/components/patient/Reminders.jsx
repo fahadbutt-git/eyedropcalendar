@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { courseLastDay } from "../../lib/calendar.js";
 import { daysBetween, parseISO } from "../../lib/dates.js";
-import { buildICS } from "../../lib/ics.js";
+import { buildICS, eventIds } from "../../lib/ics.js";
 import { downloadFile } from "../../lib/download.js";
 import { APP_SCHEME, allowExactTimes, cancelReminders, isNative, onAppResume, scheduleReminders } from "../../lib/native.js";
 import { usePersistentState } from "../../lib/storage.js";
@@ -38,6 +38,10 @@ export default function Reminders({ plan: shared, id, code }) {
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState(false);
   const [late, setLate] = useState(false);
+  // The alarms last added from this phone, so a changed plan can cancel
+  // the ones it no longer has.
+  const [sent, setSent] = usePersistentState(`edt.icsSent.${id}`, null);
+  const changed = !!sent?.code && sent.code !== code;
 
   // Ongoing drops never end, so the app keeps a rolling window of reminders.
   const plan = useMemo(() => {
@@ -78,7 +82,10 @@ export default function Reminders({ plan: shared, id, code }) {
   const download = () => {
     // Events are named for the patient, so a new plan from the clinic updates
     // the same alarms rather than adding a second set.
-    downloadFile("eye-drop-reminders.ics", buildICS({ ...plan, id, generic }), "text/calendar");
+    const fresh = new Set(eventIds(buildICS({ ...plan, id, generic })));
+    const cancel = (Array.isArray(sent?.uids) ? sent.uids : []).filter((u) => typeof u === "string" && !fresh.has(u)).slice(0, 2000);
+    downloadFile("eye-drop-reminders.ics", buildICS({ ...plan, id, generic, cancel }), "text/calendar");
+    setSent({ code, uids: [...fresh] });
     setSaved(true);
   };
 
@@ -111,6 +118,11 @@ export default function Reminders({ plan: shared, id, code }) {
         )
       ) : (
         <>
+          {changed && (
+            <p className="notice warn" role="status">
+              Your plan has changed since you last added alarms. Add the new file below. Some calendars then remove the old alarms by themselves. If old alarms still go off, remove them as shown under How to remove old alarms.
+            </p>
+          )}
           <p>Add an alarm to your phone&apos;s calendar for every dose in this plan.</p>
           <button className="btn primary" onClick={download}>
             {Icon.bell} Add alarms to my calendar

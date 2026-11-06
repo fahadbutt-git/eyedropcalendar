@@ -95,7 +95,13 @@ assert.deepEqual(list, ["Xalatan", "Pred Forte"]);
 assert.ok(await tracker.getByRole("button", { name: /Next: calendar/ }).isDisabled(), "calendar closed until checked");
 await shot(tracker, "2-review");
 
-await tracker.locator(".import-review input[type=checkbox]").click();
+// Each drop shows its sentence from the note and is ticked on its own. The
+// calendar stays closed until every drop is ticked.
+assert.equal(await tracker.locator(".import-source").count(), 2, "each drop shows its source sentence");
+const ticks = tracker.locator(".import-review input[type=checkbox]");
+await ticks.first().check();
+assert.ok(await tracker.getByRole("button", { name: /Next: calendar/ }).isDisabled(), "still closed with one drop left");
+await ticks.last().click();
 await tracker.locator(".import-done").waitFor();
 await tracker.getByRole("button", { name: /Next: calendar/ }).click();
 await tracker.getByRole("button", { name: "Add to Oscar chart" }).click();

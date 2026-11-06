@@ -506,5 +506,6 @@ html.patient.large-text { font-size: 125%; }
 .import-review h3 { font-size: 0.95rem; }
 .import-list { padding-left: 22px; display: grid; gap: 8px; }
 .import-list ul { margin-top: 4px; }
+.import-source { display: block; margin: 4px 0; padding-left: 10px; border-left: 3px solid var(--line); font-style: italic; }
 .import-done { margin-bottom: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .error-text { color: var(--maroon); }

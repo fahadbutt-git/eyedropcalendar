@@ -56,6 +56,8 @@ function checkImport(v) {
     handoff: cleanText(v.handoff, 64),
     flags: Object.fromEntries(Object.entries(v.flags).slice(0, 20).map(([k, f]) => [cleanText(k, 40), cleanFlags(f)])),
     skipped: cleanSkipped(v.skipped),
+    sources: Object.fromEntries(Object.entries(v.sources && typeof v.sources === "object" ? v.sources : {}).slice(0, 20).map(([k, t]) => [cleanText(k, 40), cleanText(t, 200)])),
+    confirmed: Array.isArray(v.confirmed) ? v.confirmed.slice(0, 20).map((k) => cleanText(k, 40)) : [],
     reviewed: v.reviewed === true,
     fromLink: v.fromLink === true,
     patient: { name: cleanText(v.patient?.name, 80), dob: isValidISO(v.patient?.dob) ? v.patient.dob : "" },
@@ -344,7 +346,7 @@ function ClinicianApp() {
     const known = new Set(formulary.list.map((m) => m.brand));
     const rows = (Array.isArray(d.drops) ? d.drops : [])
       .slice(0, MAX_DROPS)
-      .map((x) => ({ entry: cleanEntry(x), flags: cleanFlags(x?.flags) }))
+      .map((x) => ({ entry: cleanEntry(x), flags: cleanFlags(x?.flags), source: cleanText(x?.source, 200) }))
       .filter((r) => r.entry && known.has(r.entry.brand));
     if (!rows.length) return;
     if (hasPatient && !window.confirm("Replace the patient on screen with the one from Oscar?")) return;
@@ -357,6 +359,8 @@ function ClinicianApp() {
       handoff: cleanText(d.handoff, 64),
       patient: patientFromOscar,
       flags: Object.fromEntries(rows.map((r, i) => [ids[i], r.flags])),
+      sources: Object.fromEntries(rows.map((r, i) => [ids[i], r.source])),
+      confirmed: [],
       skipped: cleanSkipped(d.skipped),
       reviewed: false,
     });
@@ -427,7 +431,8 @@ function ClinicianApp() {
             reset={reset}
             openPlan={openPlanByHand}
             imported={imported}
-            setReviewed={(reviewed) => setImported((v) => (v ? { ...v, reviewed } : v))}
+            setReviewed={(reviewed) => setImported((v) => (v ? { ...v, reviewed, confirmed: reviewed ? v.confirmed : [] } : v))}
+            setConfirmed={(confirmed, reviewed) => setImported((v) => (v ? { ...v, confirmed, reviewed } : v))}
           />
         )}
         {terms === TERMS_VERSION && tab === "schedule" && (

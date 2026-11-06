@@ -163,7 +163,8 @@ assert.equal(saved.length, 0, "a forged request reached Oscar");
 ok("nothing reached Oscar from the forged requests");
 
 // 5b. If another clinician signs in to Oscar in the meantime, nothing is written.
-await tracker.locator(".import-review input[type=checkbox]").click();
+// Ticking the last drop closes the review, so each box is clicked, not checked.
+for (const box of await tracker.locator(".import-review input[type=checkbox]").all()) await box.click();
 await tracker.getByRole("button", { name: /Next: calendar/ }).click();
 await fetch(`${OSCAR}/__standin/provider?no=111111`);
 await tracker.getByRole("button", { name: "Add to Oscar chart" }).click();

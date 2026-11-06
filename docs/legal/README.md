@@ -50,10 +50,7 @@ Decisions for Fahad and Yusuf come first.
 | A domain mailbox, such as privacy@eyedroptracker.com, in place of Gmail | Fahad | Before the pilot |
 | Start the clinic contact list for security notices | Fahad | Before the pilot |
 | Decide whether patients see an accept screen on first launch of the app | Fahad and Yusuf | Before the pilot |
-| Per-drop confirmation in the review step, showing each source sentence | Makers | Before the pilot |
-| Required strength choice for atropine, cyclopentolate and timolol | Makers | Before the pilot |
-| Cancel old calendar reminders when a plan changes, with on-screen advice | Makers | Before the pilot |
-| Review date prompt for steroid courses over 2 weeks | Makers | Before the pilot |
+| Add atropine 0.01% and other low strengths to the drug list, with a named reviewer | Makers | Before the pilot |
 | Reader accuracy test on 300 or more made-up notes | Makers | Before hospital use |
 | Independent penetration test | Makers | Before hospital use |
 | Confirm the Ontario College of Pharmacists position on signatures drawn on screen | Lawyer | Before the pilot |

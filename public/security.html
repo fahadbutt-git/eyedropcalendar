@@ -41,7 +41,7 @@
           </thead>
           <tbody>
             <tr><td>Patient name, date of birth, health card number, address</td><td>The clinician's browser tab only, in temporary memory that is wiped when the tab closes</td><td>Until New patient, the tab closes, or 30 minutes without use</td></tr>
-            <tr><td>Drops read from an Oscar chart</td><td>Chrome's session storage, inside the extension, on the clinic computer</td><td>Deleted once Eye Drop Tracker takes them. Tab and patient number kept until either tab closes, two hours at most</td></tr>
+            <tr><td>Drops read from an Oscar chart, with the sentence each came from</td><td>Chrome's session storage, inside the extension, on the clinic computer</td><td>Deleted once Eye Drop Tracker takes them. Tab and patient number kept until either tab closes, two hours at most</td></tr>
             <tr><td>Prescriber details, clinic drug list</td><td>That browser's storage on the clinic computer</td><td>Until cleared by the clinic</td></tr>
             <tr><td>Drawn signature</td><td>Memory, for one prescription</td><td>Never saved</td></tr>
             <tr><td>Chart note</td><td>The clinic's Oscar, written by the clinician's own login</td><td>The clinic's record retention rules</td></tr>
@@ -72,7 +72,7 @@
       </ul>
 
       <h2>Testing</h2>
-      <p>Every release runs 59 unit tests, an end-to-end test of the extension with a stand-in Oscar, and a security suite of 18 checks. The suite tries to run hostile markup from every chart field, message the extension from web pages, press its buttons with scripts, forge chart writes, write free text, write to the wrong patient or under the wrong clinician, repeat writes, overload imports and leave data behind. It also records every network request and confirms each one goes only to Oscar or Eye Drop Tracker, with no patient details in any address. The source code is public on <a href="https://github.com/fahadbutt-git/eyedropcalendar">GitHub</a> for independent review.</p>
+      <p>Every release runs 62 unit tests, an end-to-end test of the extension with a stand-in Oscar, and a security suite of 18 checks. The suite tries to run hostile markup from every chart field, message the extension from web pages, press its buttons with scripts, forge chart writes, write free text, write to the wrong patient or under the wrong clinician, repeat writes, overload imports and leave data behind. It also records every network request and confirms each one goes only to Oscar or Eye Drop Tracker, with no patient details in any address. The source code is public on <a href="https://github.com/fahadbutt-git/eyedropcalendar">GitHub</a> for independent review.</p>
 
       <h2>Service providers</h2>
       <div class="scroll">

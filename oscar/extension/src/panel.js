@@ -157,8 +157,9 @@ function start() {
           patientId: state.patient.id,
           provider: state.provider,
           patient: { name: state.patient.name, dob: state.patient.dob },
-          // The note text stays here. Only the drops go to Eye Drop Tracker.
-          drops: chosen.map((d) => ({ ...d, source: undefined })),
+          // The note stays here. Each drop takes only the sentence it was read
+          // from, so the clinician can check it against the chart.
+          drops: chosen.map((d) => ({ ...d, source: typeof d.source === "string" ? d.source.slice(0, 200) : "" })),
           code: state.result.code || "",
           skipped: state.result.skipped,
         },

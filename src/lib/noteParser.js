@@ -112,7 +112,7 @@ function chooseBrand(found, clause, formulary) {
   const word = found[0].text.toLowerCase();
   const pick = pool.find((m) => m.aka.toLowerCase().startsWith(`generic ${word}`)) || pool[0];
   const strengths = new Set(pool.map((m) => m.generic.match(/[\d.]+%/)?.[0]));
-  const flag = strengths.size > 1 ? `"${found[0].text}" comes in more than one strength, so ${pick.brand} (${pick.generic}) was chosen. Check the strength.` : null;
+  const flag = strengths.size > 1 ? `Strength: "${found[0].text}" comes in more than one strength, so ${pick.brand} (${pick.generic}) was chosen. Check the strength.` : null;
   return { brand: pick.brand, flag };
 }
 
@@ -236,6 +236,11 @@ export function parseNote(note, formulary) {
         const own = item.clause;
         const shared = item.shared?.clause || "";
         const med = formulary.find((m) => m.brand === brand);
+        // A strength written straight after the name must match the drug
+        // chosen. Atropine 0.01% is not atropine 1%.
+        const stated = own.match(/^[\s(]*(\d*\.?\d+)\s*%/)?.[1];
+        if (stated && med && !new RegExp(`(^|[^\\d.])${stated.replace(".", "\\.")}%`).test(med.generic))
+          flags.push(`Strength: the note says ${stated}%, but ${brand} is ${med.generic}. Choose the right strength, or add it to the drug list.`);
         const context = item.before.split(/[,(]/).pop();
         const entry = { brand, eye: null, drops: 1, mode: "ongoing", freq: null, durationDays: 7, startDay: 1, steps: [], source: sentence, flags };
 

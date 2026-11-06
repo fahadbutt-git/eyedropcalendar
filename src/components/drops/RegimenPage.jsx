@@ -33,7 +33,7 @@ function PatientForm({ patient, setPatient }) {
   );
 }
 
-export default function RegimenPage({ patient, setPatient, drops, setDrops, formulary, startDate, warnings, go, reset, openPlan, imported, setReviewed }) {
+export default function RegimenPage({ patient, setPatient, drops, setDrops, formulary, startDate, warnings, go, reset, openPlan, imported, setReviewed, setConfirmed }) {
   const list = drops.filter((d) => d.brand);
   const update = (i, patch) => setDrops(list.map((d, j) => (j === i ? { ...d, ...patch } : d)));
   const remove = (i) => setDrops(list.filter((_, j) => j !== i));
@@ -53,7 +53,7 @@ export default function RegimenPage({ patient, setPatient, drops, setDrops, form
       </div>
       <p className="page-note">Patient details stay in this browser tab and are never sent anywhere. Press New patient before the next person.</p>
 
-      {imported && <ImportReview imported={imported} drops={list} setReviewed={setReviewed} />}
+      {imported && <ImportReview imported={imported} drops={list} setReviewed={setReviewed} setConfirmed={setConfirmed} />}
 
       <OpenPlan formulary={formulary} hasDrops={list.length > 0} onOpen={openPlan} />
 

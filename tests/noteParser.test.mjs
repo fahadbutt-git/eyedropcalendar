@@ -151,3 +151,9 @@ test("hourly drops are left off the calendar for the clinician to write by hand"
   assert.deepEqual(r.drops.map((d) => d.brand), ["Pred Forte"]);
   assert.match(r.skipped.find((s) => s.name === "Vigamox").why, /by hand/);
 });
+
+test("a strength in the note that differs from the drug chosen is flagged", () => {
+  assert.match(flagged(parseNote("Atropine 0.01% qhs OU.", F), "Atropine"), /^Strength: the note says 0\.01%/m);
+  assert.doesNotMatch(flagged(parseNote("Atropine 1% BID OD.", F), "Atropine"), /Strength/);
+  assert.doesNotMatch(flagged(parseNote("Xalatan 0.005% qhs OU.", F), "Xalatan"), /Strength/);
+});

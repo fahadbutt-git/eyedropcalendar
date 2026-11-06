@@ -7,7 +7,7 @@ import { doseTimes, fmtTime } from "../src/lib/times.js";
 import { dropWarnings } from "../src/lib/checks.js";
 import { SEED_FORMULARY, DRUG_CLASSES } from "../src/data/formulary.js";
 import { scheduleSpan, courseLastDay } from "../src/lib/calendar.js";
-import { buildICS } from "../src/lib/ics.js";
+import { buildICS, eventIds } from "../src/lib/ics.js";
 import { encodeRegimen, decodeRegimen, codeFromUrl } from "../src/lib/share.js";
 import { cleanFormulary } from "../src/lib/validate.js";
 import { doseGroups, upcomingReminders, doseDayIndex, minutesInto, nextDose } from "../src/lib/doses.js";
@@ -361,4 +361,23 @@ test("the chart note holds the plan and a link that reopens it", async () => {
   assert.match(note, /Xalatan \(Latanoprost 0\.005%\): Instill 1 drop in both eyes once daily at bedtime\./);
   assert.match(note, /8:00 AM to 10:00 PM/);
   assert.equal(codeFromUrl(note), code);
+});
+
+test("a new calendar file cancels alarms the changed plan no longer has", () => {
+  const base = { formulary: SEED_FORMULARY, start: new Date(2026, 10, 2), wake: "08:00", bed: "22:00", from: new Date(2026, 10, 1), id: "abcd1234" };
+  const slot = (brand, freq) => ({ ...newSlot(), brand, eye: "OU", freq, mode: "ongoing" });
+  const before = eventIds(buildICS({ ...base, entries: toEntries([slot("Xalatan", 1), slot("Timoptic", 2)]) }));
+  const entries = toEntries([slot("Xalatan", 1)]);
+  const fresh = new Set(eventIds(buildICS({ ...base, entries })));
+  const cancel = before.filter((u) => !fresh.has(u));
+  assert.ok(cancel.length > 0);
+  const ics = buildICS({ ...base, entries, cancel });
+  assert.equal((ics.match(/STATUS:CANCELLED/g) || []).length, cancel.length);
+  for (const u of fresh) assert.ok(!cancel.includes(u));
+});
+
+test("a steroid course longer than two weeks asks for a pressure check", () => {
+  const w = (d) => dropWarnings([{ ...newSlot(), ...d }], SEED_FORMULARY, DRUG_CLASSES).join(" ");
+  assert.match(w({ brand: "Pred Forte", eye: "OD", mode: "taper", steps: [{ freq: 4, days: 7 }, { freq: 3, days: 7 }, { freq: 2, days: 7 }] }), /pressure check/);
+  assert.doesNotMatch(w({ brand: "Pred Forte", eye: "OD", mode: "duration", freq: 4, durationDays: 7 }), /pressure check/);
 });

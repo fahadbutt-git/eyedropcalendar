@@ -67,6 +67,11 @@ export function dropWarnings(drops, formulary, classNames, { dob = "", today = n
       all.push(`${d.brand} is set to ongoing. Steroids, NSAIDs, antibiotics and cycloplegics usually have a set course or taper.`);
     if (med.maxFreq && peak > med.maxFreq)
       all.push(`${d.brand} is set to ${peak} times a day. The label maximum is ${med.maxFreq === 1 ? "once" : `${med.maxFreq} times`} a day.`);
+    // Steroids raise eye pressure in some people, so a longer course needs a
+    // pressure check booked.
+    const days = mode === "taper" ? d.steps.reduce((n, st) => n + (Number(st.days) || 0), 0) : mode === "duration" ? Number(d.durationDays) || 0 : 0;
+    if (med.cls.includes("STER") && days > 14)
+      all.push(`${d.brand} runs for ${days} days. Book an eye pressure check within 2 to 4 weeks of starting, sooner with glaucoma.`);
     if (d.drops > 1) all.push(`${d.brand} is set to ${d.drops} drops each time. One drop is usually enough.`);
     if (med.cls.includes("AA") && age != null && age < 18)
       all.push(`${d.brand}: brimonidine is contraindicated under 2 years and not recommended under 18.`);

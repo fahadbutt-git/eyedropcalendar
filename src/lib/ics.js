@@ -49,7 +49,11 @@ function event(lines, { uid, at, items, stamp, until, generic, text }) {
   );
 }
 
-export function buildICS({ entries, formulary, start, wake, bed, id = "plan", from = new Date(), generic = false }) {
+// Event IDs in a calendar file, so the next file can cancel any that the
+// new plan no longer has.
+export const eventIds = (ics) => [...ics.matchAll(/^UID:(.+)@eyedroptracker\.com\r?$/gm)].map((m) => m[1]);
+
+export function buildICS({ entries, formulary, start, wake, bed, id = "plan", from = new Date(), generic = false, cancel = [] }) {
   const stamp = utc(new Date());
   const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Eye Drop Tracker//EN", "CALSCALE:GREGORIAN", "X-WR-CALNAME:Eye drops"];
   // Start one day back, because a dose after midnight belongs to the day
@@ -95,6 +99,11 @@ export function buildICS({ entries, formulary, start, wake, bed, id = "plan", fr
       },
     });
   }
+  // Alarms from the last file that this plan no longer has are cancelled.
+  // Calendars that honour cancelled events remove them. The screen also
+  // explains how to remove them by hand.
+  for (const uid of cancel)
+    lines.push("BEGIN:VEVENT", `UID:${uid}@eyedroptracker.com`, `DTSTAMP:${stamp}`, `DTSTART:${local(from)}`, "STATUS:CANCELLED", "SUMMARY:Cancelled eye drop alarm", "END:VEVENT");
   lines.push("END:VCALENDAR");
   return lines.join("\r\n");
 }
