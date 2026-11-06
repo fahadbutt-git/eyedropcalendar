@@ -1,6 +1,6 @@
 // Offline support: network first, falling back to the cached copy. Only good
 // responses are cached, and old cached files are cleared when the app updates.
-const CACHE = "edt-v5";
+const CACHE = "edt-v6";
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./manifest.webmanifest", "./icon-192.png"])));
   self.skipWaiting();
