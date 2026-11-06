@@ -37,7 +37,7 @@ export default function KeepPlan({ code }) {
           {note}
         </p>
       )}
-      <p className="pt-note small">The link shows your drops and dates, not your name. Your eye clinic can also print your calendar again from your chart.</p>
+      <p className="pt-note small">Anyone with this link can see your drops and dates, but not your name. Send it only to people you trust. Your eye clinic can also print your calendar again from your chart.</p>
     </section>
   );
 }

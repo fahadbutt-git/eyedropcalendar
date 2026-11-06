@@ -1,6 +1,6 @@
 # Privacy impact assessment and threat risk assessment
 
-Eye Drop Tracker and Eye Drop Tracker for Oscar. Template for clinics, completed by the makers. Version 1.0, 6 November 2026, for extension 0.3.0.
+Eye Drop Tracker and Eye Drop Tracker for Oscar. Template for clinics, completed by the makers. Version 1.1, 6 November 2026, for extension 0.3.0.
 
 The clinic, as health information custodian, adopts or adapts this assessment and signs it in section 9. It follows the structure of the Information and Privacy Commissioner of Ontario's Planning for Success: Privacy Impact Assessment Guide. Sections marked "Clinic to complete" need the clinic's own answers.
 
@@ -20,7 +20,7 @@ The clinic, as health information custodian, adopts or adapts this assessment an
 
 - The clinic is the custodian under PHIPA (or the equivalent law of its province) for all patient information entered, printed, charted or given to the patient.
 - Use of patient information to prepare the patient's own drop plan is a use for providing health care. Within the circle of care the clinic may rely on assumed implied consent under PHIPA section 20(2), unless the patient has said otherwise.
-- The makers supply electronic goods under PHIPA section 10(4). They receive no patient information, so no disclosure to them occurs (O. Reg. 329/04, section 6(4)).
+- The makers supply electronic goods under PHIPA section 10(4). The software is designed so that patient information is not sent to them, so no disclosure to them occurs (O. Reg. 329/04, section 6(4)). They are not a health information network provider.
 - Clinic to confirm whether its policies need express consent before the plan link is sent to a patient by email or text.
 
 ## 3. Data inventory
@@ -95,7 +95,8 @@ Likelihood and impact are rated low, medium or high after the listed controls.
 | --- | --- | --- |
 | Clinic consent policy for sending the link electronically | Clinic | Clinic to complete |
 | Independent penetration test of the extension and site | Makers | Before hospital use |
-| French versions of public documents | Makers | Before use in Quebec |
+| French versions of public documents. Not offered in Quebec until then | Makers | Before use in Quebec |
+| Clinic joins the makers' clinic contact list for security notices | Clinic | At go-live |
 
 ## 9. Sign-off
 

@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { SITE_URL } from "../config.js";
+import { SITE_URL, TERMS_VERSION } from "../config.js";
 import { isNative } from "../lib/native.js";
 
 // Shown once per browser before the clinician pages, so everyone who builds a
-// plan has agreed to the terms. Bump TERMS_VERSION when the terms change
-// enough that people should agree again.
-export const TERMS_VERSION = "2026-11-06";
+// plan has agreed to the terms.
+export { TERMS_VERSION };
 export const legalLink = (page, ext = "html") => `${isNative ? SITE_URL : ""}/${page}.${ext}`;
 
 export default function TermsGate({ onAccept }) {
@@ -18,7 +17,7 @@ export default function TermsGate({ onAccept }) {
         does not replace clinical judgement: check every calendar, phone plan and prescription before it reaches a patient. It is
         not a licensed medical device.
       </p>
-      <p>Patient details stay in this browser and are never sent anywhere.</p>
+      <p>Patient details are not sent to us. They stay in this browser, the clinic's own records and the patient's phone.</p>
       <label className="check">
         <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
         <span>

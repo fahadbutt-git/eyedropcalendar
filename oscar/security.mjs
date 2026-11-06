@@ -7,6 +7,7 @@
 //   node oscar/security.mjs
 //
 // Each check prints a line. Any failure stops the run with an error.
+import { TERMS_VERSION } from "../src/config.js";
 import { chromium } from "playwright";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -41,7 +42,7 @@ await oscar.fill('input[name="pin"]', "1117");
 await oscar.click("button");
 const site = await context.newPage();
 await site.goto(SITE);
-await site.evaluate(() => localStorage.setItem("edt.terms", JSON.stringify("2026-11-03")));
+await site.evaluate((v) => localStorage.setItem("edt.terms", JSON.stringify(v)), TERMS_VERSION);
 await site.close();
 
 const openPanel = (page) =>

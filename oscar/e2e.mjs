@@ -9,6 +9,7 @@
 // reads the drops, opens them in Eye Drop Tracker, checks the review gate,
 // adds the chart note back, reopens the plan at the next visit, and reads a
 // note that is still being typed.
+import { TERMS_VERSION } from "../src/config.js";
 import { chromium } from "playwright";
 import { mkdtempSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -52,7 +53,7 @@ assert.match(enc.url(), /casemgmt\/forward\.jsp\?action=view&demographicNo=1/);
 // The site's terms are accepted once for this browser.
 const site = await context.newPage();
 await site.goto(SITE);
-await site.evaluate(() => localStorage.setItem("edt.terms", JSON.stringify("2026-11-03")));
+await site.evaluate((v) => localStorage.setItem("edt.terms", JSON.stringify(v)), TERMS_VERSION);
 await site.close();
 
 // What the toolbar button, the shortcut and the right-click menu do: hand

@@ -4,6 +4,7 @@ import { addDays, fmtLong, parseISO } from "./dates.js";
 import { lastDayIndex } from "./regimen.js";
 import { fmtTime } from "./times.js";
 import { sigText } from "./wording.js";
+import { TERMS_VERSION } from "../config.js";
 
 const minutes = (hhmm) => {
   const [h, m] = hhmm.split(":").map(Number);
@@ -23,6 +24,8 @@ export function chartNote({ entries, formulary, start, wake, bed, link }) {
     `Eye drop plan, ${fmtLong(startDate)}${end}`,
     ...lines,
     `Dose times spread from ${fmtTime(minutes(wake))} to ${fmtTime(minutes(bed))}.`,
+    `Prepared with Eye Drop Tracker under its clinic terms of ${TERMS_VERSION}.`,
+    // The link stays last, so it is still read whole if Oscar runs lines together.
     `Plan link (paste into Eye Drop Tracker to change this plan): ${link}`,
   ].join("\n");
 }

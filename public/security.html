@@ -31,7 +31,7 @@
       <h1>Security</h1>
       <p class="date">Last updated 6 November 2026</p>
 
-      <p>Eye Drop Tracker has no server that holds data, no accounts and no database. Patient information stays on the clinic's computers, in the clinic's own medical record system and on the patient's phone. This page is our public description of the software, the information it handles and its safeguards, for clinics, privacy officers and security reviewers.</p>
+      <p>Eye Drop Tracker has no server that holds data, no accounts and no database. Patient information stays on the clinic's computers, in the clinic's own medical record system and on the patient's phone. The software is designed so that it is not sent to us, and we keep no copy. This page is our public description of the software, the information it handles and its safeguards, for clinics, privacy officers and security reviewers.</p>
 
       <h2>Where information goes</h2>
       <div class="scroll">
@@ -40,7 +40,7 @@
             <tr><th scope="col">Information</th><th scope="col">Where it is</th><th scope="col">How long</th></tr>
           </thead>
           <tbody>
-            <tr><td>Patient name, date of birth, health card number, address</td><td>The clinician's browser tab only</td><td>Until New patient, the tab closes, or 30 minutes without use</td></tr>
+            <tr><td>Patient name, date of birth, health card number, address</td><td>The clinician's browser tab only, in temporary memory that is wiped when the tab closes</td><td>Until New patient, the tab closes, or 30 minutes without use</td></tr>
             <tr><td>Drops read from an Oscar chart</td><td>Chrome's session storage, inside the extension, on the clinic computer</td><td>Deleted once Eye Drop Tracker takes them. Tab and patient number kept until either tab closes, two hours at most</td></tr>
             <tr><td>Prescriber details, clinic drug list</td><td>That browser's storage on the clinic computer</td><td>Until cleared by the clinic</td></tr>
             <tr><td>Drawn signature</td><td>Memory, for one prescription</td><td>Never saved</td></tr>
@@ -68,10 +68,11 @@
         <li>Writes to the chart need a real click, go only to the patient the plan came from, stop if another clinician has signed in, are made once per plan, and contain only text the extension builds from a valid plan.</li>
         <li>Clicks made by scripts on a page are ignored. Chart text is shown as text, so markup in a chart cannot run.</li>
         <li>All code is in the package. Nothing is downloaded and run later.</li>
+        <li>Releases are published only from accounts protected by multi-factor authentication, by people who have signed a confidentiality undertaking.</li>
       </ul>
 
       <h2>Testing</h2>
-      <p>Every release runs unit tests, an end-to-end test of the extension with a stand-in Oscar, and a security suite of 18 checks. The suite tries to run hostile markup from every chart field, message the extension from web pages, press its buttons with scripts, forge chart writes, write free text, write to the wrong patient or under the wrong clinician, repeat writes, overload imports and leave data behind. It also records every network request and confirms each one goes only to Oscar or Eye Drop Tracker, with no patient details in any address. The source code is public on <a href="https://github.com/fahadbutt-git/eyedropcalendar">GitHub</a> for independent review.</p>
+      <p>Every release runs 59 unit tests, an end-to-end test of the extension with a stand-in Oscar, and a security suite of 18 checks. The suite tries to run hostile markup from every chart field, message the extension from web pages, press its buttons with scripts, forge chart writes, write free text, write to the wrong patient or under the wrong clinician, repeat writes, overload imports and leave data behind. It also records every network request and confirms each one goes only to Oscar or Eye Drop Tracker, with no patient details in any address. The source code is public on <a href="https://github.com/fahadbutt-git/eyedropcalendar">GitHub</a> for independent review.</p>
 
       <h2>Service providers</h2>
       <div class="scroll">
@@ -89,10 +90,10 @@
       </div>
 
       <h2>Incidents</h2>
-      <p>If we learn of a flaw or event that could expose patient information, we act within one business day to contain it, tell affected clinics at the first reasonable opportunity, release a fix, and record what happened and what we did. We keep that record for at least 24 months. Clinics then meet their own duties to patients and their commissioner, and we help with any facts we have.</p>
+      <p>If we learn of a flaw or event that could expose patient information, we act within one business day to contain it and release a fix. We tell clinics at the first reasonable opportunity: by email to every clinic on our clinic contact list, by a notice on this website and the Chrome Web Store listing, and by a notice in the app. We record what happened and what we did, and keep that record for at least 24 months. Clinics then meet their own duties to patients and their commissioner, and we help with any facts we have.</p>
 
       <h2>Reporting a vulnerability</h2>
-      <p>Email <a href="mailto:eyedroptracker@gmail.com">eyedroptracker@gmail.com</a> with "Security" in the subject line. Please describe the problem and how to reproduce it, and do not include real patient information. We will reply within three business days and keep you informed until it is fixed.</p>
+      <p>Email <a href="mailto:eyedroptracker@gmail.com">eyedroptracker@gmail.com</a> with "Security" in the subject line. Please describe the problem and how to reproduce it, and do not include real patient information. We reply to security reports within two business days and keep you informed until the problem is fixed.</p>
       <p>We will not pursue anyone who reports in good faith, tests only against their own installs or a demo system, does not access or change other people's data, and gives us reasonable time to fix the problem before publishing. Our contact details for researchers are also in <a href="/.well-known/security.txt">security.txt</a>.</p>
 
       <h2>Requests from clinics</h2>
