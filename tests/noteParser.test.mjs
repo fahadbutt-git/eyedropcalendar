@@ -120,3 +120,34 @@ test("Oscar Rx entries read the same way, skipping archived and PRN", () => {
     ["Timoptic", "OU", 2, "ongoing", 1],
   ]);
 });
+
+test("ordinary words are never read as an eye", () => {
+  assert.equal(parseNote("Pred Forte to be used QID OS x1wk then BID x1wk.", F).drops[0].eye, "OS");
+  assert.equal(parseNote("Xalatan qhs OS, re-check IOP in 4 weeks.", F).drops[0].eye, "OS");
+  assert.equal(parseNote("Timoptic BID left, call right away if pain.", F).drops[0].eye, "OS");
+});
+
+test("two eyes named for one drop are flagged", () => {
+  assert.match(flagged(parseNote("Xalatan qhs OD OS.", F), "Xalatan"), /more than one eye/);
+});
+
+test("OD with no frequency is flagged, since it can mean once daily", () => {
+  const r = parseNote("Latanoprost OD.", F);
+  assert.equal(r.drops[0].eye, "OD");
+  assert.match(flagged(r, "Xalatan"), /once daily as well as right eye/);
+  assert.doesNotMatch(flagged(parseNote("Xalatan qhs OD.", F), "Xalatan"), /once daily/);
+});
+
+test("a current drop is kept when the sentence also mentions the past", () => {
+  assert.deepEqual(brief(parseNote("Allergic conjunctivitis: start Pataday daily OU.", F)).map((d) => d[0]), ["Pataday"]);
+  assert.deepEqual(brief(parseNote("s/p failed trab OS, continue Cosopt BID OS.", F)).map((d) => d[0]), ["Cosopt"]);
+  const r = parseNote("Allergic to Xalatan. Lumigan qhs OU.", F);
+  assert.deepEqual(r.drops.map((d) => d.brand), ["Lumigan RC"]);
+  assert.ok(r.skipped.some((s) => s.name === "Xalatan"));
+});
+
+test("hourly drops are left off the calendar for the clinician to write by hand", () => {
+  const r = parseNote("Vigamox q1h OS. Pred Forte QID OS.", F);
+  assert.deepEqual(r.drops.map((d) => d.brand), ["Pred Forte"]);
+  assert.match(r.skipped.find((s) => s.name === "Vigamox").why, /by hand/);
+});

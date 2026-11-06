@@ -49,7 +49,6 @@ const FREQS = [
   [/\bq\.?\s?2\s?h(?:r|rs|ours?)?\b|\bevery 2 hours\b/i, 8, "Every 2 hours was read as 8 times a day."],
   [/\bq\.?\s?3\s?h(?:r|rs|ours?)?\b|\bevery 3 hours\b/i, 6, "Every 3 hours was read as 6 times a day."],
   [/\bq\.?\s?4\s?h(?:r|rs|ours?)?\b|\bevery 4 hours\b/i, 4, "Every 4 hours was read as 4 times a day while awake."],
-  [/\bq\.?\s?1\s?h(?:r|rs|ours?)?\b|\bhourly\b|\bevery hour\b/i, 8, "Hourly is more than the calendar holds, so 8 times a day was used."],
   [/\b([2-8])\s?(?:x|times)\s?(?:\/|a|per)?\s?(?:day|d|daily)\b|\bx\s?([2-8])\s?\/\s?(?:day|d)\b/i, null],
   [/\bq\.?i\.?d\.?(?![a-z])|\bfour times\b/i, 4],
   [/\bt\.?i\.?d\.?(?![a-z])|\bthree times\b/i, 3],
@@ -58,11 +57,22 @@ const FREQS = [
   [/\bq\.?d\.?(?![a-z])|\bq\s?am\b|\bq\s?pm\b|\bdaily\b|\bonce a day\b|\bonce\b|\bqday\b|\bevery day\b/i, 1],
 ];
 
+// Abbreviations count only in capitals, so "to be used", "re-check" and
+// "Os" in a sentence are not read as an eye. "Right" and "left" count unless
+// they are part of a phrase such as "right away" or "left over".
+const SIDE_PHRASE = "(?!\\s*(?:away|now|after|before|here|there|over|behind|alone|side of)\\b)";
 const EYE_WORDS = [
-  [/\bOU\b|\bboth eyes\b|\bbilateral(?:ly)?\b|\bBE\b/i, "OU"],
-  [/\bOD\b|\bright(?: eye)?\b|\bRE\b/i, "OD"],
-  [/\bOS\b|\bleft(?: eye)?\b|\bLE\b/i, "OS"],
+  [/\bOU\b|\bBE\b/, /\bboth eyes\b|\bbilateral(?:ly)?\b/i, "OU"],
+  [/\bOD\b|\bRE\b/, new RegExp(`\\bright\\b${SIDE_PHRASE}`, "i"), "OD"],
+  [/\bOS\b|\bLE\b/, new RegExp(`\\bleft\\b${SIDE_PHRASE}`, "i"), "OS"],
 ];
+// "OD" also means once daily, which is why ISMP Canada lists it as error-prone.
+const OD_ALONE = /\bOD\b/;
+// Hourly drops (keratitis, endophthalmitis) are more than the calendar can
+// show, so they are left for the clinician to write by hand.
+const HOURLY = /\bq\.?\s?(?:1\s?h(?:r|rs|ours?)?|30\s?min)\b|\bhourly\b|\bevery (?:hour|30 minutes|half hour)\b/i;
+// Words that make a drop current even when the sentence also mentions the past.
+const CURRENT = /\b(start|started|begin|continue|cont|restart|resume|use|add|new)\b/i;
 
 const UNIT_DAYS = { d: 1, day: 1, days: 1, w: 7, wk: 7, wks: 7, week: 7, weeks: 7, mo: 30, month: 30, months: 30 };
 const DURATION = /(?:\bx|×|\bfor)\s*(\d{1,3})\s*(days?|d|wks?|w|weeks?|mo|months?)\b/i;
@@ -117,14 +127,16 @@ function findFreq(text) {
   return null;
 }
 
-function findEye(text) {
-  let best = null;
-  for (const [re, eye] of EYE_WORDS) {
-    const m = text.match(re);
-    if (m && (!best || m.index < best.at)) best = { eye, at: m.index };
+// Every eye named in the text, first one first.
+function eyesIn(text) {
+  const found = [];
+  for (const [abbr, words, eye] of EYE_WORDS) {
+    const at = Math.min(...[text.match(abbr), text.match(words)].filter(Boolean).map((m) => m.index));
+    if (Number.isFinite(at)) found.push({ eye, at });
   }
-  return best?.eye || null;
+  return found.sort((a, b) => a.at - b.at).map((f) => f.eye);
 }
+const findEye = (text) => eyesIn(text)[0] || null;
 
 const findDays = (text) => {
   const m = text.match(DURATION);
@@ -227,7 +239,12 @@ export function parseNote(note, formulary) {
         const context = item.before.split(/[,(]/).pop();
         const entry = { brand, eye: null, drops: 1, mode: "ongoing", freq: null, durationDays: 7, startDay: 1, steps: [], source: sentence, flags };
 
-        if (PAST.test(item.before) || PAST.test(own)) {
+        // Past use is judged on the few words next to the drug, so "Allergic
+        // conjunctivitis: start Pataday" and "s/p failed trab, continue
+        // Cosopt" are kept.
+        const near = item.before.split(/[:;,.(]/).pop().split(/\s+/).slice(-4).join(" ");
+        const ownStart = own.split(/[,;.]/)[0];
+        if ((PAST.test(near) || PAST.test(ownStart)) && !CURRENT.test(near) && !CURRENT.test(ownStart)) {
           skipped.push({ name: brand, why: "mentioned as past use or an allergy" });
           continue;
         }
@@ -240,6 +257,13 @@ export function parseNote(note, formulary) {
           continue;
         }
 
+        if (HOURLY.test(own) || (shared && HOURLY.test(shared))) {
+          skipped.push({ name: brand, why: "used hourly or more often, which the calendar cannot show. Write this plan by hand" });
+          continue;
+        }
+
+        const named = eyesIn(own);
+        if (new Set(named).size > 1) flags.push("The note names more than one eye for this drop. Check which eye is meant.");
         entry.eye = findEye(own) || (shared && findEye(shared));
         if (!entry.eye && sectionEye) {
           entry.eye = sectionEye;
@@ -281,6 +305,8 @@ export function parseNote(note, formulary) {
             flags.push("The note says taper without the steps, so a weekly taper was used.");
           }
         }
+        if (entry.eye === "OD" && OD_ALONE.test(own) && !sched.steps.length && !sched.after)
+          flags.push('"OD" can mean once daily as well as right eye. Check which eye is meant.');
         if (med?.maxFreq && entry.freq > med.maxFreq) flags.push(`${brand} is usually not used more than ${med.maxFreq === 1 ? "once" : `${med.maxFreq} times`} a day.`);
         drops.push(entry);
 
