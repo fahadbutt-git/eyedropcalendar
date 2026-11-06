@@ -34,11 +34,26 @@ function mount() {
 function start() {
   const { host, panel } = mount();
   const client = oscarClient(restBase(window.location));
-  const selection = String(window.getSelection?.() || "").trim();
+  // Text the clinician selected: on the page, inside Oscar's note box, or
+  // handed over by the right-click menu.
+  const fieldSelection = () => {
+    const el = document.activeElement;
+    return el && /^(TEXTAREA|INPUT)$/.test(el.tagName) && el.selectionEnd > el.selectionStart ? el.value.slice(el.selectionStart, el.selectionEnd) : "";
+  };
+  const selection = String(window.__edtSelection || window.getSelection?.() || fieldSelection() || "").trim();
+  window.__edtSelection = "";
+  // The note being written at this visit, not saved yet. Oscar starts it with
+  // a date line such as "[05-Nov-2026 .: ]", which is not part of the plan.
+  const draft = () =>
+    [...document.querySelectorAll('textarea[name="caseNote_note"]')]
+      .map((t) => t.value.replace(/^\s*\[[^\]\n]{0,60}\]\s*/, "").trim())
+      .filter((t) => t.length > 10)
+      .join("\n\n");
   const state = { patient: null, notes: [], rx: [], source: null, result: null, chosen: new Set(), error: "", busy: true, opened: false };
 
   const sourceText = () => {
     if (state.source === "selection") return selection;
+    if (state.source === "draft") return draft();
     return state.notes.find((n) => n.id === state.source)?.text || "";
   };
   // A note Eye Drop Tracker wrote carries the plan link, which gives the
@@ -63,6 +78,7 @@ function start() {
     const r = state.result;
     const options = [
       selection.length > 10 && `<option value="selection">Text selected on this page</option>`,
+      draft() && `<option value="draft">Today's note, not saved yet</option>`,
       ...state.notes.map((n) => `<option value="${esc(n.id)}">Note, ${esc(fmtDate(n.date))}${n.provider ? `, ${esc(n.provider)}` : ""}</option>`),
       state.rx.length && `<option value="rx">Medication list (Rx)</option>`,
     ].filter(Boolean);
@@ -153,9 +169,11 @@ function start() {
     try {
       const [patient, notes, rx] = await Promise.all([client.patient(id), client.notes(id), client.currentDrugs(id)]);
       Object.assign(state, { patient, notes, rx });
-      // Selected text first, then the newest note that names a drop.
       const withDrops = notes.find((n) => fromLink(n.text) || parseNote(n.text, formulary).drops.length);
-      state.source = selection.length > 10 ? "selection" : withDrops?.id || notes[0]?.id || (rx.length ? "rx" : null);
+      // Selected text first, then today's unsaved note if it names a drop,
+      // then the newest saved note that does.
+      const draftHasDrops = draft() && (fromLink(draft()) || parseNote(draft(), formulary).drops.length);
+      state.source = selection.length > 10 ? "selection" : draftHasDrops ? "draft" : withDrops?.id || notes[0]?.id || (rx.length ? "rx" : null);
       if (state.source) read();
     } catch (e) {
       state.error = e.message || "Oscar could not be read.";

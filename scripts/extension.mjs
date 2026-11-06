@@ -39,7 +39,7 @@ if (dev) {
   manifest.name += " (development)";
   manifest.content_scripts[0].matches.push("http://localhost:4173/*", "http://localhost:5173/*");
   // The stand-in Oscar, so tests can open the panel without a toolbar click.
-  manifest.host_permissions = ["http://localhost:8080/*"];
+  manifest.host_permissions = ["http://localhost:8080/*", "http://localhost:4173/*"];
 }
 writeFileSync(join(out, "manifest.json"), JSON.stringify(manifest, null, 2));
 cpSync(join(ext, "icons"), join(out, "icons"), { recursive: true });

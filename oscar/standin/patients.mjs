@@ -61,6 +61,8 @@ RTC 1 week with IOP.`,
     hin: "0000000003",
     address: "3 Example Street",
     reason: "Annual",
+    // Typed at today's visit and not saved yet.
+    draft: "Pink eye OD. Start Vigamox TID OD x 7 days. Return if not better.",
     notes: [{ date: "2026-11-02T11:00:00-05:00", text: "Healthy eyes. No drops. RTC 1 year." }],
     rx: [],
   },

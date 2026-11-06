@@ -11,14 +11,49 @@ const site = async () => (await chrome.storage.local.get("site")).site || DEFAUL
 const key = (id) => `handoff:${id}`;
 const tabKey = (tabId) => `tab:${tabId}`;
 
-chrome.action.onClicked.addListener(async (tab) => {
-  if (!tab.id || !/^https?:/.test(tab.url || "")) return;
-  await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["panel.js"] });
+// Oscar opens encounters in pop-up windows, which Chrome shows without
+// extension buttons. So the panel also opens from the right-click menu and
+// from a keyboard shortcut (Alt+Shift+E, Option+Shift+E on a Mac), which
+// grant the same one-tab access as the button.
+const MENU = "edt-read";
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({ id: MENU, title: "Read eye drops with Eye Drop Tracker", contexts: ["page", "selection", "editable", "frame"] });
 });
+
+async function openPanel(tab, selection = "", frameId) {
+  if (!tab?.id) return;
+  const target = { tabId: tab.id, ...(frameId ? { frameIds: [frameId] } : {}) };
+  try {
+    // Text selected inside Oscar's note box is not visible to the page's own
+    // selection, so the menu hands it over.
+    await chrome.scripting.executeScript({ target, func: (text) => (window.__edtSelection = text), args: [String(selection).slice(0, 20000)] });
+    await chrome.scripting.executeScript({ target, files: ["panel.js"] });
+  } catch {
+    // Chrome's own pages and the web store cannot be read. Nothing to do.
+  }
+}
+
+chrome.action.onClicked.addListener((tab) => openPanel(tab));
+chrome.contextMenus.onClicked.addListener((info, tab) => info.menuItemId === MENU && openPanel(tab, info.selectionText || "", info.frameId));
+
+// Eye Drop Tracker opens in an ordinary window, even when Oscar's encounter
+// is a pop-up.
+async function trackerTab(url, from) {
+  const win = await chrome.windows.get(from.windowId).catch(() => null);
+  if (win?.type === "normal") return chrome.tabs.create({ url, windowId: win.id, index: from.index + 1 });
+  const normal = await chrome.windows.getLastFocused({ windowTypes: ["normal"] }).catch(() => null);
+  if (normal) {
+    const tab = await chrome.tabs.create({ url, windowId: normal.id });
+    await chrome.windows.update(normal.id, { focused: true });
+    return tab;
+  }
+  const created = await chrome.windows.create({ url, type: "normal" });
+  return created.tabs[0];
+}
 
 async function openTracker(sender, payload) {
   const handoff = crypto.randomUUID();
-  const created = await chrome.tabs.create({ url: `${await site()}#/oscar`, index: sender.tab.index + 1 });
+  const created = await trackerTab(`${await site()}#/oscar`, sender.tab);
   await chrome.storage.session.set({
     [key(handoff)]: { oscarTab: sender.tab.id, patientId: payload.patientId, payload },
     [tabKey(created.id)]: handoff,

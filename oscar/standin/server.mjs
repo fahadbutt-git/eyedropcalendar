@@ -5,9 +5,13 @@
 //   node oscar/standin/server.mjs        then open http://localhost:8080/oscar
 //   Log in with oscardoc / mac2002 / 1117 (the Open OSP demo login).
 //
-// Oscar's JSON comes from CXF's JSONProvider, which writes numbers as
-// strings and a one-item list as a single object. The stand-in does the
-// same, so the extension is built to cope with both.
+// It copies the behaviour of the Open-O 25 release tested on 5 November
+// 2026: dates as milliseconds, the encounter in a pop-up window at
+// casemgmt/forward.jsp with the note being written in a textarea named
+// caseNote_note, and Prototype.js on every page, which changes how the
+// page's own JSON.stringify writes lists. Older Oscar builds write numbers as
+// strings and a one-item list as a bare object, so some answers use that
+// form too, and the extension has to read both.
 import { createServer } from "node:http";
 import { randomBytes } from "node:crypto";
 import { PATIENTS } from "./patients.mjs";
@@ -32,7 +36,10 @@ const readBody = (req) =>
 // CXF writes a list of one as a bare object.
 const cxfList = (list) => (list.length === 1 ? list[0] : list);
 
-const page = (title, body) => `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
+// What Prototype.js 1.6 does to every Oscar page: lists turn into strings
+// when the page calls JSON.stringify.
+const PROTOTYPE = `<script>Array.prototype.toJSON = function () { return "[" + Array.prototype.map.call(this, function (x) { return JSON.stringify(String(x)); }).join(",") + "]"; };</script>`;
+const page = (title, body) => `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>${PROTOTYPE}
 <style>body{font:13px Arial,sans-serif;margin:0;background:#fff}header{background:#003399;color:#fff;padding:6px 10px;font-weight:bold}
 main{padding:10px}a{color:#003399}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:4px 8px;text-align:left}
 .note{white-space:pre-wrap;border:1px solid #999;padding:8px;width:780px;min-height:240px;font:12px Arial,sans-serif}
@@ -51,7 +58,7 @@ function demographicTo(p) {
 
 function noteTo(p, n, i) {
   return {
-    noteId: str(p.id * 100 + i), uuid: `standin-${p.id}-${i}`, note: n.text, observationDate: n.date, updateDate: n.date,
+    noteId: p.id * 100 + i, uuid: `standin-${p.id}-${i}`, note: n.text, observationDate: Date.parse(n.date), updateDate: Date.parse(n.date),
     providerName: "Demo, Doctor", providerNo: "999998", isSigned: "true", isEditable: "true", revision: "1",
     encounterType: "face to face encounter with client", archived: "false", isCpp: "false", isDocument: "false",
   };
@@ -91,6 +98,9 @@ async function rest(req, res, path, url) {
       return send(res, 400, "");
     }
     if (!p || typeof note?.note !== "string" || !note.note.trim()) return send(res, 200, "");
+    // A list that arrives as text is what Prototype.js does to JSON written
+    // from the page itself. Oscar fails on it, so the stand-in does too.
+    if (!Array.isArray(note.assignedIssues)) return send(res, 500, "assignedIssues must be a list", "text/plain");
     const entry = { demographicNo: p.id, note: note.note, isSigned: note.isSigned, date: new Date().toISOString() };
     saved.push(entry);
     return send(res, 200, noteTo(p, { date: entry.date, text: entry.note }, 99));
@@ -125,15 +135,17 @@ const server = createServer(async (req, res) => {
   if (!authed(req)) return res.writeHead(302, { Location: "/oscar/index.jsp" }).end();
   if (path === "/oscar/provider/providercontrol.jsp")
     return send(res, 200, page("Schedule", `<h2>Today</h2><table><tr><th>Patient</th><th>Reason</th></tr>${PATIENTS.map(
-      (p) => `<tr><td><a href="/oscar/CaseManagementEntry.do?method=edit&demographicNo=${p.id}&providerNo=999998">${escapeHtml(p.lastName)}, ${escapeHtml(p.firstName)}</a></td><td>${escapeHtml(p.reason)}</td></tr>`
+      (p) => `<tr><td><a href="/oscar/casemgmt/forward.jsp?action=view&demographicNo=${p.id}&providerNo=999998" onclick="window.open(this.href, 'encounter${p.id}', 'height=710,width=1024,location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes'); return false;">${escapeHtml(p.lastName)}, ${escapeHtml(p.firstName)}</a></td><td>${escapeHtml(p.reason)}</td></tr>`
     ).join("")}</table>`), "text/html");
-  if (path === "/oscar/CaseManagementEntry.do") {
+  if (path === "/oscar/CaseManagementEntry.do" || path === "/oscar/casemgmt/forward.jsp") {
     const p = PATIENTS.find((x) => x.id === Number(url.searchParams.get("demographicNo")));
     if (!p) return send(res, 404, page("Not found", "No such patient"), "text/html");
     const latest = [...p.notes].sort((a, b) => b.date.localeCompare(a.date))[0];
     return send(res, 200, page(`Encounter - ${p.lastName}, ${p.firstName}`, `<input type="hidden" name="demographicNo" value="${p.id}">
       <div class="bar">Encounter: ${escapeHtml(p.lastName)}, ${escapeHtml(p.firstName)} &middot; ${p.dob}</div>
-      <div class="note" id="caseNote_note0" contenteditable="true">${escapeHtml(latest.text)}</div>`), "text/html");
+      <div class="note">${escapeHtml(latest.text)}</div>
+      <div class="bar">Today's note</div>
+      <textarea name="caseNote_note" id="caseNote_note${p.id}" class="note">[06-Nov-2026 .: ]\n${escapeHtml(p.draft || "")}</textarea>`), "text/html");
   }
   send(res, 404, page("Not found", "Not found"), "text/html");
 });

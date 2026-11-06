@@ -48,5 +48,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/fahadbutt-git/eyedropcalendar"
-  }
+  },
+  "extensionVersion": "0.2.0"
 }
