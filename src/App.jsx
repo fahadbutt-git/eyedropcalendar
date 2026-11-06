@@ -113,8 +113,8 @@ function Footer({ patientView }) {
         {!patientView && (
           <p>
             A clinical aid, not a substitute for clinical judgement. Check every calendar and prescription before it goes to a
-            patient. Defaults follow Canadian product monographs and the Ontario Drug Benefit formulary. Patient details are never
-            sent anywhere.
+            patient. Defaults follow Canadian product monographs and the Ontario Drug Benefit formulary. Patient details are not
+            sent to us.
           </p>
         )}
       </div>

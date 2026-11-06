@@ -47,7 +47,7 @@ const SHOTS = [
     media: browser("review.jpg", 700),
     k: "Check",
     title: "Nothing prints until every drop is checked",
-    body: "Eye Drop Tracker opens with the patient and drops filled in, and the calendar stays locked until the clinician confirms each drop against the chart.",
+    body: "Eye Drop Tracker opens with the patient and drops filled in. Each drop sits beside the sentence it came from, and the calendar stays locked until the clinician ticks every one.",
   },
   {
     file: "3-calendar",

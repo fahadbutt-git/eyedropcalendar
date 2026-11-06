@@ -51,7 +51,7 @@ export default function RegimenPage({ patient, setPatient, drops, setDrops, form
           New patient
         </button>
       </div>
-      <p className="page-note">Patient details stay in this browser tab and are never sent anywhere. Press New patient before the next person.</p>
+      <p className="page-note">Patient details stay in this browser tab and are not sent to us. Press New patient before the next person.</p>
 
       {imported && <ImportReview imported={imported} drops={list} setReviewed={setReviewed} setConfirmed={setConfirmed} />}
 
