@@ -10,6 +10,12 @@
 
 export const asList = (v) => (v == null || v === "" ? [] : Array.isArray(v) ? v : [v]);
 const yes = (v) => v === true || v === "true";
+// Dates come as text in some Oscar versions and as milliseconds in others.
+const isoDate = (v) => {
+  if (v == null || v === "") return "";
+  const d = new Date(/^\d+$/.test(String(v)) ? Number(v) : v);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+};
 
 export class OscarError extends Error {
   constructor(kind, message) {
@@ -69,7 +75,7 @@ export function oscarClient(base, fetcher = fetch) {
     },
     async search(query) {
       const r = await call(`demographics/quickSearch?query=${encodeURIComponent(query)}`);
-      return asList(r?.content).map((p) => ({ id: String(p.demographicNo), name: `${p.lastName}, ${p.firstName}`, dob: p.dob || "" }));
+      return asList(r?.content).map((p) => ({ id: String(p.demographicNo), name: `${p.lastName}, ${p.firstName}`, dob: isoDate(p.dob).slice(0, 10) }));
     },
     // Newest first. Oscar's own list is newest first already, but sorting
     // costs nothing and does not depend on it.
@@ -77,8 +83,8 @@ export function oscarClient(base, fetcher = fetch) {
       const r = await call(`notes/${id}/all?numToReturn=${count}&offset=0`, { method: "POST", body: {} });
       return asList(r?.notelist)
         .filter((n) => n && typeof n.note === "string" && n.note.trim() && !yes(n.archived) && !yes(n.isDocument) && !yes(n.isCpp))
-        .map((n) => ({ id: String(n.noteId), date: n.observationDate || n.updateDate || "", provider: n.providerName || "", text: n.note }))
-        .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+        .map((n) => ({ id: String(n.noteId), date: isoDate(n.observationDate || n.updateDate), provider: n.providerName || "", text: n.note }))
+        .sort((a, b) => b.date.localeCompare(a.date));
     },
     async currentDrugs(id) {
       try {
