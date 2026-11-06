@@ -3,7 +3,7 @@
   "name": "Eye Drop Tracker for Oscar",
   "short_name": "Eye Drop Tracker",
   "version": "0.1.0",
-  "description": "Reads the eye drop plan from an Oscar chart note into Eye Drop Tracker, and adds the plan back to the chart. Nothing leaves this computer.",
+  "description": "Reads the eye drop plan from an Oscar chart into Eye Drop Tracker and adds it back to the chart. No data goes anywhere but Oscar.",
   "action": {
     "default_title": "Eye Drop Tracker: read drops from this chart",
     "default_icon": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png" }

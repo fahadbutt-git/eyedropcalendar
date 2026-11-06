@@ -58,6 +58,7 @@ function checkImport(v) {
     skipped: cleanSkipped(v.skipped),
     reviewed: v.reviewed === true,
     fromLink: v.fromLink === true,
+    patient: { name: cleanText(v.patient?.name, 80), dob: isValidISO(v.patient?.dob) ? v.patient.dob : "" },
   };
 }
 
@@ -335,7 +336,7 @@ function ClinicianApp() {
       clearPatient();
       setPatient(patientFromOscar);
       openPlan(plan);
-      setImported({ handoff: cleanText(d.handoff, 64), flags: {}, skipped: [], reviewed: false, fromLink: true });
+      setImported({ handoff: cleanText(d.handoff, 64), patient: patientFromOscar, flags: {}, skipped: [], reviewed: false, fromLink: true });
       return;
     }
     const known = new Set(formulary.list.map((m) => m.brand));
@@ -352,6 +353,7 @@ function ClinicianApp() {
     setDrops(rows.map((r, i) => ({ ...r.entry, id: ids[i] })));
     setImported({
       handoff: cleanText(d.handoff, 64),
+      patient: patientFromOscar,
       flags: Object.fromEntries(rows.map((r, i) => [ids[i], r.flags])),
       skipped: cleanSkipped(d.skipped),
       reviewed: false,
@@ -364,6 +366,17 @@ function ClinicianApp() {
     setDrops(plan.entries.map((e, i) => ({ ...e, id: `d${Date.now().toString(36)}o${i}` })));
     setSettings((s) => ({ ...s, start: plan.start, wake: plan.wake, bed: plan.bed, nonce: plan.nonce || s.nonce }));
   };
+
+  // A plan opened by hand (Change a plan from an earlier visit) is no longer
+  // the one read from Oscar, so the link back to that chart is dropped.
+  const openPlanByHand = (plan) => {
+    setImported(null);
+    openPlan(plan);
+  };
+  // The plan goes back to Oscar only while the patient on screen is still the
+  // one it was read from.
+  const samePatient = !!imported?.patient && imported.patient.name === patient.name && imported.patient.dob === patient.dob;
+  const chartTarget = oscar.available && imported?.handoff && samePatient ? imported.patient.name : "";
 
   return (
     <>
@@ -410,7 +423,7 @@ function ClinicianApp() {
             warnings={warnings}
             go={go}
             reset={reset}
-            openPlan={openPlan}
+            openPlan={openPlanByHand}
             imported={imported}
             setReviewed={(reviewed) => setImported((v) => (v ? { ...v, reviewed } : v))}
           />
@@ -424,7 +437,7 @@ function ClinicianApp() {
             setSettings={setSettings}
             warnings={warnings}
             go={go}
-            addToChart={oscar.available && imported?.handoff ? (text) => oscar.addToChart(imported.handoff, text) : null}
+            addToChart={chartTarget ? { patient: chartTarget, add: (code) => oscar.addToChart(imported.handoff, code) } : null}
           />
         )}
         {terms === TERMS_VERSION && tab === "rx" && (

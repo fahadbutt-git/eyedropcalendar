@@ -29,6 +29,8 @@ await build({
   loader: { ".css": "text" },
   legalComments: "none",
   minify: !dev,
+  // Where Eye Drop Tracker lives. Fixed in the build, never a setting.
+  define: { __EDT_SITE__: JSON.stringify(dev ? "http://localhost:4173/" : "https://eyedroptracker.com/") },
 });
 
 const manifest = JSON.parse(readFileSync(join(ext, "manifest.json"), "utf8"));

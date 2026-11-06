@@ -18,6 +18,7 @@ import assert from "node:assert/strict";
 
 const ext = join(dirname(fileURLToPath(import.meta.url)), "extension/dist");
 const OSCAR = "http://localhost:8080/oscar";
+await fetch(`${OSCAR}/__standin/reset`);
 const SITE = "http://localhost:4173/";
 const shots = process.argv[2];
 if (shots) mkdirSync(shots, { recursive: true });
@@ -31,7 +32,6 @@ const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir()
   args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
 });
 const worker = context.serviceWorkers()[0] || (await context.waitForEvent("serviceworker"));
-await worker.evaluate((site) => chrome.storage.local.set({ site }), SITE);
 
 // Sign in to Oscar and open the first patient's encounter.
 const oscar = await context.newPage();
@@ -111,6 +111,12 @@ assert.doesNotMatch(saved[0].note, /Vigamox/);
 // A different patient on the Oscar tab: nothing is added.
 await enc.goto(`${OSCAR}/casemgmt/forward.jsp?action=view&demographicNo=2`);
 await tracker.reload();
+// The same plan again is refused as a repeat.
+await tracker.getByRole("button", { name: "Add to Oscar chart" }).click();
+await tracker.locator("text=already in the Oscar chart").waitFor();
+// A changed plan is refused because the Oscar page has moved on.
+await tracker.reload();
+await tracker.getByLabel("Start date").fill("2026-11-09");
 await tracker.getByRole("button", { name: "Add to Oscar chart" }).click();
 await tracker.locator("text=/closed or has moved on|different patient/").waitFor();
 assert.equal((await (await fetch(`${OSCAR}/__standin/saved`)).json()).length, 1);

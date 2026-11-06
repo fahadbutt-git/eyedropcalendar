@@ -35,11 +35,13 @@ export function useOscarBridge(onImport) {
     return () => window.removeEventListener("message", listen);
   }, []);
 
-  const addToChart = (handoff, text) =>
+  // Only the plan code is sent. The extension writes the chart note itself
+  // from it, so nothing but a well-formed plan can reach a chart.
+  const addToChart = (handoff, code) =>
     new Promise((resolve) => {
       const id = Math.random().toString(36).slice(2);
       waiting.current.set(id, resolve);
-      post({ type: "addToChart", id, handoff, text });
+      post({ type: "addToChart", id, handoff, code });
       setTimeout(() => {
         if (waiting.current.delete(id)) resolve({ ok: false, message: "The extension did not answer. Use Copy for chart note instead." });
       }, WAIT_MS);

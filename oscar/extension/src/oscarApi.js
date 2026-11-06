@@ -67,6 +67,12 @@ export function oscarClient(base, fetcher = fetch) {
   };
 
   return {
+    // The signed-in clinician, so a note is never saved under someone else
+    // who has since signed in to Oscar in another tab.
+    async me() {
+      const p = await call("providerService/provider/me");
+      return String(p?.providerNo ?? p?.id ?? "");
+    },
     async patient(id) {
       const d = await call(`demographics/${id}`);
       if (!d) throw new OscarError("missing", "Oscar did not return this patient.");

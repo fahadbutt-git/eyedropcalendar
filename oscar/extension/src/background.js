@@ -1,15 +1,23 @@
 // Passes a plan between the Oscar tab and the Eye Drop Tracker tab. The
-// extension only touches a tab when the clinician clicks its button there
+// extension only touches a tab when the clinician asks it to there
 // (activeTab), so it holds no standing access to any website.
 //
-// A handoff (an Oscar tab, the patient open in it and the drops read) is
-// kept in session storage, which Chrome clears when the browser closes, and
-// the drops are deleted as soon as Eye Drop Tracker has taken them.
+// A hand-off records the Oscar page, the patient and the clinician the plan
+// was read from. It is kept in session storage, which only this service
+// worker can read and which Chrome clears when the browser closes. The
+// patient's name, date of birth and drops are deleted as soon as Eye Drop
+// Tracker has taken them, or after two hours if it never does. The rest goes
+// when either tab closes.
+import { decodeRegimen } from "../../../src/lib/share.js";
+import { chartNote } from "../../../src/lib/chartNote.js";
 
-const DEFAULT_SITE = "https://eyedroptracker.com/";
-const site = async () => (await chrome.storage.local.get("site")).site || DEFAULT_SITE;
+// Fixed at build time (scripts/extension.mjs), never a setting.
+// eslint-disable-next-line no-undef
+const SITE = __EDT_SITE__;
+const PLAN_TTL = 2 * 60 * 60 * 1000;
 const key = (id) => `handoff:${id}`;
 const tabKey = (tabId) => `tab:${tabId}`;
+const read = async (k) => (await chrome.storage.session.get(k))[k];
 
 // Oscar opens encounters in pop-up windows, which Chrome shows without
 // extension buttons. So the panel also opens from the right-click menu and
@@ -51,49 +59,106 @@ async function trackerTab(url, from) {
   return created.tabs[0];
 }
 
-async function openTracker(sender, payload) {
-  const handoff = crypto.randomUUID();
-  const created = await trackerTab(`${await site()}#/oscar`, sender.tab);
-  await chrome.storage.session.set({
-    [key(handoff)]: { oscarTab: sender.tab.id, patientId: payload.patientId, payload },
-    [tabKey(created.id)]: handoff,
+// Only plain, bounded data is passed on: at most a dozen drops, short text,
+// and nothing that is not plain JSON.
+const MAX_PAYLOAD = 64 * 1024;
+const plain = (v) => JSON.parse(JSON.stringify(v ?? null));
+function checkPayload(p) {
+  if (!p || typeof p !== "object" || JSON.stringify(p).length > MAX_PAYLOAD) return null;
+  if (!/^\d{1,10}$/.test(String(p.patientId))) return null;
+  return plain({
+    patientId: String(p.patientId),
+    provider: String(p.provider ?? "").slice(0, 20),
+    patient: { name: String(p.patient?.name ?? "").slice(0, 80), dob: String(p.patient?.dob ?? "").slice(0, 10) },
+    drops: Array.isArray(p.drops) ? p.drops.slice(0, 12) : [],
+    skipped: Array.isArray(p.skipped) ? p.skipped.slice(0, 20) : [],
+    code: typeof p.code === "string" ? p.code.slice(0, 4000) : "",
   });
-  return { ok: true };
+}
+
+async function openTracker(sender, raw) {
+  const payload = checkPayload(raw);
+  if (!payload) return { ok: false, message: "The plan could not be read. Nothing was opened." };
+  const handoff = crypto.randomUUID();
+  const { patientId, provider } = payload;
+  // Stored before the tab opens, so the page always finds it. The document
+  // ID ties later writes to this exact Oscar page: if the tab has moved on,
+  // nothing is written.
+  await chrome.storage.session.set({
+    [key(handoff)]: { oscarTab: sender.tab.id, oscarDoc: sender.documentId || "", patientId, provider, at: Date.now(), written: [], payload },
+  });
+  try {
+    const created = await trackerTab(`${SITE}#/oscar`, sender.tab);
+    await chrome.storage.session.set({ [tabKey(created.id)]: handoff });
+    return { ok: true };
+  } catch {
+    await chrome.storage.session.remove(key(handoff));
+    return { ok: false, message: "Eye Drop Tracker could not be opened." };
+  }
 }
 
 // Eye Drop Tracker asks once for the plan meant for its tab.
 async function pending(sender) {
-  const handoff = (await chrome.storage.session.get(tabKey(sender.tab.id)))[tabKey(sender.tab.id)];
-  if (!handoff) return null;
-  const stored = (await chrome.storage.session.get(key(handoff)))[key(handoff)];
+  const handoff = await read(tabKey(sender.tab.id));
+  const stored = handoff && (await read(key(handoff)));
   if (!stored?.payload) return null;
   const { payload, ...rest } = stored;
   await chrome.storage.session.set({ [key(handoff)]: rest });
-  return { handoff, drops: payload.drops, skipped: payload.skipped, patient: payload.patient, code: payload.code };
+  if (Date.now() - stored.at > PLAN_TTL) return null;
+  const { patient, drops, skipped, code } = payload;
+  return { handoff, patient, drops, skipped, code };
 }
 
-async function addToChart(sender, { handoff, text }) {
-  const stored = handoff && (await chrome.storage.session.get(key(handoff)))[key(handoff)];
-  if (!stored) return { ok: false, message: "This plan was not opened from Oscar in this browser session. Use Copy for chart note instead." };
-  const mine = (await chrome.storage.session.get(tabKey(sender.tab.id)))[tabKey(sender.tab.id)];
-  if (mine !== handoff) return { ok: false, message: "This tab did not open this plan." };
+const digest = async (text) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+const busy = new Set();
+
+// The note is written by the extension from the plan code, never taken as
+// text from the website, so the page cannot put anything but a well-formed
+// Eye Drop Tracker plan in a chart.
+async function addToChart(sender, { handoff, code }) {
+  let plan;
   try {
-    return await chrome.tabs.sendMessage(stored.oscarTab, { type: "addNote", patientId: stored.patientId, text });
+    plan = decodeRegimen(String(code || ""));
   } catch {
-    return { ok: false, message: "The Oscar chart is closed or has moved on. Open it again and click the Eye Drop Tracker button, or use Copy for chart note." };
+    return { ok: false, message: "This is not an Eye Drop Tracker plan, so nothing was added." };
+  }
+  const stored = typeof handoff === "string" && (await read(key(handoff)));
+  if (!stored) return { ok: false, message: "This plan was not opened from Oscar in this browser session. Use Copy for chart note instead." };
+  if ((await read(tabKey(sender.tab.id))) !== handoff) return { ok: false, message: "This tab did not open this plan." };
+  const text = chartNote({ ...plan, link: `${SITE}#/p/${code}` });
+  const sum = await digest(text);
+  if (stored.written.includes(sum)) return { ok: false, message: "This plan is already in the Oscar chart." };
+  if (busy.has(handoff)) return { ok: false, message: "Already adding this plan. Wait a moment." };
+  busy.add(handoff);
+  try {
+    const message = { type: "addNote", patientId: stored.patientId, provider: stored.provider, text };
+    const result = await chrome.tabs.sendMessage(stored.oscarTab, message, stored.oscarDoc ? { documentId: stored.oscarDoc } : { frameId: 0 });
+    if (result?.ok) await chrome.storage.session.set({ [key(handoff)]: { ...stored, written: [...stored.written, sum] } });
+    return result || { ok: false, message: "The Oscar chart did not answer." };
+  } catch {
+    return { ok: false, message: "The Oscar chart is closed or has moved on. Open it again and use the Eye Drop Tracker button, or use Copy for chart note." };
+  } finally {
+    busy.delete(handoff);
   }
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
-  if (!sender.tab) return false;
+  if (!sender.tab || sender.id !== chrome.runtime.id) return false;
   const run = { open: () => openTracker(sender, msg.payload), pending: () => pending(sender), addToChart: () => addToChart(sender, msg) }[msg?.type];
   if (!run) return false;
-  run().then(reply, (e) => reply({ ok: false, message: String(e?.message || e) }));
+  run().then(reply, () => reply({ ok: false, message: "Something went wrong. Nothing was changed." }));
   return true;
 });
 
+// Closing either tab ends the hand-off.
 chrome.tabs.onRemoved.addListener(async (tabId) => {
-  const k = tabKey(tabId);
-  const handoff = (await chrome.storage.session.get(k))[k];
-  await chrome.storage.session.remove(handoff ? [k, key(handoff)] : [k]);
+  const all = await chrome.storage.session.get(null);
+  const handoff = all[tabKey(tabId)];
+  const ended = Object.entries(all)
+    .filter(([k, v]) => k.startsWith("handoff:") && (k === key(handoff) || v?.oscarTab === tabId))
+    .map(([k]) => k);
+  const tabs = Object.entries(all)
+    .filter(([k, v]) => k.startsWith("tab:") && (k === tabKey(tabId) || ended.includes(key(v))))
+    .map(([k]) => k);
+  if (ended.length || tabs.length) await chrome.storage.session.remove([...ended, ...tabs]);
 });

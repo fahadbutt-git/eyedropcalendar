@@ -26,6 +26,7 @@ function mount() {
   style.textContent = STYLE;
   const panel = document.createElement("aside");
   panel.setAttribute("aria-label", "Eye Drop Tracker");
+  panel.setAttribute("aria-live", "polite");
   root.append(style, panel);
   document.documentElement.append(host);
   return { host, panel };
@@ -75,6 +76,14 @@ function start() {
   };
 
   function render() {
+    // Redrawing keeps keyboard focus on the same control.
+    const was = panel.getRootNode().activeElement;
+    const focusKey = was && (was.dataset.i != null ? `[data-i="${was.dataset.i}"]` : was.dataset.act ? `[data-act="${was.dataset.act}"]` : null);
+    draw();
+    if (focusKey) panel.querySelector(focusKey)?.focus();
+  }
+
+  function draw() {
     const r = state.result;
     const options = [
       selection.length > 10 && `<option value="selection">Text selected on this page</option>`,
@@ -83,7 +92,7 @@ function start() {
       state.rx.length && `<option value="rx">Medication list (Rx)</option>`,
     ].filter(Boolean);
     panel.innerHTML = `
-      <header><h1>Eye Drop Tracker</h1><button class="x" data-act="close" aria-label="Close">×</button></header>
+      <header><div><h1>Eye Drop Tracker</h1><p class="origin">Reading ${esc(window.location.host)}</p></div><button class="x" data-act="close" aria-label="Close">×</button></header>
       <div class="body">
         ${state.error ? `<p class="error" role="alert">${esc(state.error)}</p>` : ""}
         ${state.busy ? `<p class="muted">Reading the chart…</p>` : ""}
@@ -135,17 +144,18 @@ function start() {
   });
 
   panel.addEventListener("click", async (e) => {
+    // Only a person's click counts. A script on the Oscar page cannot press
+    // the panel's buttons.
+    if (!e.isTrusted) return;
     const act = e.target.closest("[data-act]")?.dataset.act;
-    if (act === "close") {
-      host.remove();
-      window.__edtPanel = null;
-    }
+    if (act === "close") close();
     if (act === "open") {
       const chosen = state.result.drops.filter((_, i) => state.chosen.has(i));
       const reply = await chrome.runtime.sendMessage({
         type: "open",
         payload: {
           patientId: state.patient.id,
+          provider: state.provider,
           patient: { name: state.patient.name, dob: state.patient.dob },
           // The note text stays here. Only the drops go to Eye Drop Tracker.
           drops: chosen.map((d) => ({ ...d, source: undefined })),
@@ -167,8 +177,8 @@ function start() {
       return render();
     }
     try {
-      const [patient, notes, rx] = await Promise.all([client.patient(id), client.notes(id), client.currentDrugs(id)]);
-      Object.assign(state, { patient, notes, rx });
+      const [patient, notes, rx, provider] = await Promise.all([client.patient(id), client.notes(id), client.currentDrugs(id), client.me().catch(() => "")]);
+      Object.assign(state, { patient, notes, rx, provider });
       const withDrops = notes.find((n) => fromLink(n.text) || parseNote(n.text, formulary).drops.length);
       // Selected text first, then today's unsaved note if it names a drop,
       // then the newest saved note that does.
@@ -190,14 +200,35 @@ function start() {
       reply({ ok: false, message: "The Oscar tab now shows a different patient, so nothing was added. Use Copy for chart note." });
       return false;
     }
-    client.addNote(msg.patientId, msg.text).then(
-      () => reply({ ok: true, message: "Added to the Oscar chart as an unsigned note. Sign it in the chart." }),
-      (e) => reply({ ok: false, message: e.message || "Oscar did not save the note." })
-    );
+    // The same clinician must still be signed in to Oscar.
+    client
+      .me()
+      .catch(() => "")
+      .then((now) => {
+        if (msg.provider && now !== msg.provider) throw new Error("A different person is now signed in to Oscar, so nothing was added. Read the chart again.");
+        return client.addNote(msg.patientId, msg.text);
+      })
+      .then(
+        () => reply({ ok: true, message: "Added to the Oscar chart as an unsigned note. Sign it in the chart." }),
+        (e) => reply({ ok: false, message: e.message || "Oscar did not save the note." })
+      );
     return true;
   };
 
+  // Keyboard: focus moves into the panel when it opens, Escape closes it and
+  // returns focus to where the clinician was in Oscar.
+  const returnTo = document.activeElement;
+  function close() {
+    host.remove();
+    window.__edtPanel = null;
+    if (returnTo?.isConnected) returnTo.focus?.();
+  }
+  panel.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+
   render();
+  panel.querySelector('[data-act="close"]')?.focus();
   load();
   return host;
 }

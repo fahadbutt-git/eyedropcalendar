@@ -66,4 +66,22 @@ RTC 1 week with IOP.`,
     notes: [{ date: "2026-11-02T11:00:00-05:00", text: "Healthy eyes. No drops. RTC 1 year." }],
     rx: [],
   },
+  {
+    // For the security tests: markup in every field Oscar returns.
+    id: 4,
+    firstName: '<img src=x onerror="window.__pwned=1">',
+    lastName: "HOSTILE",
+    sex: "F",
+    dob: "1960-01-01",
+    hin: "0000000004",
+    address: "4 Example Street",
+    reason: "Security test",
+    notes: [
+      {
+        date: "2026-11-04T10:00:00-05:00",
+        text: '<script>window.__pwned=2</script>Continue Xalatan qhs OS <img src=x onerror="window.__pwned=3"> and Timoptic BID OU "><svg onload=window.__pwned=4>',
+      },
+    ],
+    rx: [{ brandName: '<img src=x onerror="window.__pwned=5">XALATAN', instructions: "1 gtt OS qhs" }],
+  },
 ];

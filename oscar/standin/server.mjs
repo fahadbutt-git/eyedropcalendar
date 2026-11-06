@@ -19,6 +19,7 @@ import { PATIENTS } from "./patients.mjs";
 const PORT = Number(process.env.PORT || 8080);
 const sessions = new Set();
 const saved = []; // notes written back, for tests to read
+let provider = "999998"; // who is signed in; tests can switch it
 
 const str = (v) => (v == null ? v : String(v));
 const cookieOf = (req) => /JSESSIONID=([\w]+)/.exec(req.headers.cookie || "")?.[1];
@@ -59,7 +60,7 @@ function demographicTo(p) {
 function noteTo(p, n, i) {
   return {
     noteId: p.id * 100 + i, uuid: `standin-${p.id}-${i}`, note: n.text, observationDate: Date.parse(n.date), updateDate: Date.parse(n.date),
-    providerName: "Demo, Doctor", providerNo: "999998", isSigned: "true", isEditable: "true", revision: "1",
+    providerName: p.lastName === "HOSTILE" ? '<img src=x onerror="window.__pwned=6">' : "Demo, Doctor", providerNo: "999998", isSigned: "true", isEditable: "true", revision: "1",
     encounterType: "face to face encounter with client", archived: "false", isCpp: "false", isDocument: "false",
   };
 }
@@ -68,6 +69,7 @@ async function rest(req, res, path, url) {
   if (url.searchParams.get("_wadl") !== null) return send(res, 200, "<application/>", "application/xml");
   if (!authed(req)) return send(res, 401, "<error>Not authorized</error>", "text/xml");
   let m;
+  if (path === "providerService/provider/me") return send(res, 200, { id: provider, firstName: "doctor", lastName: "oscardoc" });
   if ((m = path.match(/^demographics\/quickSearch$/))) {
     const q = (url.searchParams.get("query") || "").toLowerCase();
     const found = PATIENTS.filter((p) => `${p.lastName}, ${p.firstName}`.toLowerCase().includes(q.replace(/\s*,\s*/, ", ")) || p.lastName.toLowerCase().startsWith(q));
@@ -132,6 +134,16 @@ const server = createServer(async (req, res) => {
   }
   if (path.startsWith("/oscar/ws/rs/")) return rest(req, res, path.slice("/oscar/ws/rs/".length), url);
   if (path === "/oscar/__standin/saved") return send(res, 200, saved);
+  // Each test run starts from no saved notes and the usual clinician.
+  if (path === "/oscar/__standin/reset") {
+    saved.length = 0;
+    provider = "999998";
+    return send(res, 200, { reset: true });
+  }
+  if (path === "/oscar/__standin/provider") {
+    provider = url.searchParams.get("no") || "999998";
+    return send(res, 200, { provider });
+  }
   if (!authed(req)) return res.writeHead(302, { Location: "/oscar/index.jsp" }).end();
   if (path === "/oscar/provider/providercontrol.jsp")
     return send(res, 200, page("Schedule", `<h2>Today</h2><table><tr><th>Patient</th><th>Reason</th></tr>${PATIENTS.map(

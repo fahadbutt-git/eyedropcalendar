@@ -5,7 +5,7 @@ import { scheduleSpan } from "../../lib/calendar.js";
 import { dosesOnDay } from "../../lib/regimen.js";
 import { chartNote } from "../../lib/chartNote.js";
 import AddToChart from "./AddToChart.jsx";
-import { encodeRegimen, patientLink } from "../../lib/share.js";
+import { codeFromUrl, encodeRegimen, patientLink } from "../../lib/share.js";
 import { isClockTime } from "../../lib/times.js";
 import { CopyButton, Field, Icon, capTint, chipStyle, printSheets } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
@@ -160,7 +160,7 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
         <div className="chart-note">
           <CopyButton text={note}>Copy for chart note</CopyButton>
           <p className="hint">The plan and its link, to paste into the clinic note. Paste the link back in at the next visit to change the plan.</p>
-          {addToChart && <AddToChart text={note} add={addToChart} />}
+          {addToChart && <AddToChart code={codeFromUrl(link)} patient={addToChart.patient} add={addToChart.add} />}
         </div>
       </div>
       <button className="btn" onClick={() => go("rx")}>

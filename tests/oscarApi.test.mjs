@@ -85,3 +85,21 @@ test("a note is added unsigned, to the patient asked for", async () => {
   assert.equal(body.isSigned, false);
   assert.deepEqual(body.assignedIssues, []);
 });
+
+test("the note the extension writes from the plan code matches the site's chart note", async () => {
+  const { encodeRegimen, decodeRegimen } = await import("../src/lib/share.js");
+  const { chartNote } = await import("../src/lib/chartNote.js");
+  const { SEED_FORMULARY } = await import("../src/data/formulary.js");
+  const entries = [
+    { brand: "Xalatan", eye: "OS", drops: 1, mode: "ongoing", freq: 1, durationDays: 7, startDay: 1, steps: [] },
+    { brand: "Pred Forte", eye: "OD", drops: 1, mode: "taper", freq: 8, durationDays: 7, startDay: 1, steps: [{ freq: 8, days: 7 }, { freq: 4, days: 7 }, { freq: 2, days: 7 }] },
+    { brand: "Vigamox", eye: "OD", drops: 1, mode: "duration", freq: 3, durationDays: 7, startDay: 1, steps: [] },
+  ];
+  const settings = { start: "2026-11-06", wake: "07:30", bed: "22:30" };
+  const code = encodeRegimen({ entries, formulary: SEED_FORMULARY, ...settings, nonce: "abcd1234" });
+  const link = `https://eyedroptracker.com/#/p/${code}`;
+  const fromSite = chartNote({ entries, formulary: SEED_FORMULARY, ...settings, link });
+  const fromExtension = chartNote({ ...decodeRegimen(code), link });
+  assert.equal(fromExtension, fromSite);
+  assert.throws(() => decodeRegimen("not-a-plan"));
+});
