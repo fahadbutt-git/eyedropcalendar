@@ -4,6 +4,7 @@ import { addDays, fmtShort, isValidISO, parseISO } from "../../lib/dates.js";
 import { scheduleSpan } from "../../lib/calendar.js";
 import { dosesOnDay } from "../../lib/regimen.js";
 import { chartNote } from "../../lib/chartNote.js";
+import AddToChart from "./AddToChart.jsx";
 import { encodeRegimen, patientLink } from "../../lib/share.js";
 import { isClockTime } from "../../lib/times.js";
 import { CopyButton, Field, Icon, capTint, chipStyle, printSheets } from "../ui.jsx";
@@ -54,7 +55,7 @@ function useQrCode(text, enabled) {
 
 // Start date and dose times only change when the new value is complete and
 // valid, so clearing a field can never break the page.
-function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, print, go }) {
+function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, addToChart, print, go }) {
   const [times, setTimes] = useState({ wake: s.wake, bed: s.bed });
   const [startText, setStartText] = useState(s.start);
   const setStart = (v) => {
@@ -159,6 +160,7 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, pri
         <div className="chart-note">
           <CopyButton text={note}>Copy for chart note</CopyButton>
           <p className="hint">The plan and its link, to paste into the clinic note. Paste the link back in at the next visit to change the plan.</p>
+          {addToChart && <AddToChart text={note} add={addToChart} />}
         </div>
       </div>
       <button className="btn" onClick={() => go("rx")}>
@@ -168,7 +170,7 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, pri
   );
 }
 
-export default function SchedulePage({ entries, formulary, patient, settings: s, setSettings, warnings, go }) {
+export default function SchedulePage({ entries, formulary, patient, settings: s, setSettings, warnings, go, addToChart }) {
   const start = parseISO(s.start);
   const span = scheduleSpan(entries, s.months, start);
   const size = s.size;
@@ -260,6 +262,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
         link={link}
         note={chartNote({ entries, formulary, start: s.start, wake: s.wake, bed: s.bed, link })}
         qr={qr}
+        addToChart={addToChart}
         print={() => printSheets("schedule")}
         go={go}
       />

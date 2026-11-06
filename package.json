@@ -14,7 +14,10 @@
     "app:ios": "npm run app:sync && cap open ios",
     "app:version": "node scripts/version.mjs",
     "app:icons": "node scripts/icons.cjs",
-    "app:screens": "node scripts/store-screens.mjs"
+    "app:screens": "node scripts/store-screens.mjs",
+    "ext:build": "node scripts/extension.mjs",
+    "oscar:standin": "node oscar/standin/server.mjs",
+    "oscar:e2e": "node oscar/e2e.mjs"
   },
   "dependencies": {
     "@capacitor-community/text-to-speech": "6.1.0",

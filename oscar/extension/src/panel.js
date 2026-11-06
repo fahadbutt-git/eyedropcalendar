@@ -1,0 +1,200 @@
+// The panel on the Oscar chart. It reads the open patient's notes and
+// medication list from Oscar, shows the drops it found with everything it
+// had to assume, and opens the checked drops in Eye Drop Tracker.
+import { SEED_FORMULARY } from "../../../src/data/formulary.js";
+import { parseNote, parseRxList } from "../../../src/lib/noteParser.js";
+import { patientInstruction } from "../../../src/lib/wording.js";
+import { codeFromUrl, decodeRegimen } from "../../../src/lib/share.js";
+import { oscarClient, openPatientId, restBase } from "./oscarApi.js";
+import STYLE from "./panel.css";
+
+const formulary = SEED_FORMULARY;
+const medOf = (brand) => formulary.find((m) => m.brand === brand);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const fmtDate = (iso) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "Undated" : d.toLocaleDateString("en-CA", { day: "numeric", month: "short", year: "numeric" });
+};
+
+function mount() {
+  const host = document.createElement("div");
+  host.id = "edt-oscar-panel";
+  host.style.cssText = "all:initial;position:fixed;top:0;right:0;height:100vh;z-index:2147483647";
+  // Its own styles, kept apart from Oscar's.
+  const root = host.attachShadow({ mode: "open" });
+  const style = document.createElement("style");
+  style.textContent = STYLE;
+  const panel = document.createElement("aside");
+  panel.setAttribute("aria-label", "Eye Drop Tracker");
+  root.append(style, panel);
+  document.documentElement.append(host);
+  return { host, panel };
+}
+
+function start() {
+  const { host, panel } = mount();
+  const client = oscarClient(restBase(window.location));
+  const selection = String(window.getSelection?.() || "").trim();
+  const state = { patient: null, notes: [], rx: [], source: null, result: null, chosen: new Set(), error: "", busy: true, opened: false };
+
+  const sourceText = () => {
+    if (state.source === "selection") return selection;
+    return state.notes.find((n) => n.id === state.source)?.text || "";
+  };
+  // A note Eye Drop Tracker wrote carries the plan link, which gives the
+  // plan exactly, and lets the patient keep their check marks.
+  const fromLink = (text) => {
+    const code = codeFromUrl(text);
+    if (!code) return null;
+    try {
+      const plan = decodeRegimen(code);
+      return { code, drops: plan.entries.map((e) => ({ ...e, flags: [] })), skipped: [] };
+    } catch {
+      return null;
+    }
+  };
+  const read = () => {
+    state.result = state.source === "rx" ? parseRxList(state.rx, formulary) : fromLink(sourceText()) || parseNote(sourceText(), formulary);
+    state.chosen = new Set(state.result.drops.map((_, i) => i));
+    state.opened = false;
+  };
+
+  function render() {
+    const r = state.result;
+    const options = [
+      selection.length > 10 && `<option value="selection">Text selected on this page</option>`,
+      ...state.notes.map((n) => `<option value="${esc(n.id)}">Note, ${esc(fmtDate(n.date))}${n.provider ? `, ${esc(n.provider)}` : ""}</option>`),
+      state.rx.length && `<option value="rx">Medication list (Rx)</option>`,
+    ].filter(Boolean);
+    panel.innerHTML = `
+      <header><h1>Eye Drop Tracker</h1><button class="x" data-act="close" aria-label="Close">×</button></header>
+      <div class="body">
+        ${state.error ? `<p class="error" role="alert">${esc(state.error)}</p>` : ""}
+        ${state.busy ? `<p class="muted">Reading the chart…</p>` : ""}
+        ${state.patient ? `<p class="who"><strong>${esc(state.patient.name)}</strong>${state.patient.dob ? `<span>Born ${esc(state.patient.dob)}</span>` : ""}</p>` : ""}
+        ${options.length ? `<label class="field">Read drops from<select data-act="source">${options.join("")}</select></label>` : ""}
+        ${state.source && state.source !== "rx" ? `<details class="src"><summary>Show the text</summary><pre>${esc(sourceText())}</pre></details>` : ""}
+        ${r ? drops(r) : ""}
+      </div>
+      <footer>
+        <button class="primary" data-act="open" ${!r || !state.chosen.size || state.opened ? "disabled" : ""}>${state.opened ? "Opened in Eye Drop Tracker" : `Open ${state.chosen.size || ""} in Eye Drop Tracker`}</button>
+        <p class="muted small">Read on this computer only. Check every drop against the chart before anything is printed.</p>
+      </footer>`;
+    const select = panel.querySelector('[data-act="source"]');
+    if (select && state.source) select.value = state.source;
+  }
+
+  function drops(r) {
+    if (!r.drops.length && !r.skipped.length) return `<p class="muted">No eye drops found here. Choose another note, or select the plan in the note and click the button again.</p>`;
+    const items = r.drops
+      .map((d, i) => {
+        const med = medOf(d.brand);
+        return `<li class="${d.flags.length ? "flagged" : ""}">
+          <label><input type="checkbox" data-i="${i}" ${state.chosen.has(i) ? "checked" : ""} ${r.code ? "disabled" : ""}>
+          <span><strong>${esc(d.brand)}</strong> <span class="muted">${esc(med?.generic || "")}</span><br>${esc(patientInstruction(d, med?.qhs))}</span></label>
+          ${d.flags.length ? `<ul class="flags">${d.flags.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>` : ""}
+        </li>`;
+      })
+      .join("");
+    const skipped = r.skipped.length
+      ? `<h2>Not added</h2><ul class="skipped">${r.skipped.map((s) => `<li><strong>${esc(s.name)}</strong>: ${esc(s.why)}</li>`).join("")}</ul>`
+      : "";
+    const link = r.code ? `<p class="link-note">This note has an Eye Drop Tracker plan link. The plan opens exactly as it was saved, and the patient keeps their check marks.</p>` : "";
+    return `<h2>Drops found</h2>${link}<ul class="drops">${items}</ul>${skipped}`;
+  }
+
+  panel.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.dataset.act === "source") {
+      state.source = t.value;
+      read();
+      render();
+    } else if (t.dataset.i != null) {
+      const i = Number(t.dataset.i);
+      if (t.checked) state.chosen.add(i);
+      else state.chosen.delete(i);
+      state.opened = false;
+      render();
+    }
+  });
+
+  panel.addEventListener("click", async (e) => {
+    const act = e.target.closest("[data-act]")?.dataset.act;
+    if (act === "close") {
+      host.remove();
+      window.__edtPanel = null;
+    }
+    if (act === "open") {
+      const chosen = state.result.drops.filter((_, i) => state.chosen.has(i));
+      const reply = await chrome.runtime.sendMessage({
+        type: "open",
+        payload: {
+          patientId: state.patient.id,
+          patient: { name: state.patient.name, dob: state.patient.dob },
+          // The note text stays here. Only the drops go to Eye Drop Tracker.
+          drops: chosen.map((d) => ({ ...d, source: undefined })),
+          code: state.result.code || "",
+          skipped: state.result.skipped,
+        },
+      });
+      state.opened = !!reply?.ok;
+      state.error = reply?.ok ? "" : reply?.message || "Eye Drop Tracker could not be opened.";
+      render();
+    }
+  });
+
+  async function load() {
+    const id = openPatientId(window.location, document);
+    if (!id) {
+      state.busy = false;
+      state.error = "Open a patient's encounter in Oscar, then click the Eye Drop Tracker button.";
+      return render();
+    }
+    try {
+      const [patient, notes, rx] = await Promise.all([client.patient(id), client.notes(id), client.currentDrugs(id)]);
+      Object.assign(state, { patient, notes, rx });
+      // Selected text first, then the newest note that names a drop.
+      const withDrops = notes.find((n) => fromLink(n.text) || parseNote(n.text, formulary).drops.length);
+      state.source = selection.length > 10 ? "selection" : withDrops?.id || notes[0]?.id || (rx.length ? "rx" : null);
+      if (state.source) read();
+    } catch (e) {
+      state.error = e.message || "Oscar could not be read.";
+    }
+    state.busy = false;
+    render();
+  }
+
+  // Eye Drop Tracker sends the finished chart note back here. It is added
+  // only to the patient the plan was read from, and only while that chart is
+  // still the one open.
+  window.__edtAddNote = (msg, reply) => {
+    if (!state.patient || msg.patientId !== state.patient.id || openPatientId(window.location, document) !== msg.patientId) {
+      reply({ ok: false, message: "The Oscar tab now shows a different patient, so nothing was added. Use Copy for chart note." });
+      return false;
+    }
+    client.addNote(msg.patientId, msg.text).then(
+      () => reply({ ok: true, message: "Added to the Oscar chart as an unsigned note. Sign it in the chart." }),
+      (e) => reply({ ok: false, message: e.message || "Oscar did not save the note." })
+    );
+    return true;
+  };
+
+  render();
+  load();
+  return host;
+}
+
+// One listener for the page, whichever panel is the latest, so a note is
+// never added twice.
+if (!window.__edtListening) {
+  window.__edtListening = true;
+  chrome.runtime.onMessage.addListener((msg, _sender, reply) => (msg?.type === "addNote" && window.__edtAddNote ? window.__edtAddNote(msg, reply) : false));
+}
+
+// Clicking the toolbar button again closes the panel.
+if (window.__edtPanel?.isConnected) {
+  window.__edtPanel.remove();
+  window.__edtPanel = null;
+} else {
+  window.__edtPanel = start();
+}

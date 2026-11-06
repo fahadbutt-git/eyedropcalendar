@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Eye Drop Tracker for Oscar",
+  "short_name": "Eye Drop Tracker",
+  "version": "0.1.0",
+  "description": "Reads the eye drop plan from an Oscar chart note into Eye Drop Tracker, and adds the plan back to the chart. Nothing leaves this computer.",
+  "action": {
+    "default_title": "Eye Drop Tracker: read drops from this chart",
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png" }
+  },
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["activeTab", "scripting", "storage"],
+  "content_scripts": [
+    {
+      "matches": ["https://eyedroptracker.com/*", "https://www.eyedroptracker.com/*"],
+      "js": ["bridge.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "minimum_chrome_version": "116"
+}

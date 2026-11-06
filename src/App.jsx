@@ -11,7 +11,8 @@ import { adoptPlan, currentPlanCode, forgetCurrentPlan } from "./lib/patientStor
 import { usePersistentState } from "./lib/storage.js";
 import { useIdle } from "./lib/useIdle.js";
 import { isClockTime } from "./lib/times.js";
-import { cleanEntry, cleanFormulary } from "./lib/validate.js";
+import { MAX_DROPS, cleanEntry, cleanFormulary } from "./lib/validate.js";
+import { useOscarBridge } from "./lib/oscarBridge.js";
 import RegimenPage from "./components/drops/RegimenPage.jsx";
 import SchedulePage from "./components/schedule/SchedulePage.jsx";
 import RxPage from "./components/rx/RxPage.jsx";
@@ -39,6 +40,26 @@ const defaultSettings = () => ({
   size: "standard",
   nonce: newNonce(),
 });
+
+// Text from the extension or storage: trimmed, limited and without control
+// or invisible formatting characters.
+const cleanText = (v, max) => (typeof v === "string" ? v.replace(/[\p{Cc}\p{Cf}]/gu, "").trim().slice(0, max) : "");
+const cleanFlags = (v) => (Array.isArray(v) ? v.map((f) => cleanText(f, 300)).filter(Boolean).slice(0, 10) : []);
+const cleanSkipped = (v) =>
+  (Array.isArray(v) ? v : [])
+    .map((s) => ({ name: cleanText(s?.name, 60), why: cleanText(s?.why, 120) }))
+    .filter((s) => s.name && s.why)
+    .slice(0, 20);
+function checkImport(v) {
+  if (!v || typeof v !== "object" || !v.flags || typeof v.flags !== "object") return null;
+  return {
+    handoff: cleanText(v.handoff, 64),
+    flags: Object.fromEntries(Object.entries(v.flags).slice(0, 20).map(([k, f]) => [cleanText(k, 40), cleanFlags(f)])),
+    skipped: cleanSkipped(v.skipped),
+    reviewed: v.reviewed === true,
+    fromLink: v.fromLink === true,
+  };
+}
 
 // Stored settings are repaired field by field, so a bad value can never break a page.
 function checkSettings(s) {
@@ -266,8 +287,14 @@ function ClinicianApp() {
     setTab(next);
     window.scrollTo({ top: 0 });
   };
+  // Drops read from Oscar through the extension, with what had to be assumed
+  // for each, until the clinician has checked them.
+  const [imported, setImported] = usePersistentState("edt.import", null, { ...session, check: checkImport });
+  const needsReview = !!imported && !imported.reviewed;
+
   // Everything about the current patient, cleared together.
   const clearPatient = () => {
+    setImported(null);
     setPatient(BLANK_PATIENT);
     setDrops([]);
     setRx(blankRx());
@@ -291,6 +318,46 @@ function ClinicianApp() {
     if (hasPatient) setCleared(false);
   }, [hasPatient]);
 
+  // The extension's drops are checked like any other outside data, and only
+  // drugs in this clinic's drug list are taken.
+  const oscar = useOscarBridge((d) => {
+    const patientFromOscar = { ...BLANK_PATIENT, name: cleanText(d.patient?.name, 80), dob: isValidISO(d.patient?.dob) ? d.patient.dob : "" };
+    // A plan link from an earlier Eye Drop Tracker chart note opens exactly
+    // as saved, keeping its patient code so the patient's ticks carry over.
+    if (typeof d.code === "string" && d.code) {
+      let plan;
+      try {
+        plan = decodeRegimen(d.code);
+      } catch {
+        return;
+      }
+      if (hasPatient && !window.confirm("Replace the patient on screen with the one from Oscar?")) return;
+      clearPatient();
+      setPatient(patientFromOscar);
+      openPlan(plan);
+      setImported({ handoff: cleanText(d.handoff, 64), flags: {}, skipped: [], reviewed: false, fromLink: true });
+      return;
+    }
+    const known = new Set(formulary.list.map((m) => m.brand));
+    const rows = (Array.isArray(d.drops) ? d.drops : [])
+      .slice(0, MAX_DROPS)
+      .map((x) => ({ entry: cleanEntry(x), flags: cleanFlags(x?.flags) }))
+      .filter((r) => r.entry && known.has(r.entry.brand));
+    if (!rows.length) return;
+    if (hasPatient && !window.confirm("Replace the patient on screen with the one from Oscar?")) return;
+    clearPatient();
+    const stamp = Date.now().toString(36);
+    const ids = rows.map((_, i) => `d${stamp}x${i}`);
+    setPatient(patientFromOscar);
+    setDrops(rows.map((r, i) => ({ ...r.entry, id: ids[i] })));
+    setImported({
+      handoff: cleanText(d.handoff, 64),
+      flags: Object.fromEntries(rows.map((r, i) => [ids[i], r.flags])),
+      skipped: cleanSkipped(d.skipped),
+      reviewed: false,
+    });
+  });
+
   // A plan opened from a patient's link keeps its start date, dose times and
   // plan ID. Each drop gets a fresh row id for editing.
   const openPlan = (plan) => {
@@ -310,7 +377,7 @@ function ClinicianApp() {
               key={key}
               className={`step ${tab === key ? "active" : ""}`}
               aria-current={tab === key ? "step" : undefined}
-              disabled={i > 0 && !entries.length}
+              disabled={i > 0 && (!entries.length || needsReview)}
               onClick={() => go(key)}
             >
               <span className="step-num">{i + 1}</span> <span className="long">{label}</span>
@@ -344,10 +411,21 @@ function ClinicianApp() {
             go={go}
             reset={reset}
             openPlan={openPlan}
+            imported={imported}
+            setReviewed={(reviewed) => setImported((v) => (v ? { ...v, reviewed } : v))}
           />
         )}
         {terms === TERMS_VERSION && tab === "schedule" && (
-          <SchedulePage entries={entries} formulary={formulary.list} patient={patient} settings={settings} setSettings={setSettings} warnings={warnings} go={go} />
+          <SchedulePage
+            entries={entries}
+            formulary={formulary.list}
+            patient={patient}
+            settings={settings}
+            setSettings={setSettings}
+            warnings={warnings}
+            go={go}
+            addToChart={oscar.available && imported?.handoff ? (text) => oscar.addToChart(imported.handoff, text) : null}
+          />
         )}
         {terms === TERMS_VERSION && tab === "rx" && (
           <RxPage

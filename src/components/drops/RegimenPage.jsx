@@ -6,6 +6,7 @@ import MedPicker from "./MedPicker.jsx";
 import OpenPlan from "./OpenPlan.jsx";
 import { Field } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
+import ImportReview from "./ImportReview.jsx";
 import Cautions from "../Cautions.jsx";
 import { cautionsFor } from "../../data/cautions.js";
 
@@ -32,7 +33,7 @@ function PatientForm({ patient, setPatient }) {
   );
 }
 
-export default function RegimenPage({ patient, setPatient, drops, setDrops, formulary, startDate, warnings, go, reset, openPlan }) {
+export default function RegimenPage({ patient, setPatient, drops, setDrops, formulary, startDate, warnings, go, reset, openPlan, imported, setReviewed }) {
   const list = drops.filter((d) => d.brand);
   const update = (i, patch) => setDrops(list.map((d, j) => (j === i ? { ...d, ...patch } : d)));
   const remove = (i) => setDrops(list.filter((_, j) => j !== i));
@@ -51,6 +52,8 @@ export default function RegimenPage({ patient, setPatient, drops, setDrops, form
         </button>
       </div>
       <p className="page-note">Patient details stay in this browser tab and are never sent anywhere. Press New patient before the next person.</p>
+
+      {imported && <ImportReview imported={imported} drops={list} setReviewed={setReviewed} />}
 
       <OpenPlan formulary={formulary} hasDrops={list.length > 0} onOpen={openPlan} />
 
@@ -97,8 +100,10 @@ export default function RegimenPage({ patient, setPatient, drops, setDrops, form
       <Cautions cautions={cautionsFor(list, formulary)} />
 
       <div className="actionbar">
-        <span>{list.length ? `${list.length} drop${list.length > 1 ? "s" : ""}` : "Add at least one drop to continue"}</span>
-        <button className="btn primary lg" disabled={!list.length} onClick={() => go("schedule")}>
+        <span>
+          {!list.length ? "Add at least one drop to continue" : imported && !imported.reviewed ? "Confirm the drops read from Oscar to continue" : `${list.length} drop${list.length > 1 ? "s" : ""}`}
+        </span>
+        <button className="btn primary lg" disabled={!list.length || (imported && !imported.reviewed)} onClick={() => go("schedule")}>
           Next: calendar
         </button>
       </div>

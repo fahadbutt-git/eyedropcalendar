@@ -498,3 +498,12 @@ html.patient.large-text { font-size: 125%; }
 .remove-alarms ol { padding-left: 1.3em; display: grid; gap: 4px; }
 .idle-notice { margin-bottom: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .chart-note { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-2); display: grid; gap: 6px; justify-items: start; }
+
+/* Drops read from an Oscar chart, before the clinician has checked them. */
+.import-review { margin-bottom: 18px; display: grid; gap: 10px; }
+.import-review h2 { font-size: 1.05rem; }
+.import-review h3 { font-size: 0.95rem; }
+.import-list { padding-left: 22px; display: grid; gap: 8px; }
+.import-list ul { margin-top: 4px; }
+.import-done { margin-bottom: 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.error-text { color: var(--maroon); }
