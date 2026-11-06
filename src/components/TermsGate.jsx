@@ -5,7 +5,7 @@ import { isNative } from "../lib/native.js";
 // Shown once per browser before the clinician pages, so everyone who builds a
 // plan has agreed to the terms. Bump TERMS_VERSION when the terms change
 // enough that people should agree again.
-export const TERMS_VERSION = "2026-11-03";
+export const TERMS_VERSION = "2026-11-06";
 export const legalLink = (page, ext = "html") => `${isNative ? SITE_URL : ""}/${page}.${ext}`;
 
 export default function TermsGate({ onAccept }) {
@@ -25,6 +25,10 @@ export default function TermsGate({ onAccept }) {
           I am a health professional, or work under one, and I agree to the{" "}
           <a href={legalLink("terms")} target="_blank" rel="noopener noreferrer">
             terms of use
+          </a>
+          ,{" "}
+          <a href={legalLink("clinic-terms")} target="_blank" rel="noopener noreferrer">
+            clinic terms
           </a>{" "}
           and{" "}
           <a href={legalLink("privacy")} target="_blank" rel="noopener noreferrer">

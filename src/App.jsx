@@ -102,7 +102,9 @@ function Footer({ patientView }) {
         </p>
         <p className="legal-links">
           <a href={legalLink("terms")}>Terms of use</a>
+          {!patientView && <a href={legalLink("clinic-terms")}>Clinic terms</a>}
           <a href={legalLink("privacy")}>Privacy</a>
+          <a href={legalLink("security")}>Security</a>
           <a href={legalLink("accessibility")}>Accessibility</a>
           <a href={legalLink("licenses", "txt")}>Open source licences</a>
         </p>

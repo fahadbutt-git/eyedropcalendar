@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#1f3a5f" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <title>Security · Eye Drop Tracker</title>
+    <style>
+      :root { color-scheme: light; }
+      body { margin: 0; background: #fff; color: #1b1f24; font: 1rem/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      header { border-bottom: 3px solid #1f3a5f; }
+      header a { display: block; max-width: 720px; margin: 0 auto; padding: 14px 20px; font-weight: 700; color: #1b1f24; text-decoration: none; }
+      main { max-width: 720px; margin: 0 auto; padding: 8px 20px 48px; }
+      h1 { font-size: 1.7rem; line-height: 1.25; margin: 24px 0 4px; }
+      h2 { font-size: 1.1rem; margin: 28px 0 6px; }
+      p, li { max-width: 66ch; }
+      ul { padding-left: 1.3em; }
+      table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+      th, td { text-align: left; vertical-align: top; border-bottom: 1px solid #d9d5cb; padding: 8px 8px 8px 0; }
+      .scroll { overflow-x: auto; }
+      .date { color: #545b64; margin-top: 0; }
+      a { color: #1f3a5f; }
+      nav { border-top: 1px solid #d9d5cb; margin-top: 36px; padding-top: 14px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+    </style>
+  </head>
+  <body>
+    <header><a href="/">Eye Drop Tracker</a></header>
+    <main>
+      <h1>Security</h1>
+      <p class="date">Last updated 6 November 2026</p>
+
+      <p>Eye Drop Tracker has no server that holds data, no accounts and no database. Patient information stays on the clinic's computers, in the clinic's own medical record system and on the patient's phone. This page is our public description of the software, the information it handles and its safeguards, for clinics, privacy officers and security reviewers.</p>
+
+      <h2>Where information goes</h2>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Information</th><th scope="col">Where it is</th><th scope="col">How long</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Patient name, date of birth, health card number, address</td><td>The clinician's browser tab only</td><td>Until New patient, the tab closes, or 30 minutes without use</td></tr>
+            <tr><td>Drops read from an Oscar chart</td><td>Chrome's session storage, inside the extension, on the clinic computer</td><td>Deleted once Eye Drop Tracker takes them. Tab and patient number kept until either tab closes, two hours at most</td></tr>
+            <tr><td>Prescriber details, clinic drug list</td><td>That browser's storage on the clinic computer</td><td>Until cleared by the clinic</td></tr>
+            <tr><td>Drawn signature</td><td>Memory, for one prescription</td><td>Never saved</td></tr>
+            <tr><td>Chart note</td><td>The clinic's Oscar, written by the clinician's own login</td><td>The clinic's record retention rules</td></tr>
+            <tr><td>Plan link and QR code: drops, eyes, times, dates, a random patient code</td><td>On paper, the patient's phone and the clinic chart. Never a name or health number</td><td>As long as the patient keeps it</td></tr>
+            <tr><td>Doses ticked and reminders</td><td>The patient's phone only</td><td>Until the patient removes the app or its data</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The plan sits after the "#" in its link, which browsers never send to a server. Our host therefore never receives a plan, even when a patient opens one.</p>
+
+      <h2>Safeguards in the website and app</h2>
+      <ul>
+        <li>A strict content security policy lets the site load code and connect only to itself. No third-party scripts, fonts, analytics or advertising.</li>
+        <li>HTTPS only, with HTTP Strict Transport Security. The site cannot be framed by other sites, and sends no referrer to other sites.</li>
+        <li>No cookies. Patient details use per-tab session storage, cleared after 30 minutes idle, including in reopened tabs.</li>
+        <li>Patient-facing links carry no direct identifiers, and a check code stops damaged or mistyped links from opening.</li>
+        <li>The phone app schedules reminders on the phone itself and can hide drug names on the lock screen.</li>
+      </ul>
+
+      <h2>Safeguards in the Oscar extension</h2>
+      <ul>
+        <li>Chrome permissions are limited to the open tab when the clinician asks (activeTab), with no standing access to any website.</li>
+        <li>It talks only to the clinic's Oscar, using the clinician's own login and session, and to eyedroptracker.com in the same browser. The site address is fixed when the extension is built.</li>
+        <li>Writes to the chart need a real click, go only to the patient the plan came from, stop if another clinician has signed in, are made once per plan, and contain only text the extension builds from a valid plan.</li>
+        <li>Clicks made by scripts on a page are ignored. Chart text is shown as text, so markup in a chart cannot run.</li>
+        <li>All code is in the package. Nothing is downloaded and run later.</li>
+      </ul>
+
+      <h2>Testing</h2>
+      <p>Every release runs unit tests, an end-to-end test of the extension with a stand-in Oscar, and a security suite of 18 checks. The suite tries to run hostile markup from every chart field, message the extension from web pages, press its buttons with scripts, forge chart writes, write free text, write to the wrong patient or under the wrong clinician, repeat writes, overload imports and leave data behind. It also records every network request and confirms each one goes only to Oscar or Eye Drop Tracker, with no patient details in any address. The source code is public on <a href="https://github.com/fahadbutt-git/eyedropcalendar">GitHub</a> for independent review.</p>
+
+      <h2>Service providers</h2>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Provider</th><th scope="col">What it does</th><th scope="col">Patient information</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Vercel, Inc. (United States)</td><td>Serves the website files</td><td>None. Short-lived request logs only</td></tr>
+            <tr><td>GitHub, Inc. (United States)</td><td>Holds the public source code</td><td>None</td></tr>
+            <tr><td>Google (Gmail)</td><td>Our email</td><td>None, unless someone sends it to us. Please do not</td></tr>
+            <tr><td>Google (Chrome Web Store), Apple and Google app stores</td><td>Distribute the extension and phone app</td><td>None</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Incidents</h2>
+      <p>If we learn of a flaw or event that could expose patient information, we act within one business day to contain it, tell affected clinics at the first reasonable opportunity, release a fix, and record what happened and what we did. We keep that record for at least 24 months. Clinics then meet their own duties to patients and their commissioner, and we help with any facts we have.</p>
+
+      <h2>Reporting a vulnerability</h2>
+      <p>Email <a href="mailto:eyedroptracker@gmail.com">eyedroptracker@gmail.com</a> with "Security" in the subject line. Please describe the problem and how to reproduce it, and do not include real patient information. We will reply within three business days and keep you informed until it is fixed.</p>
+      <p>We will not pursue anyone who reports in good faith, tests only against their own installs or a demo system, does not access or change other people's data, and gives us reasonable time to fix the problem before publishing. Our contact details for researchers are also in <a href="/.well-known/security.txt">security.txt</a>.</p>
+
+      <h2>Requests from clinics</h2>
+      <p>Clinics can ask for a privacy impact assessment and threat risk assessment template completed for Eye Drop Tracker, the test results for a release, or a countersigned copy of the <a href="/clinic-terms.html">clinic terms</a>.</p>
+
+      <nav aria-label="Legal"><a href="/terms.html">Terms of use</a><a href="/clinic-terms.html">Clinic terms</a><a href="/privacy.html">Privacy</a><a href="/security.html">Security</a><a href="/accessibility.html">Accessibility</a><a href="/">Back to Eye Drop Tracker</a></nav>
+    </main>
+  </body>
+</html>
