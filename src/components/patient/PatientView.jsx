@@ -14,6 +14,7 @@ import { usePersistentState } from "../../lib/storage.js";
 import { CapDot, Icon } from "../ui.jsx";
 import { formInfo } from "../../data/forms.js";
 import InstallTip from "./InstallTip.jsx";
+import KeepPlan from "./KeepPlan.jsx";
 import Reminders from "./Reminders.jsx";
 
 // Check marks are stored per plan and per date as { "<brand>|<eye>|<dose>": time }.
@@ -291,6 +292,7 @@ export default function PatientView({ plan: shared, code }) {
 
       <Reminders plan={shared} id={id} code={code} />
       {!isNative && <InstallTip />}
+      <KeepPlan code={code} />
 
       <section className="pt-card" aria-labelledby="mine-h">
         <h2 id="mine-h">My drops</h2>

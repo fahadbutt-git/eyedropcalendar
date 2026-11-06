@@ -256,6 +256,7 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .sheet-qr img { width: calc(var(--s) * 7.222); height: calc(var(--s) * 7.222); image-rendering: pixelated; display: block; }
 .sheet-qr b { display: block; font-size: calc(var(--s) * 1.042); line-height: 1.2; margin-bottom: calc(var(--s) * 0.278); }
 .sheet-qr ol { margin: 0; padding-left: calc(var(--s) * 1.111); font-size: calc(var(--s) * 0.799); line-height: 1.35; }
+.sheet-qr-lost { margin: calc(var(--s) * 0.278) 0 0; font-size: calc(var(--s) * 0.799); line-height: 1.3; font-style: italic; }
 .legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--s) * 17.361)), 1fr)); gap: calc(var(--s) * 0.556) calc(var(--s) * 1.528); margin-bottom: calc(var(--s) * 0.833); }
 .legend-item { display: grid; grid-template-columns: calc(var(--s) * 1.667) minmax(0, 1fr); gap: calc(var(--s) * 0.556); align-items: start; line-height: 1.35; }
 .legend-item b { font-size: calc(var(--s) * 1.042); }
@@ -325,7 +326,7 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .sched-print.large .cal td { border-width: 2px; height: calc(var(--s) * 7.639); }
 .sched-print.large .boxes i, .sched-print.large .chart .box { border-width: 2px; }
 /* Large print: no secondary text drops below about 15 pt on paper. */
-.sched-print.large :is(.kicker, .legend-times, .legend-sub, .chart-foot, .chart .c-drop-in, .chart thead th span, .tbl-sched th, .tbl-sched td, .sheet-qr ol, .cal th, .week-band) { font-size: calc(var(--s) * 0.95); }
+.sched-print.large :is(.kicker, .legend-times, .legend-sub, .chart-foot, .chart .c-drop-in, .chart thead th span, .tbl-sched th, .tbl-sched td, .sheet-qr ol, .sheet-qr-lost, .cal th, .week-band) { font-size: calc(var(--s) * 0.95); }
 
 /* ── Prescription ──────────────────────────────────────────────────── */
 .rx-items { display: grid; gap: 12px; }

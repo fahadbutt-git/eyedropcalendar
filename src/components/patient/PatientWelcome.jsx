@@ -26,6 +26,7 @@ export default function PatientWelcome({ onCode }) {
           <li>Open your phone&apos;s camera and point it at the square QR code.</li>
           <li>Tap the link that appears, then tap Open in the app.</li>
         </ol>
+        <p className="pt-note small">Lost your calendar? Call your eye clinic. They can print it again from your chart, or send you the link.</p>
       </section>
       <form className="pt-card" onSubmit={open}>
         <label className="field" htmlFor="plan-link">

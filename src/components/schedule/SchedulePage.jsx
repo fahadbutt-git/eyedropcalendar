@@ -147,7 +147,7 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
         {qr && (
           <div className="aside-qr">
             <img src={qr} alt="QR code that opens this drop plan on a phone" />
-            <p>The patient can scan this now with their phone camera, or from the printed page.</p>
+            <p>Before the patient leaves, scan this with their phone camera so the plan is on the phone, not only on paper.</p>
           </div>
         )}
         <p className="hint">The link holds the drops and dates only, never the patient&apos;s name or health details.</p>
@@ -159,7 +159,7 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
         </div>
         <div className="chart-note">
           <CopyButton text={note}>Copy for chart note</CopyButton>
-          <p className="hint">The plan and its link, to paste into the clinic note. Paste the link back in at the next visit to change the plan.</p>
+          <p className="hint">The plan and its link, to paste into the clinic note. Open the link again to change the plan at the next visit, or to reprint it if the patient loses the calendar.</p>
           {addToChart && <AddToChart code={codeFromUrl(link)} patient={addToChart.patient} add={addToChart.add} />}
         </div>
       </div>
@@ -239,6 +239,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
                   <li>Point it at this square</li>
                   <li>Tap the link that appears</li>
                 </ol>
+                <p className="sheet-qr-lost">Lost this page? Your eye clinic can print it again.</p>
               </div>
             </div>
           )}
