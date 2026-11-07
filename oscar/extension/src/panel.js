@@ -50,7 +50,7 @@ function start() {
       .map((t) => t.value.replace(/^\s*\[[^\]\n]{0,60}\]\s*/, "").trim())
       .filter((t) => t.length > 10)
       .join("\n\n");
-  const state = { patient: null, notes: [], rx: [], source: null, result: null, chosen: new Set(), error: "", busy: true, opened: false };
+  const state = { patient: null, notes: [], rx: [], source: null, result: null, chosen: new Set(), error: "", busy: true, opened: false, offerButton: false };
 
   const sourceText = () => {
     if (state.source === "selection") return selection;
@@ -104,6 +104,7 @@ function start() {
       <footer>
         <button class="primary" data-act="open" ${!r || !state.chosen.size || state.opened ? "disabled" : ""}>${state.opened ? "Opened in Eye Drop Tracker" : `Open ${state.chosen.size || ""} in Eye Drop Tracker`}</button>
         <p class="muted small">Read on this computer only. Check every drop against the chart before anything is printed.</p>
+        ${state.offerButton ? `<p class="small"><button class="linkish" data-act="setup">Show an Eye drops button on every encounter</button></p>` : ""}
       </footer>`;
     const select = panel.querySelector('[data-act="source"]');
     if (select && state.source) select.value = state.source;
@@ -149,6 +150,11 @@ function start() {
     if (!e.isTrusted) return;
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (act === "close") close();
+    if (act === "setup") {
+      await chrome.runtime.sendMessage({ type: "setup" }).catch(() => {});
+      state.offerButton = false;
+      return draw();
+    }
     if (act === "open") {
       const chosen = state.result.drops.filter((_, i) => state.chosen.has(i));
       const reply = await chrome.runtime.sendMessage({
@@ -231,6 +237,13 @@ function start() {
   render();
   panel.querySelector('[data-act="close"]')?.focus();
   load();
+  chrome.runtime
+    .sendMessage({ type: "buttonStatus" })
+    .then((s) => {
+      state.offerButton = s?.offer === true;
+      if (state.offerButton) draw();
+    })
+    .catch(() => {});
   return host;
 }
 

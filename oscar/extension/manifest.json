@@ -11,9 +11,10 @@
   "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
   "background": { "service_worker": "background.js", "type": "module" },
   "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
   "commands": {
     "_execute_action": {
-      "suggested_key": { "default": "Alt+Shift+E", "mac": "Alt+Shift+E" },
+      "suggested_key": { "default": "Alt+Shift+E", "mac": "MacCtrl+Shift+E" },
       "description": "Read eye drops from the open Oscar chart"
     }
   },

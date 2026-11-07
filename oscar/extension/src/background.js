@@ -20,9 +20,9 @@ const tabKey = (tabId) => `tab:${tabId}`;
 const read = async (k) => (await chrome.storage.session.get(k))[k];
 
 // Oscar opens encounters in pop-up windows, which Chrome shows without
-// extension buttons. So the panel also opens from the right-click menu and
-// from a keyboard shortcut (Alt+Shift+E, Option+Shift+E on a Mac), which
-// grant the same one-tab access as the button.
+// extension buttons. So the panel opens from an Eye drops button on the
+// encounter (once the clinic allows it for its Oscar), the right-click menu,
+// or a keyboard shortcut (Alt+Shift+E, Control+Shift+E on a Mac).
 const MENU = "edt-read";
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({ id: MENU, title: "Read eye drops with Eye Drop Tracker", contexts: ["page", "selection", "editable", "frame"] });
@@ -42,6 +42,40 @@ async function openPanel(tab, selection = "", frameId) {
 }
 
 chrome.action.onClicked.addListener((tab) => openPanel(tab));
+
+// The Eye drops button runs only on Oscar addresses the clinic has allowed
+// from the setup page. Never on Eye Drop Tracker itself.
+const LAUNCHER = "edt-launcher";
+const SITE_ORIGIN = new URL(SITE).origin;
+async function syncLauncher() {
+  const { origins = [] } = await chrome.permissions.getAll();
+  const matches = origins.filter((o) => /^https?:\/\/[^*]+\/\*$/.test(o) && !o.startsWith(SITE_ORIGIN) && !/eyedroptracker\.com/.test(o));
+  await chrome.scripting.unregisterContentScripts({ ids: [LAUNCHER] }).catch(() => {});
+  if (matches.length) await chrome.scripting.registerContentScripts([{ id: LAUNCHER, matches, js: ["launcher.js"], runAt: "document_idle", persistAcrossSessions: true }]);
+  return matches;
+}
+// After setup, the button appears on encounters already open, with no reload.
+async function showLauncherNow() {
+  const matches = await syncLauncher();
+  if (!matches.length) return;
+  for (const t of await chrome.tabs.query({ url: matches })) chrome.scripting.executeScript({ target: { tabId: t.id }, files: ["launcher.js"] }).catch(() => {});
+}
+chrome.runtime.onInstalled.addListener(syncLauncher);
+chrome.runtime.onStartup.addListener(syncLauncher);
+chrome.permissions.onAdded.addListener(showLauncherNow);
+chrome.permissions.onRemoved.addListener(syncLauncher);
+
+async function buttonStatus(sender) {
+  const origin = new URL(sender.tab.url).origin;
+  if (!/^https?:/.test(origin) || origin === SITE_ORIGIN) return { offer: false };
+  return { offer: !(await chrome.permissions.contains({ origins: [`${origin}/*`] })), origin };
+}
+async function setup(sender) {
+  const origin = new URL(sender.tab.url).origin;
+  if (!/^https?:/.test(origin)) return { ok: false };
+  await chrome.windows.create({ url: chrome.runtime.getURL(`setup.html?origin=${encodeURIComponent(origin)}`), type: "popup", width: 520, height: 380, focused: true });
+  return { ok: true };
+}
 chrome.contextMenus.onClicked.addListener((info, tab) => info.menuItemId === MENU && openPanel(tab, info.selectionText || "", info.frameId));
 
 // Eye Drop Tracker opens in an ordinary window, even when Oscar's encounter
@@ -143,8 +177,20 @@ async function addToChart(sender, { handoff, code }) {
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
+  // The setup page is the extension's own page, so it has no tab of its own.
+  if (msg?.type === "launcherAdded" && sender.id === chrome.runtime.id && sender.url?.startsWith(chrome.runtime.getURL("setup.html"))) {
+    showLauncherNow().then(() => reply({ ok: true }));
+    return true;
+  }
   if (!sender.tab || sender.id !== chrome.runtime.id) return false;
-  const run = { open: () => openTracker(sender, msg.payload), pending: () => pending(sender), addToChart: () => addToChart(sender, msg) }[msg?.type];
+  const run = {
+    open: () => openTracker(sender, msg.payload),
+    pending: () => pending(sender),
+    addToChart: () => addToChart(sender, msg),
+    openPanel: async () => openPanel(sender.tab, typeof msg.selection === "string" ? msg.selection : "", sender.frameId),
+    buttonStatus: () => buttonStatus(sender),
+    setup: () => setup(sender),
+  }[msg?.type];
   if (!run) return false;
   run().then(reply, () => reply({ ok: false, message: "Something went wrong. Nothing was changed." }));
   return true;

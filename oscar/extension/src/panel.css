@@ -33,4 +33,5 @@ ul { list-style: none; margin: 0; padding: 0; }
 .error { background: var(--err-bg); color: var(--err-ink); padding: 8px 10px; border-radius: 6px; }
 .primary { width: 100%; font: inherit; font-weight: 700; color: #fff; background: var(--navy); border: 0; border-radius: 8px; padding: 10px 12px; cursor: pointer; }
 .primary:disabled { background: #8a97a8; cursor: default; }
+.linkish { border: 0; background: none; padding: 0; font: inherit; color: var(--navy); text-decoration: underline; cursor: pointer; }
 button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid #4a7fc1; outline-offset: 2px; }

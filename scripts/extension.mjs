@@ -21,7 +21,7 @@ rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 
 await build({
-  entryPoints: { background: join(ext, "src/background.js"), panel: join(ext, "src/panel.js"), bridge: join(ext, "src/bridge.js") },
+  entryPoints: { background: join(ext, "src/background.js"), panel: join(ext, "src/panel.js"), bridge: join(ext, "src/bridge.js"), launcher: join(ext, "src/launcher.js"), setup: join(ext, "src/setup.js") },
   outdir: out,
   bundle: true,
   format: "iife",
@@ -45,6 +45,7 @@ if (dev) {
 }
 writeFileSync(join(out, "manifest.json"), JSON.stringify(manifest, null, 2));
 cpSync(join(ext, "icons"), join(out, "icons"), { recursive: true });
+cpSync(join(ext, "setup.html"), join(out, "setup.html"));
 
 if (!dev) {
   const zip = join(ext, `eye-drop-tracker-oscar-${manifest.version}.zip`);

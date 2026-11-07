@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Add the Eye drops button to Oscar</title>
+    <style>
+      body { margin: 0; font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1b1f24; background: #fff; }
+      main { padding: 22px 26px; max-width: 460px; }
+      h1 { font-size: 18px; margin: 0 0 10px; }
+      p { margin: 0 0 12px; }
+      .site { font-weight: 700; }
+      .muted { color: #545b64; font-size: 13px; }
+      button { font: inherit; font-weight: 700; color: #fff; background: #1f3a5f; border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; }
+      button.secondary { color: #1f3a5f; background: #fff; border: 1px solid #1f3a5f; margin-left: 8px; }
+      .done { background: #e7f3ea; color: #1d5b2c; padding: 10px 12px; border-radius: 6px; }
+      .error { background: #fde8e6; color: #8a1c12; padding: 10px 12px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Add the Eye drops button to Oscar</h1>
+      <p>This puts a small Eye drops button on each encounter in <span class="site" id="site"></span>, so you can read the drop plan with one click.</p>
+      <p class="muted">Chrome will ask to let the extension "read and change your data" on this address. It reads a chart only when you click the button, and sends nothing anywhere but your Oscar and Eye Drop Tracker. You can remove it at any time in Chrome's extension settings.</p>
+      <p id="actions"><button id="allow" type="button">Add the button</button><button id="cancel" class="secondary" type="button">Not now</button></p>
+      <p id="status" role="status"></p>
+    </main>
+    <script src="setup.js"></script>
+  </body>
+</html>

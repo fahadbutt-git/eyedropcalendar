@@ -73,7 +73,14 @@ const isPopup = (page) =>
     return (await chrome.windows.get(tab.windowId)).type;
   }, page.url());
 assert.equal(await isPopup(enc), "popup", "Oscar's encounter is a pop-up window");
-await openPanel(enc);
+// The Eye drops button sits on the encounter, so no shortcut or menu is
+// needed. A script on the page cannot press it.
+const launcher = enc.locator("#edt-oscar-launcher button");
+await launcher.waitFor();
+await enc.evaluate(() => document.getElementById("edt-oscar-launcher").shadowRoot.querySelector("button").click());
+await enc.waitForTimeout(500);
+assert.equal(await enc.locator("#edt-oscar-panel").count(), 0, "scripted click on the button does nothing");
+await launcher.click();
 let panel = enc.locator("#edt-oscar-panel");
 await panel.locator("text=Drops found").waitFor();
 const found = await panel.locator(".drops > li strong").allTextContents();
