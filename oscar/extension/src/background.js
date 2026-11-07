@@ -14,6 +14,10 @@ import { chartNote } from "../../../src/lib/chartNote.js";
 // Fixed at build time (scripts/extension.mjs), never a setting.
 // eslint-disable-next-line no-undef
 const SITE = __EDT_SITE__;
+// The only Oscar addresses the Eye drops button may be allowed on. Empty in
+// the general build, so it can never ask for access to any site.
+// eslint-disable-next-line no-undef
+const OSCARS = __EDT_OSCARS__;
 const PLAN_TTL = 2 * 60 * 60 * 1000;
 const key = (id) => `handoff:${id}`;
 const tabKey = (tabId) => `tab:${tabId}`;
@@ -49,7 +53,7 @@ const LAUNCHER = "edt-launcher";
 const SITE_ORIGIN = new URL(SITE).origin;
 async function syncLauncher() {
   const { origins = [] } = await chrome.permissions.getAll();
-  const matches = origins.filter((o) => /^https?:\/\/[^*]+\/\*$/.test(o) && !o.startsWith(SITE_ORIGIN) && !/eyedroptracker\.com/.test(o));
+  const matches = origins.filter((o) => OSCARS.some((x) => o === `${x}/*`));
   await chrome.scripting.unregisterContentScripts({ ids: [LAUNCHER] }).catch(() => {});
   if (matches.length) await chrome.scripting.registerContentScripts([{ id: LAUNCHER, matches, js: ["launcher.js"], runAt: "document_idle", persistAcrossSessions: true }]);
   return matches;
@@ -67,12 +71,12 @@ chrome.permissions.onRemoved.addListener(syncLauncher);
 
 async function buttonStatus(sender) {
   const origin = new URL(sender.tab.url).origin;
-  if (!/^https?:/.test(origin) || origin === SITE_ORIGIN) return { offer: false };
+  if (!OSCARS.includes(origin)) return { offer: false };
   return { offer: !(await chrome.permissions.contains({ origins: [`${origin}/*`] })), origin };
 }
 async function setup(sender) {
   const origin = new URL(sender.tab.url).origin;
-  if (!/^https?:/.test(origin)) return { ok: false };
+  if (!OSCARS.includes(origin)) return { ok: false };
   await chrome.windows.create({ url: chrome.runtime.getURL(`setup.html?origin=${encodeURIComponent(origin)}`), type: "popup", width: 520, height: 380, focused: true });
   return { ok: true };
 }
