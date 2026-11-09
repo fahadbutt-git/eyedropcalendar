@@ -115,3 +115,13 @@ To give the extension to a clinic, publish it on the Chrome Web Store as unliste
 ## Local Open-OSP test login
 
 The local Open-OSP in Docker (Open-O 25) uses the login openodoc, password mac2002 and PIN 1117. The image ships with openodoc, PIN 2025 and a forced password change, so the older demo login (oscardoc) does not work there. To put the login back in this state, open Docker Desktop, choose the open-osp-db-1 container, open Exec and run the statement in oscar/local/reset-test-login.sql. A copy of the original login row is kept in the table security_backup_20261108. The stand-in Oscar (oscar/standin) keeps its own fixed login, oscardoc, mac2002 and 1117. Both hold made-up patients only.
+
+
+## Rehearsal on Open-O 25, 8 to 9 November 2026
+
+Run in Chrome on a local Open-O 25 in Docker, with made-up patients only, on extension 0.5.3 to 0.5.8.
+
+- Read a post-op note, a misspelled note and a plan link correctly. Oral and as-needed drops were left out with a reason.
+- Refused to write when the Oscar tab had moved to another patient, and did not add the same plan twice.
+- Found and fixed: a separate unsigned note made Oscar drop the clinician's unsaved draft the next time the encounter opened, so the plan now goes into the open note. A plan link on one line widened the encounter page and hid Sign and Save, so the link is now written in short lines. A step down of the same drug was flagged as a duplicate. The panel did not notice a note typed after it opened, and showed nothing on an empty chart or an Access Denied page.
+- Confirmed after the fixes: the plan is added below the clinician's text and autosaved with it, the signed note keeps the page at its normal width, the next visit reopens the exact plan from the link, and the phone keeps a bottle cap colour the patient sets.

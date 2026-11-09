@@ -201,6 +201,10 @@ const fresh = await context.newPage();
 await fresh.goto(`${OSCAR}/casemgmt/forward.jsp?action=view&demographicNo=6`);
 await openPanel(fresh);
 await fresh.locator("#edt-oscar-panel").locator("text=no notes or medications to read yet").waitFor();
+// Writing the plan while the panel is open: only the offer to read again shows.
+await fresh.locator('textarea[name="caseNote_note"]').pressSequentially(" Xalatan 1 gtt qhs OU.");
+await fresh.locator("#edt-oscar-panel .note-changed").waitFor();
+assert.equal(await fresh.locator("#edt-oscar-panel").locator("text=no notes or medications to read yet").count(), 0, "no contradictory empty message");
 
 // Oscar refused the encounter: the panel reads nothing and says why.
 await fresh.goto(`${OSCAR}/casemgmt/forward.jsp?action=view&demographicNo=6&denied=1`);

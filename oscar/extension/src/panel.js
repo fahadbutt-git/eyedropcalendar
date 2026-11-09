@@ -104,7 +104,7 @@ function start() {
         ${options.length ? `<label class="field">Read drops from<select data-act="source">${options.join("")}</select></label>` : ""}
         ${state.source && state.source !== "rx" ? `<details class="src"><summary>Show the text</summary><pre>${esc(sourceText())}</pre></details>` : ""}
         ${r ? drops(r) : ""}
-        ${state.patient && !state.busy && !state.error && !state.source ? `<p class="muted">This chart has no notes or medications to read yet. Write the plan in today's note and open the panel again, or add the drops by hand.</p>` : ""}
+        ${state.patient && !state.busy && !state.error && !state.source && !state.stale ? `<p class="muted">This chart has no notes or medications to read yet. Write the plan in today's note and open the panel again, or add the drops by hand.</p>` : ""}
       </div>
       <footer>
         <button class="primary" data-act="open" ${!state.patient || state.opened ? "disabled" : ""}>${state.opened ? "Opened in Eye Drop Tracker" : state.chosen.size ? `Open ${state.chosen.size} in Eye Drop Tracker` : "Open Eye Drop Tracker and add drops by hand"}</button>
