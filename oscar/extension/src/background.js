@@ -107,7 +107,7 @@ function checkPayload(p) {
   return plain({
     patientId: String(p.patientId),
     provider: String(p.provider ?? "").slice(0, 20),
-    patient: { name: String(p.patient?.name ?? "").slice(0, 80), dob: String(p.patient?.dob ?? "").slice(0, 10) },
+    patient: { name: String(p.patient?.name ?? "").slice(0, 160), dob: String(p.patient?.dob ?? "").slice(0, 10) },
     drops: Array.isArray(p.drops) ? p.drops.slice(0, 12) : [],
     skipped: Array.isArray(p.skipped) ? p.skipped.slice(0, 20) : [],
     code: typeof p.code === "string" ? p.code.slice(0, 4000) : "",
@@ -161,7 +161,13 @@ async function addToChart(sender, { handoff, code }) {
     return { ok: false, message: "This is not an Eye Drop Tracker plan, so nothing was added." };
   }
   const stored = typeof handoff === "string" && (await read(key(handoff)));
-  if (!stored) return { ok: false, message: "This plan was not opened from Oscar in this browser session. Use Copy for chart note instead." };
+  if (!stored)
+    return { ok: false, message: "This plan can no longer go back to Oscar, because its chart was closed. Open the chart again and use the Eye drops button, or use Copy for chart note." };
+  // A hand-off is good for two hours, for writing as well as reading.
+  if (Date.now() - stored.at > PLAN_TTL) {
+    await chrome.storage.session.remove(key(handoff));
+    return { ok: false, message: "This plan was read from Oscar more than two hours ago, so it was not added. Open the chart again and use the Eye drops button, or use Copy for chart note." };
+  }
   if ((await read(tabKey(sender.tab.id))) !== handoff) return { ok: false, message: "This tab did not open this plan." };
   const text = chartNote({ ...plan, link: `${SITE}#/p/${code}` });
   const sum = await digest(text);

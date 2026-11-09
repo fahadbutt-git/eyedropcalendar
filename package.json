@@ -22,6 +22,7 @@
     "oscar:standin": "node oscar/standin/server.mjs",
     "oscar:e2e": "node oscar/e2e.mjs",
     "oscar:resilience": "node oscar/resilience.mjs",
+    "oscar:edge": "node oscar/edge.mjs",
     "oscar:lock": "EDT_LOCK_TEST=1 node scripts/extension.mjs --dev --oscar=https://other-clinic.example.com && node oscar/lock.mjs && node scripts/extension.mjs --dev"
   },
   "dependencies": {

@@ -44,19 +44,27 @@ export function openPatientId(location, document) {
   return /^\d{1,10}$/.test(id || "") ? id : null;
 }
 
+const TIMEOUT = 12000;
+
 export function oscarClient(base, fetcher = fetch) {
   const call = async (path, { method = "GET", body } = {}) => {
     const where = `${method} ${path.split("?")[0].replace(/\d+/g, "#")}`;
     let res;
+    // An Oscar that does not answer is given up on, so the panel never waits forever.
+    const stop = typeof AbortController === "function" ? new AbortController() : null;
+    const timer = stop && setTimeout(() => stop.abort(), TIMEOUT);
     try {
       res = await fetcher(`${base}/${path}`, {
         method,
         credentials: "same-origin",
         headers: { Accept: "application/json", ...(body ? { "Content-Type": "application/json" } : {}) },
         body: body ? JSON.stringify(body) : undefined,
+        ...(stop ? { signal: stop.signal } : {}),
       });
     } catch {
-      throw new OscarError("network", "Oscar could not be reached.", `${where}: no answer`);
+      throw new OscarError("network", stop?.signal.aborted ? "Oscar did not answer in time." : "Oscar could not be reached.", `${where}: no answer`);
+    } finally {
+      if (timer) clearTimeout(timer);
     }
     if (res.status === 401 || res.status === 403) throw new OscarError("signed-out", "Oscar says you are not signed in. Sign in to Oscar and try again.", `${where}: ${res.status}`);
     if (res.status === 404) throw new OscarError("missing", "This Oscar does not offer that service.", `${where}: 404`);

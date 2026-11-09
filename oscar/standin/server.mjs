@@ -21,6 +21,10 @@ const sessions = new Set();
 const saved = []; // notes written back, for tests to read
 let provider = "999998"; // who is signed in; tests can switch it
 const broken = new Set(); // services a test makes fail, like an Oscar build that differs
+// Test-only: services that never answer, like an Oscar that has hung, and the
+// requests left waiting on them (answered when the stand-in is reset).
+const hanging = new Set();
+const held = [];
 
 const str = (v) => (v == null ? v : String(v));
 const cookieOf = (req) => /JSESSIONID=([\w]+)/.exec(req.headers.cookie || "")?.[1];
@@ -70,7 +74,11 @@ async function rest(req, res, path, url) {
   if (url.searchParams.get("_wadl") !== null) return send(res, 200, "<application/>", "application/xml");
   if (!authed(req)) return send(res, 401, "<error>Not authorized</error>", "text/xml");
   let m;
-  if (path === "providerService/provider/me") return send(res, 200, { id: provider, firstName: "doctor", lastName: "oscardoc" });
+  // Test-only (set through /oscar/__standin/break and /hang): a service that
+  // fails or never answers.
+  const service = /^demographics\/\d+$/.test(path) ? "demographics" : /^notes\/\d+\/all$/.test(path) ? "notes" : /^notes\/\d+\/save$/.test(path) ? "save" : path === "providerService/provider/me" ? "me" : /^rx\//.test(path) ? "rx" : "";
+  if (service && hanging.has(service)) return void held.push(res);
+  if (service && service !== "notes" && service !== "rx" && broken.has(service)) return send(res, 500, "");
   if ((m = path.match(/^demographics\/quickSearch$/))) {
     const q = (url.searchParams.get("query") || "").toLowerCase();
     const found = PATIENTS.filter((p) => `${p.lastName}, ${p.firstName}`.toLowerCase().includes(q.replace(/\s*,\s*/, ", ")) || p.lastName.toLowerCase().startsWith(q));
@@ -87,6 +95,7 @@ async function rest(req, res, path, url) {
   }
   if (broken.has("notes") && /^notes\/\d+\/all$/.test(path)) return send(res, 500, "");
   if (broken.has("rx") && /^rx\//.test(path)) return send(res, 500, "");
+  if (path === "providerService/provider/me") return send(res, 200, { id: provider, firstName: "doctor", lastName: "oscardoc" });
   if ((m = path.match(/^notes\/(\d+)\/all$/)) && req.method === "POST") {
     const p = patient(m[1]);
     if (!p) return send(res, 200, { moreNotes: "false" });
@@ -148,11 +157,23 @@ const server = createServer(async (req, res) => {
     saved.length = 0;
     provider = "999998";
     broken.clear();
+    hanging.clear();
+    for (const r of held.splice(0)) if (!r.writableEnded) send(r, 500, "");
     return send(res, 200, { reset: true });
   }
   if (path === "/oscar/__standin/break") {
     broken.add(url.searchParams.get("service"));
     return send(res, 200, { broken: [...broken] });
+  }
+  // Test-only: a service that never answers, until the stand-in is reset.
+  if (path === "/oscar/__standin/hang") {
+    hanging.add(url.searchParams.get("service"));
+    return send(res, 200, { hanging: [...hanging] });
+  }
+  // Test-only: every Oscar session ends, as when Oscar times the login out.
+  if (path === "/oscar/__standin/logout") {
+    sessions.clear();
+    return send(res, 200, { sessions: 0 });
   }
   if (path === "/oscar/__standin/provider") {
     provider = url.searchParams.get("no") || "999998";

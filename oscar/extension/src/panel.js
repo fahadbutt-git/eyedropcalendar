@@ -8,6 +8,8 @@ import { codeFromUrl, decodeRegimen } from "../../../src/lib/share.js";
 import { oscarClient, openPatientId, restBase } from "./oscarApi.js";
 import STYLE from "./panel.css";
 
+const SITE_HOST = new URL(__EDT_SITE__).host;
+
 const formulary = SEED_FORMULARY;
 const medOf = (brand) => formulary.find((m) => m.brand === brand);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -97,6 +99,7 @@ function start() {
       <header><div><h1>Eye Drop Tracker</h1><p class="origin">Reading ${esc(window.location.host)}</p></div><button class="x" data-act="close" aria-label="Close">×</button></header>
       <div class="body">
         ${state.error ? `<p class="error" role="alert">${esc(state.error)}${state.errorDetail ? `<span class="detail">Details for support: ${esc(state.errorDetail)}</span>` : ""}</p>` : ""}
+        ${state.retry ? `<button class="secondary" data-act="retry">Try again</button>` : ""}
         ${(state.partial || []).map((m) => `<p class="note-partial">${esc(m)}. Select the drops in the note, or use today's note.</p>`).join("")}
         ${state.busy ? `<p class="muted">Reading the chart…</p>` : ""}
         ${state.stale ? `<div class="note-changed" role="status"><p>Today's note has changed since it was read.</p><button class="secondary" data-act="reread">Read today's note again</button></div>` : ""}
@@ -104,7 +107,7 @@ function start() {
         ${options.length ? `<label class="field">Read drops from<select data-act="source">${options.join("")}</select></label>` : ""}
         ${state.source && state.source !== "rx" ? `<details class="src"><summary>Show the text</summary><pre>${esc(sourceText())}</pre></details>` : ""}
         ${r ? drops(r) : ""}
-        ${state.patient && !state.busy && !state.error && !state.source && !state.stale ? `<p class="muted">This chart has no notes or medications to read yet. Write the plan in today's note and open the panel again, or add the drops by hand.</p>` : ""}
+        ${state.patient && !state.busy && !state.error && !state.source && !state.stale && !state.partial?.length ? `<p class="muted">This chart has no notes or medications to read yet. Write the plan in today's note and open the panel again, or add the drops by hand.</p>` : ""}
       </div>
       <footer>
         <button class="primary" data-act="open" ${!state.patient || state.opened ? "disabled" : ""}>${state.opened ? "Opened in Eye Drop Tracker" : state.chosen.size ? `Open ${state.chosen.size} in Eye Drop Tracker` : "Open Eye Drop Tracker and add drops by hand"}</button>
@@ -159,6 +162,11 @@ function start() {
     if (!e.isTrusted) return;
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (act === "close") close();
+    if (act === "retry") {
+      Object.assign(state, { error: "", errorDetail: "", retry: false, partial: [], busy: true });
+      render();
+      return load();
+    }
     if (act === "reread") {
       if (draft()) state.source = "draft";
       if (state.source) read();
@@ -226,6 +234,9 @@ function start() {
     } catch (e) {
       state.error = e.message || "Oscar could not be read.";
       state.errorDetail = e.detail || "";
+      // A signed-out clinician signs in first. Anything else may pass.
+      state.retry = e.kind !== "signed-out";
+      if (state.retry) state.error += ` Try again in a moment. If it keeps failing, enter the patient and drops by hand at ${SITE_HOST}.`;
     }
     state.busy = false;
     render();
@@ -242,7 +253,10 @@ function start() {
     // The same clinician must still be signed in to Oscar.
     client
       .me()
-      .catch(() => "")
+      .catch((e) => {
+        if (e.kind === "signed-out") throw new Error("Oscar has signed you out, so nothing was added. Sign in to Oscar, open the chart again and use the Eye drops button, or use Copy for chart note.");
+        return "";
+      })
       .then((now) => {
         if (msg.provider && now !== msg.provider) throw new Error("A different person is now signed in to Oscar, so nothing was added. Read the chart again.");
         // Today's note is open in this encounter: the plan goes into it, below
