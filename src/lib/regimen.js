@@ -55,7 +55,7 @@ export const TAPER_PRESETS = [
 
 // A taper with no steps yet behaves as ongoing.
 export const modeOf = (d) => (d.mode === "taper" && !d.steps?.length ? "ongoing" : d.mode);
-const offsetOf = (d) => Math.max(1, d.startDay || 1) - 1;
+export const offsetOf = (d) => Math.max(1, d.startDay || 1) - 1;
 const taperDays = (d) => d.steps.reduce((sum, s) => sum + s.days, 0);
 
 export function dosesOnDay(d, dayIndex) {

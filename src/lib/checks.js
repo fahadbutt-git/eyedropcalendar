@@ -1,6 +1,6 @@
 // Safety checks shown beside the drop list and repeated on the print steps.
 // They are prompts for the prescriber, never blocks.
-import { modeOf, totalDays } from "./regimen.js";
+import { lastDayIndex, modeOf, offsetOf, totalDays } from "./regimen.js";
 
 const IGNORED = new Set(["OTHER", "LUB"]);
 const GLAUCOMA = new Set(["PGA", "BB", "CAI", "AA", "MIO"]);
@@ -12,8 +12,16 @@ function eyeWarnings(drops, medOf, eyeLabel, classNames) {
   const warnings = [];
   const seen = new Set();
   const byClass = new Map();
+  // The same drug twice is a warning only when the two run on the same days.
+  // One course after another ("twice a day for 8 days, then once a day") is
+  // a planned step down.
+  const span = (d) => [offsetOf(d), lastDayIndex(d) ?? Infinity];
+  const overlaps = (a, b) => span(a)[0] <= span(b)[1] && span(b)[0] <= span(a)[1];
+  drops.forEach((d, i) => {
+    if (drops.slice(0, i).some((e) => e.brand === d.brand && overlaps(e, d)) && !warnings.includes(`${d.brand} is listed twice for the ${eyeLabel}.`))
+      warnings.push(`${d.brand} is listed twice for the ${eyeLabel}.`);
+  });
   for (const d of drops) {
-    if (seen.has(d.brand)) warnings.push(`${d.brand} is listed twice for the ${eyeLabel}.`);
     seen.add(d.brand);
     for (const c of medOf(d)?.cls || []) {
       if (IGNORED.has(c)) continue;

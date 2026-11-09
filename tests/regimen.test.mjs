@@ -381,3 +381,16 @@ test("a steroid course longer than two weeks asks for a pressure check", () => {
   assert.match(w({ brand: "Pred Forte", eye: "OD", mode: "taper", steps: [{ freq: 4, days: 7 }, { freq: 3, days: 7 }, { freq: 2, days: 7 }] }), /pressure check/);
   assert.doesNotMatch(w({ brand: "Pred Forte", eye: "OD", mode: "duration", freq: 4, durationDays: 7 }), /pressure check/);
 });
+
+test("the same drug twice is flagged only when the courses overlap", () => {
+  const dup = (w) => w.filter((x) => x.includes("listed twice"));
+  // Twice a day for 8 days, then once a day from day 9: a planned step down.
+  const stepDown = [
+    s({ brand: "Maxidex", eye: "OS", freq: 2, mode: "duration", durationDays: 8 }),
+    s({ brand: "Maxidex", eye: "OS", freq: 1, mode: "duration", durationDays: 14, startDay: 9 }),
+  ];
+  assert.deepEqual(dup(dropWarnings(stepDown, SEED_FORMULARY, DRUG_CLASSES)), []);
+  // Both on the same days: flagged once.
+  const both = [s({ brand: "Xalatan", eye: "OS" }), s({ brand: "Xalatan", eye: "OS", freq: 2 })];
+  assert.deepEqual(dup(dropWarnings(both, SEED_FORMULARY, DRUG_CLASSES)), ["Xalatan is listed twice for the left eye."]);
+});
