@@ -110,3 +110,8 @@ Check these on the demo Oscar first, then on a test copy of the clinic's Oscar f
 - Saved notes appear in the chart as unsigned and can be signed and edited as usual.
 
 To give the extension to a clinic, publish it on the Chrome Web Store as unlisted, or have the clinic's IT install it through Chrome policy.
+
+
+## Local Open-OSP test login
+
+The local Open-OSP in Docker (Open-O 25) uses the login openodoc, password mac2002 and PIN 1117. The image ships with openodoc, PIN 2025 and a forced password change, so the older demo login (oscardoc) does not work there. To put the login back in this state, open Docker Desktop, choose the open-osp-db-1 container, open Exec and run the statement in oscar/local/reset-test-login.sql. A copy of the original login row is kept in the table security_backup_20261108. The stand-in Oscar (oscar/standin) keeps its own fixed login, oscardoc, mac2002 and 1117. Both hold made-up patients only.
