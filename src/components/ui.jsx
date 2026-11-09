@@ -15,21 +15,31 @@ export function Field({ label, optional, hint, children }) {
 }
 
 // Cap colour as a swatch plus its name, so it never relies on colour alone.
-export function CapDot({ cap, named = false }) {
+// A colour from the drug list is the usual one for that drug class. A
+// pharmacy may dispense a generic with a different cap, so it is shown as
+// "usually", and only a colour the patient set for their own bottle is shown
+// as a fact.
+export const capWords = (cap, usual = true) => {
   const c = CAP_COLOURS[cap];
-  if (!cap || !c) return named ? <span className="cap-name muted">Cap colour not standard</span> : null;
+  if (!cap || !c) return "";
+  return usual ? `Usually a ${c.label.toLowerCase()} cap` : `${c.label} cap`;
+};
+
+export function CapDot({ cap, named = false, usual = true }) {
+  const c = CAP_COLOURS[cap];
+  if (!cap || !c) return named ? <span className="cap-name muted">{usual ? "No usual cap colour" : "Cap colour not set"}</span> : null;
   return (
     <span className="cap-wrap">
-      <span className={`cap ${cap === "white" ? "light" : ""}`} style={{ background: c.hex }} role="img" aria-label={`${c.label} cap`} />
-      {named && <span className="cap-name">{c.label} cap</span>}
+      <span className={`cap ${cap === "white" ? "light" : ""}`} style={{ background: c.hex }} role="img" aria-label={capWords(cap, usual)} />
+      {named && <span className="cap-name">{capWords(cap, usual)}</span>}
     </span>
   );
 }
 
-// Numbered marker that ties a calendar mark to its drug. The bottle's cap
-// colour is used when known, so the patient can match the bottle. Without a
-// standard cap colour the marker stays plain ink, so it never suggests a
-// colour the bottle does not have.
+// Numbered marker that ties a calendar mark to its drug. The usual cap
+// colour is used when known and the clinician has not turned it off. Without
+// one the marker stays plain ink. The drug name is always printed beside the
+// number, so the colour is never the only cue.
 const DARK_TEXT = new Set(["yellow", "white", "tan", "pink", "blue", "orange", "grey", "lightgreen"]);
 
 export function chipStyle(med) {
@@ -42,8 +52,7 @@ export function chipStyle(med) {
   };
 }
 
-// A light wash of the bottle's cap colour behind a row, so a glance at the
-// sheet matches the bottle in hand. White caps get no wash.
+// A light wash of the usual cap colour behind a row. White caps get no wash.
 export const capTint = (med) => {
   const c = CAP_COLOURS[med?.cap];
   return c && med.cap !== "white" ? `${c.hex}33` : null;

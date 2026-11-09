@@ -11,7 +11,7 @@ import { EYES } from "../../lib/regimen.js";
 import { fmtTime } from "../../lib/times.js";
 import { patientInstruction } from "../../lib/wording.js";
 import { usePersistentState } from "../../lib/storage.js";
-import { CapDot, Icon } from "../ui.jsx";
+import { CapDot, Icon, capWords } from "../ui.jsx";
 import { formInfo } from "../../data/forms.js";
 import InstallTip from "./InstallTip.jsx";
 import KeepPlan from "./KeepPlan.jsx";
@@ -44,13 +44,28 @@ function useNow() {
   return now;
 }
 
+// The cap to show for a drug: the patient's own bottle when they have set
+// it, otherwise the usual colour for the drug class, shown as "usually".
+// Pharmacies may switch to a generic from another maker with another cap.
+const isCap = (k) => typeof k === "string" && k !== "" && Object.hasOwn(CAP_COLOURS, k);
+const capFor = (myCaps, med) => {
+  const mine = med?.brand && Object.hasOwn(myCaps, med.brand) ? myCaps[med.brand] : "";
+  return isCap(mine) ? { cap: mine, usual: false } : { cap: med?.cap, usual: true };
+};
+
+function BottleCap({ myCaps, med }) {
+  const c = capFor(myCaps, med);
+  return isCap(c.cap) ? <CapDot cap={c.cap} usual={c.usual} named /> : null;
+}
+
 // What "Read it to me" says: when, which drug, which bottle, how much, where.
-function spokenDose({ entry, med, time }, when) {
-  const cap = CAP_COLOURS[med?.cap];
+function spokenDose({ entry, med, time }, when, myCaps) {
+  const c = capFor(myCaps, med);
+  const words = capWords(c.cap, c.usual);
   return [
     `${when}, at ${fmtTime(time)}.`,
     `${entry.brand}.`,
-    cap && `The ${cap.label.toLowerCase()} cap.`,
+    words && (c.usual ? `${words}. Check the name on the bottle.` : `The ${words.toLowerCase()}.`),
     `${entry.drops} drop${entry.drops > 1 ? "s" : ""} in ${entry.eye === "OU" ? "both eyes" : `the ${EYES[entry.eye].long}`}.`,
     formInfo(med?.form).advice,
   ]
@@ -69,6 +84,29 @@ function ReadAloud({ text }) {
     <button className="btn read-aloud" onClick={() => speak(text)}>
       {Icon.speaker} Read it to me
     </button>
+  );
+}
+
+// "Cap on my bottle": the patient picks the colour of the bottle they have,
+// and changes it when a refill comes with a different cap.
+const CAP_CHOICES = Object.entries(CAP_COLOURS).filter(([k]) => k);
+function MyCap({ med, value, onChange }) {
+  const usual = isCap(med?.cap) ? CAP_COLOURS[med.cap].label.toLowerCase() : "";
+  return (
+    <div className="my-cap">
+      <label>
+        <span>Cap on my bottle</span>
+        <select className="select" value={isCap(value) ? value : ""} onChange={(ev) => onChange(ev.target.value)}>
+          <option value="">{usual ? `Not set (usually ${usual})` : "Not set"}</option>
+          {CAP_CHOICES.map(([k, c]) => (
+            <option key={k} value={k}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      {isCap(value) && <CapDot cap={value} usual={false} />}
+    </div>
   );
 }
 
@@ -91,6 +129,8 @@ export default function PatientView({ plan: shared, code }) {
   const [taken, setTaken] = usePersistentState(`edt.taken.${id}`, {}, { check: isObject });
   const [firstSeen] = usePersistentState(`edt.seen.${id}`, toISO(now));
   const [large, setLarge] = usePersistentState("edt.largeText", false);
+  // The cap colour of each of the patient's own bottles, by drug, kept on this phone.
+  const [myCaps, setMyCaps] = usePersistentState(`edt.caps.${id}`, {}, { check: isObject });
   const [undo, setUndo] = useState(null);
   const [waitFrom, setWaitFrom] = useState(null);
 
@@ -195,7 +235,7 @@ export default function PatientView({ plan: shared, code }) {
           </h2>
           <div className="next-name">{next.entry.brand}</div>
           <div>{doseLabel(next)}</div>
-          <CapDot cap={next.med?.cap} named />
+          <BottleCap myCaps={myCaps} med={next.med} />
           {nextIsSoon ? (
             <p className="next-wait" role="timer">
               Wait <span className="mono">{Math.max(1, Math.round(waitLeft / 60000))} min</span> so the last drop can soak in.
@@ -206,7 +246,7 @@ export default function PatientView({ plan: shared, code }) {
               I have put it in
             </button>
           )}
-          <ReadAloud text={spokenDose(next, nextIsSoon ? "Wait, then" : pick.state === "due" ? "Due now" : "Next")} />
+          <ReadAloud text={spokenDose(next, nextIsSoon ? "Wait, then" : pick.state === "due" ? "Due now" : "Next", myCaps)} />
         </section>
       )}
 
@@ -241,7 +281,7 @@ export default function PatientView({ plan: shared, code }) {
                   <div className="dose-text">
                     <span className="n">{it.entry.brand}</span>
                     <span className="d">
-                      {doseLabel(it)} {it.med?.cap && <CapDot cap={it.med.cap} named />}
+                      {doseLabel(it)} <BottleCap myCaps={myCaps} med={it.med} />
                     </span>
                     {missed && <span className="missed">Missed. Do not double up: take the next dose at its time.</span>}
                   </div>
@@ -303,11 +343,15 @@ export default function PatientView({ plan: shared, code }) {
               <div className="drug-name">
                 <b>{e.brand}</b> <span>{med?.generic}</span>
               </div>
-              <CapDot cap={med?.cap} named />
               <div>{patientInstruction(e, med?.qhs, start)}</div>
+              <MyCap med={med} value={Object.hasOwn(myCaps, e.brand) ? myCaps[e.brand] : ""} onChange={(v) => setMyCaps((prev) => ({ ...prev, [e.brand]: v }))} />
             </div>
           );
         })}
+        <p className="small">
+          Your pharmacy may give you a generic bottle with a different cap colour, and it can change between refills. Always check the
+          drug name on the label, and set the cap colour here when your bottle changes.
+        </p>
         <p className="small">Follow your eye doctor if their instructions differ from this plan. Your check marks stay on this phone.</p>
         <p className="small urgent">
           If your eye becomes very painful or red, or your vision suddenly gets worse, contact your eye clinic right away or go to

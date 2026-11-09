@@ -66,6 +66,7 @@ Status shows whether the control is in place and how it is tested.
 | H21 | Unsigned chart note never signed | Clinician forgets | Note is saved unsigned, so Oscar shows it as unsigned. Audit during the pilot | 2 | Medium | Open |
 | H22 | Lost calendar or QR code | Patient loses paper | Keep a copy card on the phone. Link in the chart for reprinting | 1 | Medium | In place |
 | H23 | Plan for one patient opened by another on a shared phone | Different patient code | Separate history per patient code. Check marks never carry over | 2 | Low | In place |
+| H24 | Wrong bottle used because the cap colour differs | Pharmacy dispenses the lowest cost generic, whose cap may not follow the AAO colour, and may switch supplier between refills | Drug name always shown first. Cap colour shown as "usually". Printed space to write the bottle's own cap. Patient sets their own bottle's cap on the phone and changes it at a refill. Clinician can print without cap colours | 2 | Low | Fixed 8 Nov 2026 after ophthalmologist review. Tested |
 
 ## Evidence a hospital will ask for
 

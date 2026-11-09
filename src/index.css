@@ -266,6 +266,9 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .legend-cap { font-weight: 700; }
 .legend-times, .legend-sub { font-size: calc(var(--s) * 0.833); }
 .legend-sub { color: var(--ink-2); }
+.legend-mycap { font-size: calc(var(--s) * 0.833); margin-top: 2px; }
+.legend-mycap > span:last-child { white-space: nowrap; }
+.legend-mycap .write-in { display: inline-block; width: 9em; border-bottom: 1px solid currentColor; vertical-align: baseline; height: 1em; }
 .sheet .cap-name { font-size: inherit; }
 .sheet .cap, .rx-sheet .cap { width: 1em; height: 1em; }
 .chip { width: calc(var(--s) * 1.528); height: calc(var(--s) * 1.528); display: inline-grid; place-items: center; font-weight: 800; font-size: calc(var(--s) * 0.764); font-style: normal; flex: none; border-radius: 3px; }
@@ -413,6 +416,10 @@ html.patient.large-text { font-size: 125%; }
 .pt .cap { width: 1.15em; height: 1.15em; }
 .pt .cap-name { font-size: 1em; font-weight: 600; }
 .pt .cap-wrap { gap: 0.35em; }
+.my-cap { display: flex; align-items: center; gap: 0.6em; flex-wrap: wrap; margin-top: 0.4em; }
+.my-cap label { display: flex; align-items: center; gap: 0.5em; flex-wrap: wrap; }
+.my-cap label > span { font-weight: 600; }
+.my-cap .select { width: auto; min-width: 11em; }
 .pt .check { min-height: 2.75rem; align-items: center; }
 .pt .check input { width: 1.5rem; height: 1.5rem; margin-top: 0; }
 .pt .small, .pt .hint { font-size: 1rem; }

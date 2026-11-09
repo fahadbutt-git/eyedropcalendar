@@ -124,6 +124,13 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
           <span className="hint">Opens the plan on the patient&apos;s phone for reminders</span>
         </span>
       </label>
+      <label className="check">
+        <input type="checkbox" checked={s.capColours} onChange={(e) => set({ capColours: e.target.checked })} />
+        <span>
+          <b>Usual cap colours</b>
+          <span className="hint">Colours the markers by drug class. Turn off if the pharmacy&apos;s generic has a different cap. The patient can write their bottle&apos;s cap on the sheet either way.</span>
+        </span>
+      </label>
       <details className="more">
         <summary>Dose times</summary>
         <div className="grid-2">
@@ -176,7 +183,8 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
   const size = s.size;
   const items = entries.map((entry, index) => {
     const med = formulary.find((m) => m.brand === entry.brand);
-    return { entry, index, med, chip: chipStyle(med), tint: capTint(med), capName: CAP_COLOURS[med?.cap]?.label || "" };
+    const coloured = s.capColours ? med : null;
+    return { entry, index, med, chip: chipStyle(coloured), tint: capTint(coloured), capName: CAP_COLOURS[med?.cap]?.label || "" };
   });
   const link = useMemo(
     () => (entries.length ? patientLink(encodeRegimen({ entries, formulary, start: s.start, wake: s.wake, bed: s.bed, nonce: s.nonce })) : ""),

@@ -8,7 +8,7 @@ import { planId } from "./hash.js";
 import { decodeRegimen } from "./share.js";
 
 const CURRENT = "edt.patientPlan";
-const KEYS = ["taken", "seen", "alarms"];
+const KEYS = ["taken", "seen", "alarms", "caps"];
 
 // Storage key for a plan. Version 2 plans carry a patient code (nonce) that
 // stays the same when the clinic changes the plan.
@@ -34,8 +34,8 @@ const write = (key, value) => {
 // new plan win where both have one. Keeps the earlier first-seen date.
 function carryOver(from, to) {
   if (from === to) return;
-  const [taken, seen, alarms] = KEYS.map((k) => read(`edt.${k}.${from}`));
-  const [newTaken, newSeen, newAlarms] = KEYS.map((k) => read(`edt.${k}.${to}`));
+  const [taken, seen, alarms, caps] = KEYS.map((k) => read(`edt.${k}.${from}`));
+  const [newTaken, newSeen, newAlarms, newCaps] = KEYS.map((k) => read(`edt.${k}.${to}`));
   if (taken && typeof taken === "object") {
     const merged = { ...taken };
     for (const [day, ticks] of Object.entries(newTaken || {})) merged[day] = { ...(taken[day] || {}), ...ticks };
@@ -43,6 +43,7 @@ function carryOver(from, to) {
   }
   if (typeof seen === "string") write(`edt.seen.${to}`, newSeen && newSeen < seen ? newSeen : seen);
   if (typeof alarms === "boolean" && newAlarms === undefined) write(`edt.alarms.${to}`, alarms);
+  if (caps && typeof caps === "object" && !Array.isArray(caps)) write(`edt.caps.${to}`, { ...caps, ...(newCaps || {}) });
 }
 
 // Makes `code` this phone's current plan, bringing over the patient's history

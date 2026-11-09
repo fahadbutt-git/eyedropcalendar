@@ -53,7 +53,7 @@ Scan the QR code on the calendar from your clinic and the app shows which drop i
 
 - Today's drops, in order, with a reminder to wait 5 minutes between drops
 - Tapers and courses that change on the right day
-- Cap colours to help you find the right bottle
+- Cap colours to help you find the right bottle, which you can change to match your own bottle when the pharmacy gives you a generic with a different cap
 - Larger text that follows your phone's text size, and Read it to me for the next dose
 - Reminders can hide drug names on your lock screen
 

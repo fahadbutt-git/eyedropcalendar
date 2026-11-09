@@ -29,7 +29,7 @@ Adherence to glaucoma and post-operative drops is poor, and complex regimens (se
 
 **Calendar**
 - Month pages when the plan fills whole months, otherwise weekly pages from the start date
-- Numbered drugs, cap colours and one tick box per dose
+- Numbered drugs, usual cap colours (can be turned off) with a space to write the bottle's own cap, and one tick box per dose
 - Taper changes (for example ↓3x) and stop days marked on the day they happen
 - Plain wording for patients, suggested dose times and how-to instructions
 - Large print for low vision: bigger text and boxes, 2 weeks per page
@@ -64,7 +64,7 @@ There is no server and no account. Patient details are kept only in the open bro
 
 ## Clinical disclaimer
 
-This is a clinical aid. It does not replace clinical judgement. Verify every prescription and schedule before giving it to a patient. Cap colours follow the American Academy of Ophthalmology class convention and should be checked against the dispensed product. LU codes refer to the Ontario Drug Benefit program.
+This is a clinical aid. It does not replace clinical judgement. Verify every prescription and schedule before giving it to a patient. Cap colours follow the American Academy of Ophthalmology class convention and are shown as the usual colour, because pharmacies may dispense generics with different caps and switch suppliers between refills. Patients can set their own bottle's cap on the phone. LU codes refer to the Ontario Drug Benefit program.
 
 ## Development
 

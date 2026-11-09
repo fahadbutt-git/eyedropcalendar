@@ -17,7 +17,7 @@ export default function Legend({ items, start, wake, bed, compact = false }) {
           <div>
             <div>
               <b>{e.brand}</b> <span className="legend-eye">{EYES[e.eye].long}</span>
-              {med?.cap && <span className="legend-cap"> · {CAP_COLOURS[med.cap]?.label} cap</span>}
+              {compact && med?.cap && CAP_COLOURS[med.cap] && <span className="legend-cap"> · usually {CAP_COLOURS[med.cap].label.toLowerCase()} cap</span>}
             </div>
             {!compact && (
               <>
@@ -31,6 +31,14 @@ export default function Legend({ items, start, wake, bed, compact = false }) {
                 <div className="legend-sub">
                   {med?.generic}
                   {formInfo(med?.form).tag && ` · ${formInfo(med.form).tag.toLowerCase()}`}
+                </div>
+                {/* Pharmacies may dispense a generic with a different cap, so
+                    the patient or pharmacist writes in the bottle's own cap. */}
+                <div className="legend-mycap">
+                  {med?.cap && CAP_COLOURS[med.cap] && <span>Usually a {CAP_COLOURS[med.cap].label.toLowerCase()} cap. </span>}
+                  <span>
+                    Cap on my bottle: <span className="write-in" aria-hidden="true" />
+                  </span>
                 </div>
               </>
             )}
