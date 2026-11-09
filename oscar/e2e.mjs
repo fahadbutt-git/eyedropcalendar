@@ -16,6 +16,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
+import { codeFromUrl } from "../src/lib/share.js";
 
 const ext = join(dirname(fileURLToPath(import.meta.url)), "extension/dist");
 const OSCAR = "http://localhost:8080/oscar";
@@ -136,7 +137,11 @@ await tracker.getByRole("button", { name: "Add to Oscar chart" }).click();
 await tracker.locator("text=already in the Oscar chart").waitFor();
 // A changed plan is refused because the Oscar page has moved on.
 await tracker.reload();
-await tracker.getByLabel("Start date").fill("2026-11-09");
+// A start date a week from the current one, so the plan always differs.
+const start = await tracker.getByLabel("Start date").inputValue();
+const later = new Date(`${start}T12:00:00`);
+later.setDate(later.getDate() + 7);
+await tracker.getByLabel("Start date").fill(later.toISOString().slice(0, 10));
 await tracker.getByRole("button", { name: "Add to Oscar chart" }).click();
 await tracker.locator("text=/closed or has moved on|different patient/").waitFor();
 assert.equal((await (await fetch(`${OSCAR}/__standin/saved`)).json()).length, 1);
@@ -150,7 +155,7 @@ await panel.locator(".link-note").waitFor();
 assert.deepEqual(await panel.locator(".drops > li strong").allTextContents(), ["Xalatan", "Pred Forte"]);
 const [again] = await Promise.all([context.waitForEvent("page"), panel.locator('[data-act="open"]').click()]);
 await again.locator("text=Opened from the plan link in the Oscar chart").waitFor();
-const code = saved[0].note.match(/#\/p\/([\w-]+)/)[1];
+const code = codeFromUrl(saved[0].note);
 const nonce = JSON.parse(Buffer.from(code, "base64url").toString()).n;
 assert.equal(JSON.parse(await again.evaluate(() => sessionStorage.getItem("edt.schedule.v3"))).nonce, nonce);
 await shot(again, "4-from-link");

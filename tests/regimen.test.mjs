@@ -394,3 +394,19 @@ test("the same drug twice is flagged only when the courses overlap", () => {
   const both = [s({ brand: "Xalatan", eye: "OS" }), s({ brand: "Xalatan", eye: "OS", freq: 2 })];
   assert.deepEqual(dup(dropWarnings(both, SEED_FORMULARY, DRUG_CLASSES)), ["Xalatan is listed twice for the left eye."]);
 });
+
+test("the chart note keeps every line short and its plan link still reads whole", async () => {
+  const { chartNote } = await import("../src/lib/chartNote.js");
+  const { encodeRegimen, decodeRegimen, codeFromUrl } = await import("../src/lib/share.js");
+  const entries = toEntries([s({ brand: "Xalatan", eye: "OU" }), s({ brand: "Cosopt", eye: "OD", freq: 2 }), s({ brand: "Pred Forte", eye: "OD", freq: 4, mode: "duration", durationDays: 14 })]);
+  const settings = { start: "2026-11-02", wake: "08:00", bed: "22:00" };
+  const code = encodeRegimen({ entries, formulary: SEED_FORMULARY, ...settings, nonce: "abcd1234" });
+  const note = chartNote({ entries, formulary: SEED_FORMULARY, ...settings, link: `https://eyedroptracker.com/#/p/${code}` });
+  // No line in the link is long enough to widen the Oscar encounter page.
+  const linkLines = note.split("\n").slice(note.split("\n").findIndex((l) => l.startsWith("Plan link")) + 1);
+  assert.ok(linkLines.every((l) => l.length <= 64), "link lines are short");
+  assert.equal(codeFromUrl(note), code);
+  // Text the clinician writes after the plan is not read as part of the link.
+  assert.equal(codeFromUrl(`${note}\nRTC 6 weeks, IOP check.`), code);
+  assert.equal(decodeRegimen(codeFromUrl(note)).nonce, "abcd1234");
+});

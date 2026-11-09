@@ -25,7 +25,12 @@ export function chartNote({ entries, formulary, start, wake, bed, link }) {
     ...lines,
     `Dose times spread from ${fmtTime(minutes(wake))} to ${fmtTime(minutes(bed))}.`,
     `Prepared with Eye Drop Tracker under its clinic terms of ${TERMS_VERSION}.`,
-    // The link stays last, so it is still read whole if Oscar runs lines together.
-    `Plan link (paste into Eye Drop Tracker to change this plan): ${link}`,
+    // Oscar does not wrap a long unbroken line, so a link of several hundred
+    // characters would widen the whole encounter page. The link is written in
+    // short lines, which every reader joins again, and ends with a bracket so
+    // text written after it is never read as part of it.
+    `Plan link (paste all of it into Eye Drop Tracker to change this plan):`,
+    ...String(link).match(/.{1,64}/g),
+    `(end of plan link)`,
   ].join("\n");
 }
