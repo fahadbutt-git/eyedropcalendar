@@ -40,7 +40,7 @@ const SHOTS = [
     media: browser("oscar-panel.jpg", 700),
     k: "In Oscar",
     title: "Read the eye drop plan from the chart in one click",
-    body: "On a patient's encounter, click the button, choose Read eye drops from the right-click menu, or press Option+Shift+E. Anything the extension had to assume is flagged in amber.",
+    body: "On a patient's encounter, click the button, choose Read eye drops from the right-click menu, or press Alt+Shift+E (Control+Shift+E on a Mac). Anything the extension had to assume is flagged in amber.",
   },
   {
     file: "2-check",

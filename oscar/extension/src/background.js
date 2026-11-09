@@ -51,12 +51,20 @@ chrome.action.onClicked.addListener((tab) => openPanel(tab));
 // from the setup page. Never on Eye Drop Tracker itself.
 const LAUNCHER = "edt-launcher";
 const SITE_ORIGIN = new URL(SITE).origin;
-async function syncLauncher() {
-  const { origins = [] } = await chrome.permissions.getAll();
-  const matches = origins.filter((o) => OSCARS.some((x) => o === `${x}/*`));
-  await chrome.scripting.unregisterContentScripts({ ids: [LAUNCHER] }).catch(() => {});
-  if (matches.length) await chrome.scripting.registerContentScripts([{ id: LAUNCHER, matches, js: ["launcher.js"], runAt: "document_idle", persistAcrossSessions: true }]);
-  return matches;
+// Setup grants the permission and messages the worker at the same moment,
+// so two syncs can overlap. They run one at a time, or the second
+// registration fails as a duplicate and the setup page never hears back.
+let syncing = Promise.resolve();
+function syncLauncher() {
+  const run = syncing.then(async () => {
+    const { origins = [] } = await chrome.permissions.getAll();
+    const matches = origins.filter((o) => OSCARS.some((x) => o === `${x}/*`));
+    await chrome.scripting.unregisterContentScripts({ ids: [LAUNCHER] }).catch(() => {});
+    if (matches.length) await chrome.scripting.registerContentScripts([{ id: LAUNCHER, matches, js: ["launcher.js"], runAt: "document_idle", persistAcrossSessions: true }]);
+    return matches;
+  });
+  syncing = run.catch(() => {});
+  return run;
 }
 // After setup, the button appears on encounters already open, with no reload.
 async function showLauncherNow() {
@@ -189,7 +197,10 @@ async function addToChart(sender, { handoff, code }) {
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   // The setup page is the extension's own page, so it has no tab of its own.
   if (msg?.type === "launcherAdded" && sender.id === chrome.runtime.id && sender.url?.startsWith(chrome.runtime.getURL("setup.html"))) {
-    showLauncherNow().then(() => reply({ ok: true }));
+    showLauncherNow().then(
+      () => reply({ ok: true }),
+      () => reply({ ok: false })
+    );
     return true;
   }
   if (!sender.tab || sender.id !== chrome.runtime.id) return false;

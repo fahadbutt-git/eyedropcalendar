@@ -20,7 +20,7 @@ Everything the developer console asks for, ready to paste. Build the upload with
 
 Eye Drop Tracker for Oscar connects the Oscar EMR to Eye Drop Tracker (eyedroptracker.com), which turns an eye drop regimen into a printed calendar, a prescription and reminders on the patient's phone.
 
-On a patient's encounter in Oscar, click the Eye Drop Tracker button, choose "Read eye drops with Eye Drop Tracker" from the right-click menu, or press Option+Shift+E (Alt+Shift+E on Windows). The extension reads the drops from the chart note being written, from text you select, from a saved note, or from the medication list.
+On a patient's encounter in Oscar, click the Eye Drop Tracker button, choose "Read eye drops with Eye Drop Tracker" from the right-click menu, or press Alt+Shift+E (Control+Shift+E on a Mac). The extension reads the drops from the chart note being written, from text you select, from a saved note, or from the medication list.
 
 - Each drop shows what was read and flags for checking anything that had to be assumed, such as an eye that was not stated.
 - Past drops, allergies, stopped drops, as-needed drops and medicines taken by mouth are listed but left out.
@@ -70,6 +70,6 @@ Then certify all three:
 
 ## Before submitting
 
-- Test the packaged zip in Chrome on a demo Oscar: the toolbar button, Option+Shift+E and the right-click menu in an encounter pop-up, Open in Eye Drop Tracker, Add to Oscar chart, and reopening from the plan link.
+- Test the packaged zip in Chrome on a demo Oscar: the toolbar button, Alt+Shift+E and the right-click menu in an encounter pop-up, Open in Eye Drop Tracker, Add to Oscar chart, and reopening from the plan link.
 - Raise `extensionVersion` in `package.json` for every new upload.
 - Review usually takes a few days. Extensions that handle health information can take longer.
