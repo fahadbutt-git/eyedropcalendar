@@ -35,7 +35,8 @@ const COMMON = new Set(
   reduce change switch minutes hours dilated dilation drops exam check follow-up followup visit clinic office given prior previous
   operated operative fellow other affected surgery post-op postop pre-op preop inflammation infection discharge redness pain itch
   itching itchy burning gtts lubricate lubricating lubricant ointment refresh systane optive genteal thera
-  prednisone methylprednisolone acetazolamide methazolamide rest alpha beta gamma interferon`.split(/\s+/)
+  prednisone methylprednisolone acetazolamide methazolamide rest alpha beta gamma interferon
+  times time one two three four five six seven eight nine ten twice once drop drops gtt each every morning evening`.split(/\s+/)
 );
 
 // Optimal string alignment distance: insertions, deletions, substitutions
@@ -151,8 +152,10 @@ export function correctSpelling(note, formulary, pattern) {
         const next = words[i + 1];
         if (next && /^[\s-]$/.test(line.slice(w.end, next.at)) && !inTaken(next.at, next.end)) {
           const pair = w.text + next.text;
-          const one = recognise(pair, multi);
-          if (one && compact(pair) !== compact(one)) {
+          // Split by dictation ("tim optic"): the whole word may be a name of its own.
+          const whole = names.find((n) => n.key === compact(pair));
+          const one = whole ? whole.text : recognise(pair, multi);
+          if (one && (whole ? line.slice(w.at, next.end) !== whole.text : compact(pair) !== compact(one))) {
             edits.push({ at: w.at, end: next.end, from: line.slice(w.at, next.end), to: one });
             i++;
             continue;

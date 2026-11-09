@@ -107,7 +107,7 @@
     "mode": "ongoing"
    },
    {
-    "brand": "TobraDex",
+    "brand": "TobraDex Ointment",
     "eye": "OS",
     "freq": 1,
     "mode": "duration",
@@ -519,7 +519,7 @@
   "note": "Blepharitis OU. Maxitral ung to lids qhs OU x 1 wk.",
   "expected": [
    {
-    "brand": "Maxitrol",
+    "brand": "Maxitrol Ointment",
     "eye": "OU",
     "freq": 1,
     "mode": "duration",
@@ -1918,7 +1918,7 @@
   "note": "Tobrex ung QID OD x 5 days",
   "expected": [
    {
-    "brand": "Tobrex",
+    "brand": "Tobrex Ointment",
     "eye": "OD",
     "freq": 4,
     "mode": "duration",

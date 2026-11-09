@@ -246,3 +246,57 @@ test("misspelled and shortened names are recognised, and only in dosing context"
   assert.deepEqual(read("Prednisone 40 mg PO daily"), []);
   assert.deepEqual(read("Discussed Xalatn options at length"), []);
 });
+
+// Patterns from notes written in the style of different physician groups
+// (tests/fixtures/populations), checked on 9 November 2026.
+test("drugs that are not current are left out", () => {
+  const brands = (t) => parseNote(t, F).drops.map((d) => d.brand);
+  assert.deepEqual(brands("DISCONTINUED MEDICATIONS:\n- Timoptic 0.5% OU BID (d/c 2025-06)\nACTIVE MEDICATIONS:\n- Dorzolamide 2% OU TID"), ["Dorzolamide"]);
+  assert.deepEqual(brands("Durezol switched to FML BID OD per cornea."), ["FML"]);
+  assert.deepEqual(brands("Copied from prior: 'Continue Combigan BID OU.'\nToday: continue Xalatan qhs OU."), ["Xalatan"]);
+  assert.deepEqual(brands("May need to start Xiidra or Restasis at follow up if not improving."), []);
+  assert.deepEqual(brands("Pt asked about Cequa vs Restasis. Will discuss with Dr. Tran. Continue Xiidra BID OU."), ["Xiidra"]);
+  assert.deepEqual(brands("PLAN: [x] Artificial tears PRN [ ] Restasis - pt declined"), []);
+  assert.deepEqual(brands("No antibiotics unless discharge worsens; then Polytrim QID x 5d."), []);
+  assert.deepEqual(brands("Eylea 2 mg IVT OS today. Vigamox 1 gtt given post-injection."), []);
+  assert.deepEqual(brands("Pt tried Zaditor OTC, minimal relief. Switch to Pazeo 1 gtt QD OU."), ["Pazeo"]);
+  assert.deepEqual(brands("Could consider a short course of Lotemax if not improving, but will hold off for now."), []);
+  assert.deepEqual(brands("Consider stopping Xalatan, continue Cosopt BID OU."), ["Cosopt"]);
+  // "Until the bottle is finished" is a current course.
+  assert.deepEqual(brands("Ocuflox QID OD until bottle finished."), ["Ocuflox"]);
+});
+
+test("shorthand clinicians write is read, and flagged where it was interpreted", () => {
+  const one = (t) => parseNote(t, F).drops[0];
+  const steps = (d) => d.steps.map((s) => `${s.freq}x${s.days}`).join(",");
+  let d = one("Steroid taper OD: Lotemax 4/3/2/1 weekly.");
+  assert.equal(steps(d), "4x7,3x7,2x7,1x7");
+  assert.ok(d.flags.some((f) => /shorthand/.test(f)));
+  d = one("Taper by 1 drop weekly: Pred Forte OS starting QID.");
+  assert.equal(steps(d), "4x7,3x7,2x7,1x7");
+  d = one("Pred Forte OS 4→3→2→1 x 1 week each.");
+  assert.equal(steps(d), "4x7,3x7,2x7,1x7");
+  d = one("Lotemax QID OS 2/52 then BID 2/52.");
+  assert.equal(steps(d), "4x14,2x14");
+  assert.equal(one("Nevanac TID OS 1/12.").durationDays, 30);
+  assert.equal(one("she will use besivance three times a day in the left eye times seven days").durationDays, 7);
+  // "times a day" is never read as a duration.
+  assert.equal(one("Xalatan one drop both eyes three times a day").mode, "ongoing");
+  assert.equal(one("Maxitrol ung OS qhs x 1 wk").brand, "Maxitrol Ointment");
+  assert.equal(one("Tobradex ointment twice a day for 2 weeks left eye.").brand, "TobraDex Ointment");
+  assert.equal(one("pataday one drop each eye once a day during allergy season").eye, "OU");
+  assert.equal(one("atropine one percent one drop left eye every morning").freq, 1);
+  assert.equal(one("Lotemax ointment qhs OD x 1 wk + PF tears QID.").freq, 1);
+  assert.equal(one("Start Trusopt tid OU.").brand, "Dorzolamide");
+});
+
+test("eyes and changes written in different ways", () => {
+  const r = (t) => parseNote(t, F).drops.map((d) => [d.brand, d.eye, d.freq]);
+  assert.deepEqual(r("one drop in the right I of cosopt twice daily and one drop in the left I of xalatan at night"), [["Cosopt", "OD", 2], ["Xalatan", "OS", 1]]);
+  assert.deepEqual(r("JIA uveitis OU. Pred Forte BID OD, QD OS."), [["Pred Forte", "OD", 2], ["Pred Forte", "OS", 1]]);
+  assert.deepEqual(r("Post-LASIK. Per protocol: Vigamox QID x 1wk, FML QID x 1wk. All OU."), [["Vigamox", "OU", 4], ["FML", "OU", 4]]);
+  assert.deepEqual(r("stop the timoptic due to slow heart rate start azopt three times daily in each eye"), [["Azopt", "OU", 3]]);
+  assert.deepEqual(r("Current Medications: Pred Forte OD BID\nChanges: Decrease Pred Forte OD to daily x 2 wk then stop."), [["Pred Forte", "OD", 1]]);
+  // A bare "continue" does not override the dose written above it.
+  assert.deepEqual(r("Medications: FML 0.1% OS BID\nPlan: continue FML."), [["FML", "OS", 2]]);
+});

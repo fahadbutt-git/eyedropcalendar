@@ -1,0 +1,494 @@
+[
+ {
+  "id": 1,
+  "style": "co-manage POW1",
+  "note": "Co-management note. POW1 s/p phaco OD (Dr. Rahman). As per Dr. Rahman: Pred Forte QID x1wk then BID x1wk OD, Vigamox QID x1wk OD (now complete). Pt compliant.\nPlan: Pred Forte BID OD x 1 more wk then stop. Next visit 1 mo.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [
+   "Vigamox"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 2,
+  "style": "referral no tx",
+  "note": "Referral to ophthalmology: suspect POAG OS. IOP 26 OS, 17 OD. CDR 0.8 OS, 0.4 OD. Did not initiate treatment; deferring to ophthalmologist.",
+  "expected": [],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 3,
+  "style": "allergy",
+  "note": "Allergic conjunctivitis OU. Rec Pataday 1 gtt QD OU, cold compresses. RTC prn.",
+  "expected": [
+   {
+    "brand": "Pataday",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 4,
+  "style": "lubricants",
+  "note": "Dry eye OU (OSDI 28). Rx: Systane Complete QID OU, Hylo-Forte QID OU, lid hygiene.\nIf no better, refer for Restasis/Xiidra.",
+  "expected": [],
+  "should_skip": [
+   "Restasis",
+   "Xiidra"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 5,
+  "style": "as per letter",
+  "note": "As per Dr. Chen's letter dated Oct 2: Continue Xalatan qhs OU. Pt reports using it in the morning; advised to switch to bedtime.",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 6,
+  "style": "bacterial",
+  "note": "Bacterial conjunctivitis OS, mucopurulent d/c. Rx Tobrex 1 gtt QID OS x 7 days.",
+  "expected": [
+   {
+    "brand": "Tobrex",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 7,
+  "style": "co-manage glc",
+  "note": "Co-manage glaucoma per Dr. Singh: Cosopt BID OU, Lumigan RC QHS OU. IOP 16/17 today (tgt <18). Will report to Dr. Singh.",
+  "expected": [
+   {
+    "brand": "Cosopt",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Lumigan RC",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 8,
+  "style": "allergy noted",
+  "note": "Allergy: Polytrim (lid swelling).\nRx Ciloxan QID OD x 5d for bacterial conj OD.",
+  "expected": [
+   {
+    "brand": "Ciloxan",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "duration",
+    "days": 5
+   }
+  ],
+  "should_skip": [
+   "Polytrimethoprim"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 9,
+  "style": "CLPC",
+  "note": "CL-related papillary conjunctivitis OU. D/C CL x 2 wk.\nRx Lotemax QID OU x 1wk then BID x 1wk.",
+  "expected": [
+   {
+    "brand": "Lotemax",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,2x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 10,
+  "style": "other prescriber",
+  "note": "Annual exam, referred by Dr. Patel's office. Pt using Alphagan BID OD (Rx by Dr. Patel). IOP 15 OD. Continue as directed.",
+  "expected": [
+   {
+    "brand": "Alphagan",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 11,
+  "style": "hordeolum",
+  "note": "Hordeolum OS upper lid. Warm compresses QID. Erythromycin ointment BID OS x 7 days.",
+  "expected": [
+   {
+    "brand": "Erythromycin Ointment",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 12,
+  "style": "switch allergy",
+  "note": "Seasonal allergies. Pt tried Zaditor OTC, minimal relief. Switch to Pazeo 1 gtt QD OU.",
+  "expected": [
+   {
+    "brand": "Pazeo",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Zaditor"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 13,
+  "style": "LASIK protocol",
+  "note": "Post-LASIK POD1 (Dr. Wong). Per protocol: Vigamox QID x 1wk, FML QID x 1wk, PF tears q1h. All OU.",
+  "expected": [
+   {
+    "brand": "Vigamox",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   },
+   {
+    "brand": "FML",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 14,
+  "style": "routine none",
+  "note": "Routine exam. No ocular meds. Systemic: metformin, ramipril. Allergy: penicillin. RTC 2y.",
+  "expected": [],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 15,
+  "style": "RCE",
+  "note": "Recurrent erosion OD. Muro 128 5% ung qhs OD x 3 mo. Tobrex ung TID OD x 5 days.",
+  "expected": [
+   {
+    "brand": "Tobrex Ointment",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "duration",
+    "days": 5
+   }
+  ],
+  "should_skip": [
+   "Muro 128"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 16,
+  "style": "unavailable drug",
+  "note": "Demodex blepharitis OU (collarettes). Xdemvy not available in Canada; using tea tree lid wipes BID instead.",
+  "expected": [],
+  "should_skip": [
+   "Xdemvy"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 17,
+  "style": "remaining course",
+  "note": "Co-management (refractive cataract, Dr. Lee) POW2 OS.\nProlensa QD OS x 2 more weeks. Durezol BID OS x 1 more week then stop.",
+  "expected": [
+   {
+    "brand": "Prolensa",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "duration",
+    "days": 14
+   },
+   {
+    "brand": "Durezol",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 18,
+  "style": "restart",
+  "note": "Pt self-discontinued Travatan Z 3 mo ago (cost). IOP 24 OU. Advised to restart Travatan Z QHS OU and contact Dr. Ahmed's office. Consider generic travoprost.",
+  "expected": [
+   {
+    "brand": "Travatan Z",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 19,
+  "style": "GPC",
+  "note": "Mild GPC OU. Alomide QID OU x 1 month.",
+  "expected": [
+   {
+    "brand": "Alomide",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "duration",
+    "days": 30
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 20,
+  "style": "Plaquenil screen",
+  "note": "Hydroxychloroquine (Plaquenil) screening, yr 6. OCT/HVF 10-2 normal. No drops.",
+  "expected": [],
+  "should_skip": [
+   "Plaquenil"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 21,
+  "style": "two prescribers",
+  "note": "Pt on Pred Forte BID OS for chronic iritis (Dr. Gill, uveitis), unchanged. Also uses Bepreve BID OU for allergy.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Bepreve",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 22,
+  "style": "advised not to use",
+  "note": "Ocular allergy OU: Patanol BID OU. Pt also has Rx from walk-in clinic for Maxitrol; advised NOT to use.",
+  "expected": [
+   {
+    "brand": "Patanol",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Maxitrol"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 23,
+  "style": "urgent referral",
+  "note": "Suspected corneal ulcer OD. Sent to ER same day. Did not start drops.",
+  "expected": [],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 24,
+  "style": "co-manage DED",
+  "note": "Co-manage: pt on Restasis Multidose BID OU per Dr. Kim. Comfortable. Cont.",
+  "expected": [
+   {
+    "brand": "Restasis Multidose",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 25,
+  "style": "viral",
+  "note": "Viral conj OU. Supportive care. Pt to avoid antibiotic drops. Pt previously used Polytrim from a family member; discussed.",
+  "expected": [],
+  "should_skip": [
+   "Polytrimethoprim"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 26,
+  "style": "phone order",
+  "note": "Glaucoma suspect OD, IOP 23. Per Dr. Iqbal by phone: begin latanoprost 0.005% QHS OD, f/u 6 wk with Dr. Iqbal.",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 27,
+  "style": "MGD",
+  "note": "Lids: MGD 2+. Rec Miebo 1 gtt QID OU.",
+  "expected": [
+   {
+    "brand": "Miebo",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 28,
+  "style": "pinguecula",
+  "note": "Inflamed pinguecula OS. FML TID OS x 1 wk then BID x 1 wk.",
+  "expected": [
+   {
+    "brand": "FML",
+    "eye": "OS",
+    "freq": 3,
+    "mode": "taper",
+    "steps": "3x7,2x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 29,
+  "style": "question",
+  "note": "Pt asked about Cequa vs Restasis. Will discuss with Dr. Tran. No change today; continue Xiidra BID OU.",
+  "expected": [
+   {
+    "brand": "Xiidra",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Cequa",
+   "Restasis"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 30,
+  "style": "misspelled",
+  "note": "Vigamocks QID OS x7d for CL-related abrasion. No patch. No CL x 1 wk.",
+  "expected": [
+   {
+    "brand": "Vigamox",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "Vigamocks"
+  ],
+  "hard": false
+ }
+]

@@ -1,0 +1,564 @@
+[
+ {
+  "id": 1,
+  "style": "hourly uveitis",
+  "note": "AAU OD, 3+ cell, fibrin. Pred Forte q1h OD while awake. Cyclogel 1% TID OD. RTC 3-4 d.",
+  "expected": [
+   {
+    "brand": "Cyclogyl",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Pred Forte"
+  ],
+  "misspelled": [
+   "Cyclogel"
+  ],
+  "hard": false
+ },
+ {
+  "id": 2,
+  "style": "taper uveitis",
+  "note": "AAU OD improving, 1+ cell. Reduce Pred Forte: QID OD x 1wk, TID x 1wk, BID x 1wk, QD x 1wk. Stop Cyclogyl.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,3x7,2x7,1x7"
+   }
+  ],
+  "should_skip": [
+   "Cyclogyl"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 3,
+  "style": "penalization",
+  "note": "Anisometropic amblyopia OD, 6yo. Atropine 1% 1 gtt OS daily (penalization). Glasses full time.",
+  "expected": [
+   {
+    "brand": "Atropine",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 4,
+  "style": "myopia control",
+  "note": "Progressive myopia, 9yo (-3.25 OU, +0.75 D/yr). Atropine 0.01% qhs OU.",
+  "expected": [
+   {
+    "brand": "Atropine",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 5,
+  "style": "peds bacterial",
+  "note": "4yo, bacterial conjunctivitis OU. Polytrym 1 gtt QID OU x 7d.",
+  "expected": [
+   {
+    "brand": "Polytrimethoprim",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "Polytrym"
+  ],
+  "hard": false
+ },
+ {
+  "id": 6,
+  "style": "neonate",
+  "note": "Neonate, 6 d old, eye discharge OU. Erythromycin ointment given at birth per protocol. Swab sent.\nStart Tobrex ointment QID OU x 7 days.",
+  "expected": [
+   {
+    "brand": "Tobrex Ointment",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [
+   "Erythromycin Ointment"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 7,
+  "style": "JIA",
+  "note": "JIA-associated uveitis OU (ANA+). Pred Forte BID OD, QD OS. Methotrexate 15 mg SC weekly (rheum).",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Methotrexate"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 8,
+  "style": "PRN allergy",
+  "note": "Allergic conj OU, 11yo. Zaditor BID OU PRN itch.",
+  "expected": [],
+  "should_skip": [
+   "Zaditor"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 9,
+  "style": "VKC pulse",
+  "note": "VKC OU. Verkazia QID OU. Pataday QD OU. Pred Forte pulse: QID x 5d then stop OU.",
+  "expected": [
+   {
+    "brand": "Verkazia",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Pataday",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Pred Forte",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "duration",
+    "days": 5
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 10,
+  "style": "viral peds",
+  "note": "Viral conjunctivitis OU, 7yo. Supportive, cool compresses. No drops.",
+  "expected": [],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 11,
+  "style": "chronic AU",
+  "note": "Chronic anterior uveitis OS. Durezole BID OS ongoing. IOP 24 OS: add Timoptic BID OS.",
+  "expected": [
+   {
+    "brand": "Durezol",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Timoptic",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "Durezole"
+  ],
+  "hard": false
+ },
+ {
+  "id": 12,
+  "style": "cystinosis",
+  "note": "Cystinosis, corneal crystals OU. Cystadrops 1 gtt QID OU. Oral cysteamine per metabolics.",
+  "expected": [
+   {
+    "brand": "Cystadrops",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 13,
+  "style": "no topical",
+  "note": "Intermediate uveitis OU, no AC cell. No topical drops needed. Humira per uveitis clinic.",
+  "expected": [],
+  "should_skip": [
+   "Humira"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 14,
+  "style": "peds glaucoma",
+  "note": "Aphakic glaucoma OD, 3yo. Timolol 0.25% BID OD, Dorzolamide TID OD. Avoid Alphagan (<6yo, CNS depression).",
+  "expected": [
+   {
+    "brand": "Timolol 0.25%",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Dorzolamide",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Alphagan"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 15,
+  "style": "pseudomonas",
+  "note": "Pseudomonas keratitis OS (CL). Fortified tobramycin q1h OS. Atropine 1% BID OS.",
+  "expected": [
+   {
+    "brand": "Atropine",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 16,
+  "style": "seasonal",
+  "note": "Seasonal allergic conjunctivitis OU. Pataday 1 gtt daily OU. Artificial tears prn. Avoid rubbing.",
+  "expected": [
+   {
+    "brand": "Pataday",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 17,
+  "style": "strab ointment",
+  "note": "POD1 bilateral MR recession (8yo). Maxitrol ointment TID OU x 1 wk then BID x 1 wk.",
+  "expected": [
+   {
+    "brand": "Maxitrol Ointment",
+    "eye": "OU",
+    "freq": 3,
+    "mode": "taper",
+    "steps": "3x7,2x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 18,
+  "style": "recurrence",
+  "note": "Recurrent iritis OD. Restart Pred Forte q2h OD x 2 days then QID OD until review. Cyclogyl BID OD.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "ongoing",
+    "comment": "first 2 days q2h not schedulable"
+   },
+   {
+    "brand": "Cyclogyl",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 19,
+  "style": "sibling drop",
+  "note": "Allergic conj, 5yo. Mom has been using sibling's Patanol. OK to continue: Patanol BID OU.",
+  "expected": [
+   {
+    "brand": "Patanol",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 20,
+  "style": "gonococcal",
+  "note": "Hyperpurulent conjunctivitis OU, adolescent, GC suspected. Ceftriaxone IM given. Erythromycin ointment QID OU x 7 days + saline irrigation.",
+  "expected": [
+   {
+    "brand": "Erythromycin Ointment",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [
+   "Ceftriaxone"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 21,
+  "style": "episcleritis",
+  "note": "Episcleritis OS. FML QID OS x 1 wk then BID x 1 wk.",
+  "expected": [
+   {
+    "brand": "FML",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,2x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 22,
+  "style": "uveitic glc",
+  "note": "Uveitic glaucoma OU. Pred Forte TID OU, Cosopt BID OU, Alphagan P BID OU. Avoid prostaglandins.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OU",
+    "freq": 3,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Cosopt",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Alphagan-P",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 23,
+  "style": "BKC",
+  "note": "Blepharokeratoconjunctivitis OU, 10yo. Erythromycin ung qhs OU x 1 mo. Lotemax BID OU x 2 wk. Lid scrubs.",
+  "expected": [
+   {
+    "brand": "Erythromycin Ointment",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "duration",
+    "days": 30
+   },
+   {
+    "brand": "Lotemax",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "duration",
+    "days": 14
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 24,
+  "style": "toxo",
+  "note": "Toxoplasma retinochoroiditis OS. Septra DS PO BID x 6 wk. Prednisone 40 mg PO from day 3. Pred Forte QID OS for AC reaction.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Septra"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 25,
+  "style": "weekend atropine",
+  "note": "Penalization: atropine 1% to the good eye (left) on Saturdays and Sundays.",
+  "expected": [
+   {
+    "brand": "Atropine",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing",
+    "comment": "weekends only; not a daily schedule"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 26,
+  "style": "fungal",
+  "note": "Fusarium keratitis OD. Natamycin 5% q1h OD. Atropine 1% TID OD. No steroids: d/c Pred Forte started at walk-in.",
+  "expected": [
+   {
+    "brand": "Atropine",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Natamycin",
+   "Pred Forte"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 27,
+  "style": "off-list steroid",
+  "note": "Allergic conj OU. Bepreve was ineffective. Start Pazeo QD OU. Short course Alrex QID OU x 2 wk.",
+  "expected": [
+   {
+    "brand": "Pazeo",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Bepreve",
+   "Alrex"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 28,
+  "style": "NLDO",
+  "note": "Healthy 2yo, NLDO OD. Crigler massage. No antibiotics unless discharge worsens; then Polytrim QID x 5d.",
+  "expected": [],
+  "should_skip": [
+   "Polytrimethoprim"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 29,
+  "style": "sarcoid",
+  "note": "Panuveitis OS (sarcoid). Pred Forte QID OS, Cyclogyl QHS OS, Combigan BID OS (IOP 25).",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Cyclogyl",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Combigan",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 30,
+  "style": "stye",
+  "note": "Stye OD. Warm compresses. Tobradex ung BID OD x 7d.",
+  "expected": [
+   {
+    "brand": "TobraDex Ointment",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ }
+]

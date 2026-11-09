@@ -1,0 +1,566 @@
+[
+ {
+  "id": 1,
+  "style": "dictated",
+  "note": "plan continue zalatan one drop in both eyes at bedtime follow up six months",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "zalatan"
+  ],
+  "hard": false
+ },
+ {
+  "id": 2,
+  "style": "homophones",
+  "note": "start co sopped twice a day in the left I and continue lumigan are see at night in both eyes",
+  "expected": [
+   {
+    "brand": "Cosopt",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Lumigan RC",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "co sopped",
+   "lumigan are see",
+   "I"
+  ],
+  "hard": true
+ },
+ {
+  "id": 3,
+  "style": "times",
+  "note": "pred fort four times a day right eye times one week then three times a day times one week then twice a day times one week then once a day times one week then stop",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,3x7,2x7,1x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "pred fort"
+  ],
+  "hard": true
+ },
+ {
+  "id": 4,
+  "style": "split word",
+  "note": "vig a mocks four times daily right eye for seven days",
+  "expected": [
+   {
+    "brand": "Vigamox",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "vig a mocks"
+  ],
+  "hard": true
+ },
+ {
+  "id": 5,
+  "style": "Canadian zed",
+  "note": "the patient will use travatan zed one drop each eye at bedtime",
+  "expected": [
+   {
+    "brand": "Travatan Z",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "travatan zed"
+  ],
+  "hard": false
+ },
+ {
+  "id": 6,
+  "style": "period dictated",
+  "note": "combi gan twice daily both eyes period continue",
+  "expected": [
+   {
+    "brand": "Combigan",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "combi gan"
+  ],
+  "hard": true
+ },
+ {
+  "id": 7,
+  "style": "no punctuation",
+  "note": "IOP was 18 in the right and 21 in the left period plan add alfa gan twice a day left eye only period continue zalatan both eyes at night",
+  "expected": [
+   {
+    "brand": "Alphagan",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "alfa gan",
+   "zalatan"
+  ],
+  "hard": true
+ },
+ {
+  "id": 8,
+  "style": "no drops",
+  "note": "no drops at this time period return in one year for dilated exam",
+  "expected": [],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 9,
+  "style": "allergy dictated",
+  "note": "patient is allergic to sulfa and to dorzolamide stop as opt continue tim optic twice a day both eyes",
+  "expected": [
+   {
+    "brand": "Timoptic",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Dorzolamide",
+   "Azopt"
+  ],
+  "misspelled": [
+   "as opt",
+   "tim optic"
+  ],
+  "hard": true
+ },
+ {
+  "id": 10,
+  "style": "split brand",
+  "note": "dura zol four times daily left eye times two weeks then two times daily times two weeks",
+  "expected": [
+   {
+    "brand": "Durezol",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x14,2x14"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "dura zol"
+  ],
+  "hard": true
+ },
+ {
+  "id": 11,
+  "style": "ill evro",
+  "note": "start ill evro one drop daily in the right eye for one month",
+  "expected": [
+   {
+    "brand": "Ilevro",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "duration",
+    "days": 30
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "ill evro"
+  ],
+  "hard": true
+ },
+ {
+  "id": 12,
+  "style": "seasonal",
+  "note": "pataday one drop each eye once a day during allergy season",
+  "expected": [
+   {
+    "brand": "Pataday",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 13,
+  "style": "max a trol",
+  "note": "max a trol ointment at bedtime left eye times ten days",
+  "expected": [
+   {
+    "brand": "Maxitrol Ointment",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "duration",
+    "days": 10
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "max a trol"
+  ],
+  "hard": true
+ },
+ {
+  "id": 14,
+  "style": "x alacom",
+  "note": "x alacom one drop in the left eye every morning",
+  "expected": [
+   {
+    "brand": "Xalacom",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "x alacom"
+  ],
+  "hard": true
+ },
+ {
+  "id": 15,
+  "style": "given in clinic",
+  "note": "he was given cyclo jill in clinic for dilation no drops to go home with",
+  "expected": [],
+  "should_skip": [
+   "Cyclogyl"
+  ],
+  "misspelled": [
+   "cyclo jill"
+  ],
+  "hard": false
+ },
+ {
+  "id": 16,
+  "style": "new paragraph",
+  "note": "continue simbrinsa BID OU and monoprost QHS OU new paragraph IOP at target",
+  "expected": [
+   {
+    "brand": "Simbrinza",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Monoprost",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "simbrinsa"
+  ],
+  "hard": false
+ },
+ {
+  "id": 17,
+  "style": "tobra decks",
+  "note": "tobra decks four times a day right eye for one week",
+  "expected": [
+   {
+    "brand": "TobraDex",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "tobra decks"
+  ],
+  "hard": true
+ },
+ {
+  "id": 18,
+  "style": "atropine words",
+  "note": "atropine one percent one drop left eye every morning for amblyopia",
+  "expected": [
+   {
+    "brand": "Atropine",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 19,
+  "style": "hourly dictated",
+  "note": "pred forte every two hours while awake right eye and cyclogyl three times a day right eye",
+  "expected": [
+   {
+    "brand": "Cyclogyl",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Pred Forte"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 20,
+  "style": "R C spelled",
+  "note": "lumigan R C one drop both eyes at night and alphagan P two times a day both eyes",
+  "expected": [
+   {
+    "brand": "Lumigan RC",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Alphagan-P",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 21,
+  "style": "stop start",
+  "note": "stop the timoptic due to slow heart rate start azopt three times daily in each eye",
+  "expected": [
+   {
+    "brand": "Azopt",
+    "eye": "OU",
+    "freq": 3,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Timoptic"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 22,
+  "style": "for a week",
+  "note": "lotemax four times a day for a week three times a day for a week two times a day for a week and once a day for a week in the right eye",
+  "expected": [
+   {
+    "brand": "Lotemax",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,3x7,2x7,1x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 23,
+  "style": "right I left I",
+  "note": "one drop in the right I of cosopt twice daily and one drop in the left I of xalatan at night",
+  "expected": [
+   {
+    "brand": "Cosopt",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "I"
+  ],
+  "hard": true
+ },
+ {
+  "id": 24,
+  "style": "erythro mycin",
+  "note": "erythro mycin ointment to both eyes four times a day for five days",
+  "expected": [
+   {
+    "brand": "Erythromycin Ointment",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "duration",
+    "days": 5
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "erythro mycin"
+  ],
+  "hard": false
+ },
+ {
+  "id": 25,
+  "style": "generic or",
+  "note": "fluorometholone or FML three times a day both eyes for two weeks",
+  "expected": [
+   {
+    "brand": "FML",
+    "eye": "OU",
+    "freq": 3,
+    "mode": "duration",
+    "days": 14
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 26,
+  "style": "someone else bottle",
+  "note": "patient brought his wife's bottle of travatan he is not to use it no glaucoma diagnosed",
+  "expected": [],
+  "should_skip": [
+   "Travatan Z"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 27,
+  "style": "long term",
+  "note": "restasis one drop each eye twice a day long term",
+  "expected": [
+   {
+    "brand": "Restasis",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 28,
+  "style": "two meds one eye",
+  "note": "vyzulta at bedtime in the right eye only and continue the zimed PF twice a day in the right eye",
+  "expected": [
+   {
+    "brand": "Vyzulta",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Zimed PF",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 29,
+  "style": "besivance",
+  "note": "she will use besivance three times a day in the left eye times seven days",
+  "expected": [
+   {
+    "brand": "Besivance",
+    "eye": "OS",
+    "freq": 3,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 30,
+  "style": "two drugs run on",
+  "note": "nevanac three times a day in the right eye times four weeks pred fort four times a day for one week then twice a day for one week right eye",
+  "expected": [
+   {
+    "brand": "Nevanac",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "duration",
+    "days": 28
+   },
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,2x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "pred fort"
+  ],
+  "hard": true
+ }
+]

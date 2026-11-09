@@ -1,0 +1,616 @@
+[
+ {
+  "id": 1,
+  "style": "terse A/P",
+  "note": "POAG OU. IOP 18/22 on Xalatan qhs OU. Tgt <18.\nAdd Cosopt BID OS.\nRTC 3/12.",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Cosopt",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 2,
+  "style": "terse",
+  "note": "NTG OD>OS. IOP 14/13. CCT 512/518. HVF stable.\nCont Lumigan RC qhs OU. 6/12.",
+  "expected": [
+   {
+    "brand": "Lumigan RC",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 3,
+  "style": "new dx",
+  "note": "PXF OS, IOP 31 OS / 17 OD. Gonio open, heavy Sampaolesi.\nStart Combigan BID OS + Xalatan qhs OS.\nSLT discussed, pt wants to think about it. RTC 4/52.",
+  "expected": [
+   {
+    "brand": "Combigan",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 4,
+  "style": "SLT hx no drops",
+  "note": "s/p SLT 360 OD (2024), OS (2025). IOP 16/17 off gtts. RNFL stable.\nObserve, no gtts. 6/12.",
+  "expected": [],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 5,
+  "style": "med change",
+  "note": "HR 48 today, c/o fatigue. Stop Timoptic OU.\nStart Azopt TID OU. Cont Travatan Z qhs OU.\nIOP 17/18.",
+  "expected": [
+   {
+    "brand": "Azopt",
+    "eye": "OU",
+    "freq": 3,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Travatan Z",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Timoptic"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 6,
+  "style": "angle closure",
+  "note": "CACG s/p LPI OU. Plateau iris OD. IOP 24 OD 19 OS.\nPilo 2% QID OD. Alphagan P TID OD.\nPhaco OD to be booked.",
+  "expected": [
+   {
+    "brand": "Pilocarpine",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Alphagan-P",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 7,
+  "style": "allergy switch",
+  "note": "Follicular conj OU, likely brimonidine allergy. D/c Alphagan OU.\nSwitch to Dorzolamide TID OU. Cont Monoprost qhs OU.",
+  "expected": [
+   {
+    "brand": "Dorzolamide",
+    "eye": "OU",
+    "freq": 3,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Monoprost",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Alphagan"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 8,
+  "style": "per-eye med list",
+  "note": "Meds:\nOD Cosopt-PF BID, Vyzulta qhs\nOS Vyzulta qhs\nIOP 15/14, at tgt. Cont.",
+  "expected": [
+   {
+    "brand": "Cosopt-PF",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Vyzulta",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 9,
+  "style": "pre-surgical",
+  "note": "JOAG OS. IOP 28 OS on DuoTrav qhs. Plan trab/MMC OS next month.\nDiamox 250 mg PO BID until surgery.\nCont DuoTrav PQ qhs OS, add Alphagan BID OS.",
+  "expected": [
+   {
+    "brand": "DuoTrav PQ",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Alphagan",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Diamox"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 10,
+  "style": "adherence",
+  "note": "IOP 21/20. Pt not using Xalacom reliably, forgets.\nSimplify: stop Xalacom, start Xalatan qhs OU + Timoptic-XE qAM OU.",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Timoptic-XE",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Xalacom"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 11,
+  "style": "generic name",
+  "note": "PDS OU, IOP 22/23, Krukenberg spindles.\nStart latanoprost 0.005% 1 gtt OU qhs.",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 12,
+  "style": "uveitic glc",
+  "note": "Uveitic glaucoma OD. IOP 34 OD.\nCosopt BID OD, Alphagan TID OD. Avoid PGA.\nPred Forte BID OD per uveitis (unchanged).",
+  "expected": [
+   {
+    "brand": "Cosopt",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Alphagan",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 13,
+  "style": "juvenile",
+  "note": "Peds-onset glaucoma, now 17. IOP 12/13 on Timolol 0.25% BID OU. Cont.",
+  "expected": [
+   {
+    "brand": "Timolol 0.25%",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 14,
+  "style": "glc suspect no tx",
+  "note": "Gonio: open 360 OU, Shaffer 4. IOP 19 OU. No tx. Repeat OCT 1 yr.",
+  "expected": [],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 15,
+  "style": "combo switch",
+  "note": "Rx: Azarga 1 gtt BID OS. D/c Azopt OS (now in combo).\nCont Lumigan RC qhs OU.",
+  "expected": [
+   {
+    "brand": "Azarga",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Lumigan RC",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Azopt"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 16,
+  "style": "s/p trab",
+  "note": "OD trab 2022 functioning, IOP 9 off meds. OS IOP 20 on Xalatan qhs, tgt <16.\nRhopressa not available in CA.\nStart Simbrinza BID OS.",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Simbrinza",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Rhopressa"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 17,
+  "style": "stable",
+  "note": "Meds OU: Combigan bid, Travatan Z qhs. IOP 17/16. Mild hyperemia, tolerable. Cont same.",
+  "expected": [
+   {
+    "brand": "Combigan",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Travatan Z",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 18,
+  "style": "restart",
+  "note": "On Zimed PF bid OU + latanoprost qhs OU. Ran out of Zimed x 2 wk -> IOP 24/25.\nRestart Zimed PF BID OU, cont latanoprost.",
+  "expected": [
+   {
+    "brand": "Zimed PF",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 19,
+  "style": "RE/LE",
+  "note": "RE: Vistitan qhs\nLE: nil\nIOP 15 / 14",
+  "expected": [
+   {
+    "brand": "Vistitan",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 20,
+  "style": "post tube",
+  "note": "s/p Ahmed OS 3/52. IOP 11 OS.\nTaper Pred Forte OS: TID x1wk, BID x1wk, daily x1wk, stop.\nStop Vigamox. Hold glaucoma gtts OS. Cont Xalatan qhs OD.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 3,
+    "mode": "taper",
+    "steps": "3x7,2x7,1x7"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Vigamox"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 21,
+  "style": "SLT day",
+  "note": "SLT OS today, 100 spots 360, 0.8 mJ. Iopidine 1% given pre-laser OS.\nCont Xalatan qhs OU. SLT OD next visit.",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Iopidine"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 22,
+  "style": "one liner",
+  "note": "Timoptic XE 0.5% qAM OS. Denies asthma. IOP 22 -> 17.",
+  "expected": [
+   {
+    "brand": "Timoptic-XE",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 23,
+  "style": "steroid responder",
+  "note": "Steroid responder OD (IOP 30 on Durezol post DMEK, Dr Patel).\nDurezol switched to FML BID OD per cornea.\nStart Cosopt BID OD.",
+  "expected": [
+   {
+    "brand": "FML",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Cosopt",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Durezol"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 24,
+  "style": "misspelled",
+  "note": "IOP 16/16, CDR 0.7/0.6. Cont Lumigen 0.01% qhs OU. Monitor.",
+  "expected": [
+   {
+    "brand": "Lumigan RC",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "Lumigen"
+  ],
+  "hard": false
+ },
+ {
+  "id": 25,
+  "style": "PGA intolerance",
+  "note": "Periorbitopathy from PGA. D/C Xalatan.\nStart Timoptic 0.5% bid OU and Trusopt tid OU.",
+  "expected": [
+   {
+    "brand": "Timoptic",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Dorzolamide",
+    "eye": "OU",
+    "freq": 3,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Xalatan"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 26,
+  "style": "no drops",
+  "note": "No drops. Glaucoma suspect, large discs (2.1 mm), IOP 17/18. Observe.",
+  "expected": [],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 27,
+  "style": "NVG",
+  "note": "NVG OD, IOP 42, rubeosis 360. Eylea IVT OD today.\nStart Cosopt BID OD, Alphagan BID OD, Atropine 1% BID OD, Pred Forte QID OD.\nPRP next wk.",
+  "expected": [
+   {
+    "brand": "Cosopt",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Alphagan",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Atropine",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Eylea"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 28,
+  "style": "family member",
+  "note": "Daughter (also my pt) on Xalatan. This pt: IOP 18/19, discs healthy, no tx needed. RTC 1 yr.",
+  "expected": [],
+  "should_skip": [
+   "Xalatan"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 29,
+  "style": "split eyes",
+  "note": "OD 1 gtt Travatan Z qhs\nOS 1 gtt Travatan Z qhs + Alphagan-P bid",
+  "expected": [
+   {
+    "brand": "Travatan Z",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Alphagan-P",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 30,
+  "style": "conditional",
+  "note": "Combigan allergy (lid erythema). Stop Combigan OU.\nStart Cosopt BID OU. Cont Xalatan qhs OU.\nIf IOP still >18 consider adding Alphagan-P later.",
+  "expected": [
+   {
+    "brand": "Cosopt",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Combigan",
+   "Alphagan-P"
+  ],
+  "misspelled": [],
+  "hard": false
+ }
+]

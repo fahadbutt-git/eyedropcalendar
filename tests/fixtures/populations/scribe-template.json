@@ -1,0 +1,594 @@
+[
+ {
+  "id": 1,
+  "style": "med list",
+  "note": "CURRENT MEDICATIONS:\n- Xalatan 0.005% 1 gtt OU QHS\n- Metoprolol 50 mg PO BID\n- Atorvastatin 20 mg PO daily\nALLERGIES: Sulfa (rash)\nPLAN:\n[x] Continue current drops\n[ ] SLT",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Metoprolol"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 2,
+  "style": "current vs plan",
+  "note": "Current meds: Cosopt BID OU, Lumigan RC QHS OU\nPlan: Stop Cosopt. Start Azarga BID OU. Continue Lumigan RC QHS OU.",
+  "expected": [
+   {
+    "brand": "Azarga",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Lumigan RC",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Cosopt"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 3,
+  "style": "allergy + FHx",
+  "note": "ALLERGIES: Alphagan (follicular conjunctivitis), Codeine\nFAMILY HX: Mother - glaucoma, on Xalatan and Timoptic\nOCULAR MEDS: None\nPLAN: Observe, IOP 19/20.",
+  "expected": [],
+  "should_skip": [
+   "Alphagan",
+   "Xalatan",
+   "Timoptic"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 4,
+  "style": "pipe table",
+  "note": "| Medication | Eye | Freq |\n| Combigan | OU | BID |\n| Travatan Z | OU | QHS |\nPlan: continue all.",
+  "expected": [
+   {
+    "brand": "Combigan",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Travatan Z",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 5,
+  "style": "discontinued section",
+  "note": "DISCONTINUED MEDICATIONS:\n- Timoptic 0.5% OU BID (d/c 2025-06, bradycardia)\nACTIVE MEDICATIONS:\n- Dorzolamide 2% OU TID\n- Monoprost OU QHS",
+  "expected": [
+   {
+    "brand": "Dorzolamide",
+    "eye": "OU",
+    "freq": 3,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Monoprost",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Timoptic"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 6,
+  "style": "med rec taper",
+  "note": "Medication Reconciliation\nEye drops:\n  Pred Forte 1% OS QID - taper: QID x 1 wk, TID x 1 wk, BID x 1 wk, QD x 1 wk then stop\n  Vigamox OS QID x 7 days\nOral: none",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,3x7,2x7,1x7"
+   },
+   {
+    "brand": "Vigamox",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 7,
+  "style": "procedure checkboxes",
+  "note": "Procedures today: [x] IVT Eylea OD [x] OCT [ ] FA\nMeds given in clinic: proparacaine, povidone-iodine 5%, Vigamox 1 gtt OD\nHome meds: none",
+  "expected": [],
+  "should_skip": [
+   "Vigamox",
+   "Eylea"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 8,
+  "style": "numbered plan",
+  "note": "Chief complaint: red eye OS\nAssessment: bacterial conjunctivitis OS\nPlan:\n1. Polytrim 1 gtt OS QID x 7 days\n2. Return if worse",
+  "expected": [
+   {
+    "brand": "Polytrimethoprim",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 9,
+  "style": "before/after",
+  "note": "MEDS PRIOR TO VISIT: Xalatan OU qhs\nMEDS AFTER VISIT: Xalatan OU qhs, Alphagan-P OD BID (NEW)",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Alphagan-P",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 10,
+  "style": "per-eye block",
+  "note": "Ocular Medications:\n  Right eye: Cosopt-PF BID, Xalatan QHS\n  Left eye: Xalatan QHS\nNon-ocular: Ramipril 10 mg, ASA 81 mg",
+  "expected": [
+   {
+    "brand": "Cosopt-PF",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 11,
+  "style": "bracket template",
+  "note": "Template: Post-op Cataract Instructions [OD]\nPred Forte: [4] x/day x [7] days, then [2] x/day x [7] days\nVigamox: [4] x/day x [7] days\nIlevro: [1] x/day x [28] days",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,2x7"
+   },
+   {
+    "brand": "Vigamox",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   },
+   {
+    "brand": "Ilevro",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "duration",
+    "days": 28
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 12,
+  "style": "declined",
+  "note": "ALLERGIES: NKDA\nCURRENT EYE MEDS: none\nPLAN: [x] Artificial tears PRN [ ] Restasis - pt declined",
+  "expected": [],
+  "should_skip": [
+   "Restasis"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 13,
+  "style": "unicode checkboxes",
+  "note": "Medications (reviewed):\n☑ Travatan Z 1 gtt OU qhs\n☐ Combigan (stopped - cost)\n☑ Simbrinza 1 gtt OU BID",
+  "expected": [
+   {
+    "brand": "Travatan Z",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Simbrinza",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Combigan"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 14,
+  "style": "past hx",
+  "note": "Hx: Pred Forte in the past for iritis (2019), resolved.\nCurrent: no eye drops.\nToday: quiet AC OU. No tx.",
+  "expected": [],
+  "should_skip": [
+   "Pred Forte"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 15,
+  "style": "allergy generic",
+  "note": "Allergies: moxifloxacin (hives), latex\nRx: Tobrex 0.3% 1 gtt OD QID x 5d\nRTC PRN",
+  "expected": [
+   {
+    "brand": "Tobrex",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "duration",
+    "days": 5
+   }
+  ],
+  "should_skip": [
+   "Vigamox"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 16,
+  "style": "OD/OS plan",
+  "note": "PLAN\nOD: Lumigan RC qhs\nOS: Lumigan RC qhs, Cosopt BID\nNext: HVF 24-2 in 4 mo",
+  "expected": [
+   {
+    "brand": "Lumigan RC",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Cosopt",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 17,
+  "style": "changes section",
+  "note": "Current Medications: Pred Forte OD BID; Atropine 1% OD QHS\nChanges: Decrease Pred Forte OD to daily x 2 wk then stop. Stop atropine.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "duration",
+    "days": 14
+   }
+  ],
+  "should_skip": [
+   "Atropine"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 18,
+  "style": "rx printed",
+  "note": "Rx printed:\nMaxitrol susp - 1 gtt OS QID x 1 wk\nMaxitrol ung - OS qhs x 1 wk",
+  "expected": [
+   {
+    "brand": "Maxitrol",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   },
+   {
+    "brand": "Maxitrol Ointment",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 19,
+  "style": "systemic only",
+  "note": "Systemic: Propranolol 40 mg PO BID. Ocular: none. IOP 14/15. Plan: observe.",
+  "expected": [],
+  "should_skip": [
+   "Propranolol"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 20,
+  "style": "stop start list",
+  "note": "Current meds:\n- Xiidra BID OU\nPlan:\n- Stop Xiidra (dysgeusia)\n- Start Cequa BID OU",
+  "expected": [
+   {
+    "brand": "Cequa",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Xiidra"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 21,
+  "style": "column table",
+  "note": "MEDICATION LIST\nName                Eye   Sig\nAzopt 1%            OS    TID\nXalacom             OS    QAM\nPlan: no change",
+  "expected": [
+   {
+    "brand": "Azopt",
+    "eye": "OS",
+    "freq": 3,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalacom",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 22,
+  "style": "problem list",
+  "note": "Assessment/Plan:\n#1 POAG OU - IOP 22/24 above target (<18). Add Combigan BID OU. Continue Vyzulta qhs OU.\n#2 Dry eye OU - Restasis BID OU (continue).\n#3 Cataract OU - monitor.",
+  "expected": [
+   {
+    "brand": "Combigan",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Vyzulta",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Restasis",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 23,
+  "style": "given vs home",
+  "note": "Medications given in clinic today: Cyclogyl 1% x1 OU, Mydfrin 2.5% x1 OU (dilation)\nHome medications: Pataday QD OU",
+  "expected": [
+   {
+    "brand": "Pataday",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Cyclogyl",
+   "Mydfrin"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 24,
+  "style": "pharmacy confirm",
+  "note": "Pt states using \"the purple cap\" BID OU and \"the teal cap\" at night OU, unable to name.\nPharmacy confirms: Alphagan 0.2% BID OU, Xalatan QHS OU.",
+  "expected": [
+   {
+    "brand": "Alphagan",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 25,
+  "style": "checkbox plan",
+  "note": "Plan: [x] Start Timoptic-XE 0.5% qAM OD [x] RTC 6 wk IOP check [ ] Consider SLT",
+  "expected": [
+   {
+    "brand": "Timoptic-XE",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 26,
+  "style": "past ocular hx",
+  "note": "PAST OCULAR HX: LASIK OU 2008, PRK enhancement OS 2010 (used FML x 1 mo).\nCURRENT: no drops.\nPLAN: Cataract consult.",
+  "expected": [],
+  "should_skip": [
+   "FML"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 27,
+  "style": "orders",
+  "note": "Diagnosis: Herpetic epithelial keratitis OD\nOrders:\n- Valtrex 1 g PO TID x 10 d\n- Eyezirgan 0.15% gel OD 5x/day x 7 d then TID x 7 d",
+  "expected": [
+   {
+    "brand": "Eyezirgan",
+    "eye": "OD",
+    "freq": 5,
+    "mode": "taper",
+    "steps": "5x7,3x7"
+   }
+  ],
+  "should_skip": [
+   "Valtrex"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 28,
+  "style": "drug allergy listed",
+  "note": "Allergies: Pred Forte (IOP spike), Sulfa\nMedications: FML 0.1% OS BID\nPlan: continue FML; Pred Forte contraindicated.",
+  "expected": [
+   {
+    "brand": "FML",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Pred Forte"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 29,
+  "style": "course in progress",
+  "note": "Current: Fucithalmic BID OU x 7 days (started 3 days ago, Rx by family doctor)\nPlan: Complete course.",
+  "expected": [
+   {
+    "brand": "Fucithalmic",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "duration",
+    "days": 4,
+    "comment": "7-day course started 3 days ago; 4 days remain"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 30,
+  "style": "pipe one-line",
+  "note": "OD: Vigamox QID x 1 wk | Pred Forte QID x 1 wk then BID x 1 wk | Nevanac TID x 4 wk\nOS: no drops",
+  "expected": [
+   {
+    "brand": "Vigamox",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   },
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,2x7"
+   },
+   {
+    "brand": "Nevanac",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "duration",
+    "days": 28
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ }
+]

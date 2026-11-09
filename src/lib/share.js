@@ -82,6 +82,15 @@ export function codeFromUrl(url) {
   } catch {
     // Leave it as typed.
   }
+  // A chart note writes the link in 64-character lines. A paste box or a
+  // browser can turn those line breaks into spaces, so a full line followed
+  // by more of the code is joined again.
+  s = s.replace(/\S*(?:#\/p\/|:\/\/p\/|\/p\/)[\w-]+(?:[ \t]+[\w-]+)+/, (run) => {
+    const pieces = run.split(/[ \t]+/);
+    let i = 1;
+    while (i < pieces.length && pieces[i - 1].length === 64) i++;
+    return [pieces.slice(0, i).join(""), ...pieces.slice(i)].join(" ");
+  });
   const m = s.match(/(?:#\/p\/|:\/\/p\/|\/p\/)([\w-]+)/);
   if (m) return m[1];
   const bare = s.trim();

@@ -410,3 +410,20 @@ test("the chart note keeps every line short and its plan link still reads whole"
   assert.equal(codeFromUrl(`${note}\nRTC 6 weeks, IOP check.`), code);
   assert.equal(decodeRegimen(codeFromUrl(note)).nonce, "abcd1234");
 });
+
+test("a plan link pasted with its line breaks turned into spaces still opens", async () => {
+  const { chartNote } = await import("../src/lib/chartNote.js");
+  const { encodeRegimen, codeFromUrl } = await import("../src/lib/share.js");
+  const entries = toEntries([s({ brand: "Xalatan", eye: "OU" }), s({ brand: "Cosopt", eye: "OD", freq: 2 }), s({ brand: "Vigamox", eye: "OS", freq: 4, mode: "duration", durationDays: 7 })]);
+  const settings = { start: "2026-11-02", wake: "08:00", bed: "22:00" };
+  const code = encodeRegimen({ entries, formulary: SEED_FORMULARY, ...settings, nonce: "spaces01" });
+  const note = chartNote({ entries, formulary: SEED_FORMULARY, ...settings, link: `https://eyedroptracker.com/#/p/${code}` });
+  const block = note.slice(note.indexOf("https://"));
+  // A paste box turns the line breaks into spaces.
+  assert.equal(codeFromUrl(block.replace(/\n/g, " ")), code);
+  // The link lines alone, without the end marker, with text after them.
+  const lines = block.split("\n").filter((l) => !l.startsWith("("));
+  assert.equal(codeFromUrl(`${lines.join(" ")} RTC 6 weeks`), code);
+  // A single-line link still works.
+  assert.equal(codeFromUrl(`see https://eyedroptracker.com/#/p/${code} thanks`), code);
+});

@@ -1706,7 +1706,7 @@
   "note": "Maxitral ung OD qhs x 1 wk",
   "expected": [
    {
-    "brand": "Maxitrol",
+    "brand": "Maxitrol Ointment",
     "eye": "OD",
     "freq": 1,
     "mode": "duration",
@@ -1962,7 +1962,7 @@
     "days": 7
    },
    {
-    "brand": "Maxitrol",
+    "brand": "Maxitrol Ointment",
     "eye": "OU",
     "freq": 1,
     "mode": "duration",
@@ -2236,7 +2236,7 @@
   "note": "Rx pad: Tobrex ung RE tid x 7/7",
   "expected": [
    {
-    "brand": "Tobrex",
+    "brand": "Tobrex Ointment",
     "eye": "OD",
     "freq": 3,
     "mode": "duration",

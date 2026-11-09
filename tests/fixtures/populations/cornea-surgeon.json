@@ -1,0 +1,568 @@
+[
+ {
+  "id": 1,
+  "style": "POD1 PKP",
+  "note": "POD1 PKP OS. Graft clear, 3 mm epi defect, BCL in place, sutures intact.\nPred Forte QID OS. Vigamox QID OS x 1 wk. Erythromycin ointment qhs OS.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Vigamox",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   },
+   {
+    "brand": "Erythromycin Ointment",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 2,
+  "style": "DMEK taper monthly",
+  "note": "DMEK OD POW1. Bubble 30%, graft attached.\nPred Forte 1% OD QID x 1 mo, then TID x 1 mo, then BID x 1 mo, then daily until review.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x30,3x30,2x30",
+    "comment": "then daily open-ended until review"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 3,
+  "style": "CXL",
+  "note": "Epi-off CXL OS today (Dresden). BCL in.\nOfloxacin QID OS x 1 wk.\nFML QID x 1 wk then BID x 1 wk then stop.\nTylenol #3 PRN pain. Remove BCL at 1 wk.",
+  "expected": [
+   {
+    "brand": "Ocuflox",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   },
+   {
+    "brand": "FML",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,2x7"
+   }
+  ],
+  "should_skip": [
+   "Tylenol"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 4,
+  "style": "4/3/2/1",
+  "note": "Steroid taper OD: Lotemax 4/3/2/1 weekly.",
+  "expected": [
+   {
+    "brand": "Lotemax",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,3x7,2x7,1x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 5,
+  "style": "chronic graft",
+  "note": "PK OU in past (OD 2015, OS 2019).\nOD: Pred Forte daily long term.\nOS: FML daily.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "FML",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 6,
+  "style": "arrows",
+  "note": "Durazol QID x2w → TID x2w → BID x2w → QD x2w → stop, OD.",
+  "expected": [
+   {
+    "brand": "Durezol",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x14,3x14,2x14,1x14"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "Durazol"
+  ],
+  "hard": false
+ },
+ {
+  "id": 7,
+  "style": "HSV stromal",
+  "note": "HSV stromal keratitis OS, epi intact.\nEyezirgan 5x/day OS x 7 days then TID x 7 days.\nValtrex 500 mg PO BID long-term.\nPred Forte BID OS.",
+  "expected": [
+   {
+    "brand": "Eyezirgan",
+    "eye": "OS",
+    "freq": 5,
+    "mode": "taper",
+    "steps": "5x7,3x7"
+   },
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Valtrex"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 8,
+  "style": "RCE",
+  "note": "Recurrent erosion OD. BCL placed.\nTobrex QID OD while BCL in.\nMaxitrol ointment qhs OD x 2 wk. Then Muro 128 ung qhs x 3 months.",
+  "expected": [
+   {
+    "brand": "Tobrex",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Maxitrol Ointment",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "duration",
+    "days": 14
+   }
+  ],
+  "should_skip": [
+   "Muro 128"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 9,
+  "style": "drop-weekly taper",
+  "note": "Taper by 1 drop weekly: Pred Forte OS starting QID.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,3x7,2x7,1x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 10,
+  "style": "Fuchs no list drops",
+  "note": "Fuchs OU, guttae 3+, AM blur. Muro 128 5% QID OU. No other drops.\nDiscussed DMEK OD.",
+  "expected": [],
+  "should_skip": [
+   "Muro 128"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 11,
+  "style": "DSAEK late",
+  "note": "POM3 DSAEK OD. Graft clear. Pred Forte BID OD. Reduce to QD after 6 mo visit.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 12,
+  "style": "keratitis hourly",
+  "note": "Bacterial keratitis OS (CL wearer), 3x2 mm infiltrate. Cultures sent.\nFortified tobra/vanc q1h OS alternating (compounded). Vigamox q1h OS.\nCyclogyl 1% TID OS.",
+  "expected": [
+   {
+    "brand": "Cyclogyl",
+    "eye": "OS",
+    "freq": 3,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Vigamox"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 13,
+  "style": "rejection",
+  "note": "Endothelial rejection OD (KP line). Pred Forte q2h OD while awake x 3 days then QID.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "ongoing",
+    "comment": "initial q2h x3d phase not schedulable"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 14,
+  "style": "PTK",
+  "note": "PTK OD 1 wk ago. BCL out today, epi healed.\nLotemax gel BID OD x 2 wk then stop. Stop Vigamox.\nPF tears q1-2h prn.",
+  "expected": [
+   {
+    "brand": "Lotemax Gel",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "duration",
+    "days": 14
+   }
+  ],
+  "should_skip": [
+   "Vigamox"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 15,
+  "style": "DALK monthly arrows",
+  "note": "s/p DALK OS. Pred Forte: QID 1/12 → TID 1/12 → BID 1/12 → QD ongoing.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x30,3x30,2x30",
+    "comment": "then QD open-ended"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 16,
+  "style": "NK",
+  "note": "Neurotrophic keratopathy OS stage 2. Oxervate 6x/day x 8 wk (applying for coverage).\nErythromycin ung qhs OS. Stop all preserved drops.",
+  "expected": [
+   {
+    "brand": "Erythromycin Ointment",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Oxervate"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 17,
+  "style": "dry eye",
+  "note": "MGD/ADDE OU. Start Restasis BID OU. Warm compresses. Doxycycline 100 mg PO daily x 3 mo.",
+  "expected": [
+   {
+    "brand": "Restasis",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Doxycycline"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 18,
+  "style": "pterygium",
+  "note": "Pterygium excision + CAG OD POD7. Graft in place.\nMaxitrol QID OD x 1 wk, TID x 1 wk, BID x 1 wk, QD x 1 wk.\nMaxitrol ung qhs x 2 wks.",
+  "expected": [
+   {
+    "brand": "Maxitrol",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,3x7,2x7,1x7"
+   },
+   {
+    "brand": "Maxitrol Ointment",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "duration",
+    "days": 14
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 19,
+  "style": "times symbol",
+  "note": "Plan: FML 0.1% OD tid × 7d, bid × 7d, qd × 7d.",
+  "expected": [
+   {
+    "brand": "FML",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "taper",
+    "steps": "3x7,2x7,1x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 20,
+  "style": "steroid switch",
+  "note": "PKP OD 2y. IOP 26 on Pred Forte daily.\nSwitch Pred Forte to Lotemax daily OD. Start Timoptic BID OD.",
+  "expected": [
+   {
+    "brand": "Lotemax",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Timoptic",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Pred Forte"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 21,
+  "style": "acanthamoeba",
+  "note": "Acanthamoeba keratitis OS. PHMB 0.02% + Brolene hourly (compounded).\nAtropine 1% BID OS. No steroids.",
+  "expected": [
+   {
+    "brand": "Atropine",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Brolene",
+   "PHMB"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 22,
+  "style": "abrasion",
+  "note": "Corneal abrasion OD (fingernail). Erythro ung QID OD x 5 days. No patch.",
+  "expected": [
+   {
+    "brand": "Erythromycin Ointment",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "duration",
+    "days": 5
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 23,
+  "style": "no changes",
+  "note": "Graft clear, IOP 14. No changes. See in 6 mo.",
+  "expected": [],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 24,
+  "style": "unspecified taper",
+  "note": "Epi defect healed. D/c BCL. D/c Ocuflox.\nCont Pred Forte taper as previously instructed.",
+  "expected": [],
+  "should_skip": [
+   "Ocuflox"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 25,
+  "style": "VKC",
+  "note": "VKC OU, 14yo, Trantas dots.\nPataday 1 gtt daily OU. Restasis BID OU.\nFML QID x 1wk then BID x 1wk OU.",
+  "expected": [
+   {
+    "brand": "Pataday",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Restasis",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "FML",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,2x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 26,
+  "style": "arrow 4321",
+  "note": "Taper: Pred Fort OS 4→3→2→1 x 1 week each.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,3x7,2x7,1x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "Pred Fort"
+  ],
+  "hard": false
+ },
+ {
+  "id": 27,
+  "style": "exposure",
+  "note": "Exposure keratopathy OD (CN7 palsy). Lacri-Lube qhs OD. Taping at night. Consider tarsorrhaphy.",
+  "expected": [],
+  "should_skip": [
+   "Lacri-Lube"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 28,
+  "style": "LASIK flap",
+  "note": "Flap striae OD post-LASIK, refloated.\nVigamox QID x 1 wk OD. Pred Forte q2h x 1d then QID x 1 wk OD.",
+  "expected": [
+   {
+    "brand": "Vigamox",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   },
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7,
+    "comment": "day-1 q2h phase not schedulable"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 29,
+  "style": "dellen",
+  "note": "Dellen OD adjacent to bleb. Lotemax ointment qhs OD x 1 wk + PF tears QID.",
+  "expected": [
+   {
+    "brand": "Lotemax Ointment",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 30,
+  "style": "KCN no meds",
+  "note": "KCN OU, s/p CXL OU 2023. Topo stable. No meds.\nAllergy: Polytrim (rash).",
+  "expected": [],
+  "should_skip": [
+   "Polytrimethoprim"
+  ],
+  "misspelled": [],
+  "hard": false
+ }
+]

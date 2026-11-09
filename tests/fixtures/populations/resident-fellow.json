@@ -1,0 +1,571 @@
+[
+ {
+  "id": 1,
+  "style": "verbose",
+  "note": "Assessment and Plan: This is a 72 year old woman with primary open angle glaucoma in both eyes, currently well controlled. Intraocular pressures today were 15 mmHg in the right eye and 16 mmHg in the left eye. We will continue her latanaprost 0.005% one drop in both eyes nightly. We discussed the importance of adherence.",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "latanaprost"
+  ],
+  "hard": false
+ },
+ {
+  "id": 2,
+  "style": "hedging",
+  "note": "Plan: I discussed with the patient that we may need to consider adding a second agent such as Cosopt in the future if her pressure continues to rise. For now, continue Lumigan RC once daily at night in the left eye only.",
+  "expected": [
+   {
+    "brand": "Lumigan RC",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Cosopt"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 3,
+  "style": "uveitis",
+  "note": "Patient is a 45M presenting with acute anterior uveitis of the right eye (2+ cell). Started on prednisolone acetate 1% every hour while awake in the right eye, and cyclopentolate 1% three times a day in the right eye. Will see back in 5 days.",
+  "expected": [
+   {
+    "brand": "Cyclogyl",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Pred Forte"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 4,
+  "style": "post-op typo",
+  "note": "Seen with Dr. Staff. POD1 s/p cataract extraction left eye. Patient instructed to begin moxifloxicin four times daily for one week and Pred Forte four times daily for one week then twice daily for one week, all in the left eye.",
+  "expected": [
+   {
+    "brand": "Vigamox",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   },
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,2x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "moxifloxicin"
+  ],
+  "hard": false
+ },
+ {
+  "id": 5,
+  "style": "copied forward",
+  "note": "Copied from prior: 'Continue Combigan BID OU, Xalatan QHS OU.'\nToday: patient reports she stopped Combigan 2 months ago due to burning. IOP 20/21. We will switch her to Simbrinza twice daily both eyes and continue Xalatan.",
+  "expected": [
+   {
+    "brand": "Simbrinza",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Combigan"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 6,
+  "style": "consider",
+  "note": "Impression: allergic conjunctivitis bilaterally. Recommended olopatadine 0.2% (Pataday) once daily both eyes. Could consider a short course of Lotemax if not improving, but will hold off for now.",
+  "expected": [
+   {
+    "brand": "Pataday",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Lotemax"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 7,
+  "style": "typo eye",
+  "note": "The patient is a 60-year-old male with ocular hypertension in the right eye. Pressure 28. Started timolol maleate 0.5% twice a day in the rigth eye. Counselled re systemic side effects.",
+  "expected": [
+   {
+    "brand": "Timoptic",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [
+   "rigth"
+  ],
+  "hard": false
+ },
+ {
+  "id": 8,
+  "style": "may extend",
+  "note": "Likely bacterial conjunctivitis right eye. Started Polytrim drops 4 times daily for 7 days right eye. If left eye becomes involved, she may start it there too.",
+  "expected": [
+   {
+    "brand": "Polytrimethoprim",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "duration",
+    "days": 7
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 9,
+  "style": "trab",
+  "note": "Fellow note: post-op day 1 following trabeculectomy with MMC OS. Bleb formed, Seidel negative. IOP 8. Plan: prednisolone acetate 1% every 2 hours while awake OS, moxifloxacin QID OS x 2 weeks, atropine 1% BID OS. Stop all glaucoma drops in the left eye. Continue Xalatan in the right eye at night.",
+  "expected": [
+   {
+    "brand": "Vigamox",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "duration",
+    "days": 14
+   },
+   {
+    "brand": "Atropine",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Pred Forte"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 10,
+  "style": "chemical injury",
+  "note": "Patient seen in emergency for alkali injury both eyes. Irrigated to pH 7.5. Started erythromycin ointment four times a day both eyes, prednisolone acetate 1% four times a day both eyes, and cyclopentolate twice a day both eyes. Doxycycline 100 mg orally BID and vitamin C.",
+  "expected": [
+   {
+    "brand": "Erythromycin Ointment",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Pred Forte",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Cyclogyl",
+    "eye": "OU",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Doxycycline"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 11,
+  "style": "may need",
+  "note": "Dry eye disease both eyes, moderate. Recommend artificial tears four times daily and warm compresses. May need to start Xiidra or Restasis at follow up if not improving.",
+  "expected": [],
+  "should_skip": [
+   "Xiidra",
+   "Restasis"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 12,
+  "style": "HZO",
+  "note": "Herpes zoster ophthalmicus left, with pseudodendrites. Valacyclovir 1g TID PO x 7 days. Pred Forte QID OS. Erythromicin ointment at bedtime left eye.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Erythromycin Ointment",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Valacyclovir"
+  ],
+  "misspelled": [
+   "Erythromicin"
+  ],
+  "hard": false
+ },
+ {
+  "id": 13,
+  "style": "increase",
+  "note": "Plan was discussed with attending. Increase Pred Forte in the right eye from twice a day to four times a day. Continue Cosopt twice daily in the right eye. Left eye: no drops.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Cosopt",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 14,
+  "style": "q2h then QID",
+  "note": "Patient is a 30F contact lens wearer with a small peripheral infiltrate OD. Started Vigamox one drop every 2 hours while awake for 48 hours then four times daily. Discontinue contact lens use.",
+  "expected": [
+   {
+    "brand": "Vigamox",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "ongoing",
+    "comment": "first 48 h q2h not schedulable"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 15,
+  "style": "normal",
+  "note": "Normal exam. Patient reassured. No drops prescribed. Follow up as needed.",
+  "expected": [],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 16,
+  "style": "increase freq",
+  "note": "Patient with POAG both eyes. She has been on Travatan Z at bedtime in both eyes and Alphagan P BID right eye. Today IOP 19 and 15. Will increase Alphagan-P to three times daily right eye. Continue the rest.",
+  "expected": [
+   {
+    "brand": "Travatan Z",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Alphagan-P",
+    "eye": "OD",
+    "freq": 3,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 17,
+  "style": "steroid response",
+  "note": "Assessment: steroid-induced IOP rise in the left eye (IOP 31) on Durezol. Plan: Switch Durezol to Lotemax four times daily left eye for 1 week, then twice a day for 1 week, then stop. Start Dorzolamide-timolol twice a day left eye.",
+  "expected": [
+   {
+    "brand": "Lotemax",
+    "eye": "OS",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,2x7"
+   },
+   {
+    "brand": "Cosopt",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Durezol"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 18,
+  "style": "could consider",
+  "note": "Episcleritis right eye. Advised cool compresses, ibuprofen as needed. Could consider FML if persistent.",
+  "expected": [],
+  "should_skip": [
+   "FML"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 19,
+  "style": "long-term",
+  "note": "Pt is s/p PKP OD 5 yrs. Continuing Pred Forte once daily OD long-term as per cornea. Also on Xalatan OS for glaucoma, nightly. Patient asks about switching to preservative-free; may consider Monoprost next time.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OS",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Monoprost"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 20,
+  "style": "chalazion",
+  "note": "Left eye: chalazion. Warm compresses QID. Tobradex ointment twice a day for 2 weeks left eye.",
+  "expected": [
+   {
+    "brand": "TobraDex Ointment",
+    "eye": "OS",
+    "freq": 2,
+    "mode": "duration",
+    "days": 14
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 21,
+  "style": "bilateral iritis",
+  "note": "Iritis OU in context of HLA-B27. Pred Forte four times daily both eyes and Cyclogyl at bedtime both eyes. Will taper at next visit.",
+  "expected": [
+   {
+    "brand": "Pred Forte",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Cyclogyl",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 22,
+  "style": "off-list drug",
+  "note": "Ocular rosacea. Doxycycline 40 mg daily. Azasite not available in Canada; started erythromycin ointment at bedtime to lids both eyes.",
+  "expected": [
+   {
+    "brand": "Erythromycin Ointment",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Azasite",
+   "Doxycycline"
+  ],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 23,
+  "style": "single eye",
+  "note": "This is a 55M with narrow angles both eyes s/p LPI OU. Pressure 22 right, 18 left. Start latanoprost right eye qhs. Left eye monitor.",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OD",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 24,
+  "style": "stale plan",
+  "note": "Plan copied forward from 2025-03: Xalatan QHS OU, Cosopt BID OU.\nUpdated today 2026-11: Cosopt was stopped by Dr. X in June. Current: Xalatan QHS OU only.",
+  "expected": [
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [
+   "Cosopt"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 25,
+  "style": "viral",
+  "note": "Adenoviral conjunctivitis OU. Supportive care only, cool compresses and artificial tears. No antibiotics needed. Hand hygiene reviewed.",
+  "expected": [],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ },
+ {
+  "id": 26,
+  "style": "someone else",
+  "note": "Posterior scleritis OS on oral prednisone 60 mg via rheumatology. No topical drops needed. Of note, patient's husband uses Lumigan.",
+  "expected": [],
+  "should_skip": [
+   "Lumigan"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 27,
+  "style": "in clinic",
+  "note": "Corneal abrasion right eye. Moxiflaxacin QID right eye for 5 days. Cyclopentolate given in clinic for comfort.",
+  "expected": [
+   {
+    "brand": "Vigamox",
+    "eye": "OD",
+    "freq": 4,
+    "mode": "duration",
+    "days": 5
+   }
+  ],
+  "should_skip": [
+   "Cyclogyl"
+  ],
+  "misspelled": [
+   "Moxiflaxacin"
+  ],
+  "hard": false
+ },
+ {
+  "id": 28,
+  "style": "asymmetric",
+  "note": "She has POAG OU with asymmetric progression. Right eye: continue Azarga BID and Xalatan nightly. Left eye: continue Xalatan nightly. We might need to bring her for SLT on the right.",
+  "expected": [
+   {
+    "brand": "Azarga",
+    "eye": "OD",
+    "freq": 2,
+    "mode": "ongoing"
+   },
+   {
+    "brand": "Xalatan",
+    "eye": "OU",
+    "freq": 1,
+    "mode": "ongoing"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 29,
+  "style": "unconfirmed",
+  "note": "Mild NPDR, no DME. No drops. Optimize A1c. Note: patient may be on Timolol 0.25% from another clinic? Unclear; we will call the pharmacy to confirm.",
+  "expected": [],
+  "should_skip": [
+   "Timolol 0.25%"
+  ],
+  "misspelled": [],
+  "hard": true
+ },
+ {
+  "id": 30,
+  "style": "Thygeson",
+  "note": "Thygeson's SPK OU. Started loteprednol 0.5% QID OU for 1 week then BID for 1 week then daily for 1 week. Bandage lens not needed.",
+  "expected": [
+   {
+    "brand": "Lotemax",
+    "eye": "OU",
+    "freq": 4,
+    "mode": "taper",
+    "steps": "4x7,2x7,1x7"
+   }
+  ],
+  "should_skip": [],
+  "misspelled": [],
+  "hard": false
+ }
+]
