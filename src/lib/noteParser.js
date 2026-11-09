@@ -8,7 +8,7 @@ import { correctSpelling } from "./spelling.js";
 //
 // The result is a draft only. It reaches a patient only after a clinician
 // has checked each drop in Eye Drop Tracker.
-import { FREQ_OPTIONS, TAPER_PRESETS } from "./regimen.js";
+import { FREQ_OPTIONS } from "./regimen.js";
 
 const MAX_DAYS = 365;
 
@@ -33,18 +33,22 @@ const EXTRA_NAMES = [
   ["duotrav", "DuoTrav PQ"],
   ["iso?pto\\s*atropine", "Atropine"],
   ["cyclopentolate", "Cyclogyl"],
+  ["polytrim|polymyxin(?: b)?[-/ ]+trimethoprim", "Polytrimethoprim"],
+  ["neomycin[-/ ]+polymyxin(?: b)?[-/ ]+dexamethasone", "Maxitrol"],
+  ["pilo", "Pilocarpine"],
+  ["timo", "Timoptic"],
 ];
 
 // Mentioned often in eye notes but not eye drops on the calendar. They are
 // reported so the clinician knows they were seen and left out.
 const NOT_DROPS = [
-  ["acetazolamide|diamox|methazolamide", "taken by mouth"],
+  ["acetazolamide|diamox|methazolamide|prednisone", "taken by mouth"],
   ["artificial tears|tear gel|tears|lubricant|refresh|systane|hylo|genteal|thera ?tears|lacrilube", "lubricant, not in the drug list"],
   // "AT" and "ATs" only in capitals, so "at bedtime" is not read as tears.
   ["\\bATs?\\b", "lubricant, not in the drug list", ""],
 ];
 
-const PAST = /\b(allerg\w*|intoleran\w*|previously|prior(?:ly)?|failed|was on|were on|history of|hx of|switched from|reaction to|stopped (?:due|because)|in the past)\b/i;
+const PAST = /\b(allerg\w*|intoleran\w*|previously|prior(?:ly)?|failed|was on|were on|history of|hx of|switched from|reaction to|stopped (?:due|because)|in the past|avoid\w*|(?<!be )used)\b/i;
 const STOP = /\b(stop|stopped|d\/c|dc'?d|discontinue[ds]?|discontinued|hold|held|cease)\b/i;
 const PRN = /\b(prn|as needed|as required|when needed)\b/i;
 
@@ -56,7 +60,7 @@ const FREQS = [
   [/\bq\.?i\.?d\.?(?![a-z])|\bfour times\b/i, 4],
   [/\bt\.?i\.?d\.?(?![a-z])|\bthree times\b/i, 3],
   [/\bb\.?i\.?d\.?(?![a-z])|\bbd\b|\btwice\b/i, 2],
-  [/\bq\.?h\.?s\.?(?![a-z])|\bnightly\b|\bat bedtime\b|\bat night\b/i, 1],
+  [/\bq\.?h\.?s\.?(?![a-z])|\bh\.?s\b|\bnightly\b|\bat bedtime\b|\bat night\b/i, 1],
   [/\bq\.?d\.?(?![a-z])|\bq\s?am\b|\bq\s?pm\b|\bdaily\b|\bonce a day\b|\bonce\b|\bqday\b|\bevery day\b/i, 1],
 ];
 
@@ -65,20 +69,31 @@ const FREQS = [
 // they are part of a phrase such as "right away" or "left over".
 const SIDE_PHRASE = "(?!\\s*(?:away|now|after|before|here|there|over|behind|alone|side of)\\b)";
 const EYE_WORDS = [
-  [/\bOU\b|\bBE\b/, /\bboth eyes\b|\bbilateral(?:ly)?\b/i, "OU"],
-  [/\bOD\b|\bRE\b/, new RegExp(`\\bright\\b${SIDE_PHRASE}`, "i"), "OD"],
-  [/\bOS\b|\bLE\b/, new RegExp(`\\bleft\\b${SIDE_PHRASE}`, "i"), "OS"],
+  [/\b[Oo][Uu]\b|\bBE\b/, /\bboth eyes\b|\bbilateral(?:ly)?\b/i, "OU"],
+  [/\b[Oo][Dd]\b|\bRE\b/, new RegExp(`\\bright\\b${SIDE_PHRASE}`, "i"), "OD"],
+  [/\b[Oo][Ss]\b|\bLE\b/, new RegExp(`\\bleft\\b${SIDE_PHRASE}`, "i"), "OS"],
 ];
 // "OD" also means once daily, which is why ISMP Canada lists it as error-prone.
-const OD_ALONE = /\bOD\b/;
+const OD_ALONE = /\b[Oo][Dd]\b/;
 // Hourly drops (keratitis, endophthalmitis) are more than the calendar can
 // show, so they are left for the clinician to write by hand.
 const HOURLY = /\bq\.?\s?(?:1\s?h(?:r|rs|ours?)?|30\s?min)\b|\bhourly\b|\bevery (?:hour|30 minutes|half hour)\b/i;
 // Words that make a drop current even when the sentence also mentions the past.
 const CURRENT = /\b(start|started|begin|continue|cont|restart|resume|use|add|new)\b/i;
+// Mentioned but not ordered: something considered, given once in clinic,
+// replaced, or stopped after the fact.
+const HYPOTHETICAL = /\b(consider\w*|may add|could add|might add|option of|discuss\w* adding|if (?:iop|pressure|needed|not)\b)/i;
+const IN_CLINIC = /\b(?:given|instilled|administered|applied)\b[^.;]{0,40}\b(?:in clinic|in (?:the )?office|today)\b|\bin clinic\b|\bx\s?[12] (?:given|in clinic)\b/i;
+const REPLACED = /\b(?:replacing|instead of|in place of|change|switch(?:ed)?(?: from)?|swap)\s+$/i;
+const STOPPED_AFTER = /\b(?<!then )(?:has been |was |were |is )?(?:stopped|discontinued|d\/c'?d|dc'?d)\b/i;
+const ORAL = /\b\d+\s*mg\b|\bp\.?o\.?\b|\bby mouth\b|\btab(?:let)?s?\b/i;
+const LABEL_ALLERGY = /\b(?:allerg\w*|intoleran\w*|adverse reactions?)\s*:[^:]*$/i;
+const SAME_OTHER_EYE = /\bsame (?:in|for|to) (?:the )?(?:fellow|other) eye\b/i;
 
 const UNIT_DAYS = { d: 1, day: 1, days: 1, w: 7, wk: 7, wks: 7, week: 7, weeks: 7, mo: 30, month: 30, months: 30 };
-const DURATION = /(?:\bx|×|\bfor)\s*(\d{1,3}|an?|one|two|three|four|five|six|seven|eight|ten|fourteen)\s*(days?|d|wks?|w|weeks?|mo|months?)\b/i;
+const DURATION = /(?:\bx|×|\bfor)\s*(\d{1,3}|an?|one|two|three|four|five|six|seven|eight|ten|fourteen)\s*(?:more\s+|additional\s+|extra\s+)?(days?|d|wks?|w|weeks?|mo|months?)\b/i;
+// "x 5/7" is five days and "x 2/52" two weeks, as many notes write them.
+const SLASH_DURATION = /(?:\bx|×|\bfor)\s*(\d{1,2})\/(7|52)\b/;
 const WORD_NUMBERS = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, ten: 10, fourteen: 14 };
 const DROPS = /\b([1-3])\s*(?:gtts?|drops?)\b/i;
 
@@ -148,6 +163,8 @@ function eyesIn(text) {
 const findEye = (text) => eyesIn(text)[0] || null;
 
 const findDays = (text) => {
+  const slash = text.match(SLASH_DURATION);
+  if (slash) return Math.min(MAX_DAYS, Number(slash[1]) * (slash[2] === "52" ? 7 : 1));
   const m = text.match(DURATION);
   const n = WORD_NUMBERS[m?.[1].toLowerCase()] ?? Number(m?.[1]);
   return m ? Math.min(MAX_DAYS, n * UNIT_DAYS[m[2].toLowerCase()]) : null;
@@ -188,6 +205,8 @@ function sentences(note) {
     let m;
     while ((m = re.exec(line))) {
       if (/\b[a-z]\.[a-z]$/i.test(line.slice(Math.max(0, m.index - 4), m.index))) continue;
+      // Common abbreviations do not end a sentence.
+      if (m[0] === "." && /\b(?:incl|e\.g|i\.e|approx|vs|etc|esp|pt|dr|re)$/i.test(line.slice(Math.max(0, m.index - 6), m.index))) continue;
       out.push(line.slice(start, m.index + 1));
       start = m.index + 1;
     }
@@ -208,7 +227,13 @@ export function parseNote(input, formulary) {
   const pattern = new RegExp(`(?<![\\w-])(${names.map((n) => n.pattern).sort((a, b) => b.length - a.length).join("|")})(?![\\w])`, "gi");
   // Misspelled drug names beside a dose are corrected and flagged. Unknown
   // words in a drug's place are listed, so nothing is dropped silently.
-  const { text: note, corrections, unknown } = correctSpelling(input, formulary, pattern);
+  const { text: corrected, corrections, unknown } = correctSpelling(input, formulary, pattern);
+  // A line that starts with "then" carries on the instruction above it.
+  const note = corrected.replace(/[,;]?\s*\r?\n\s*(?=then\b)/gi, " ");
+  // If the whole note names only one eye (a post-op note for one eye), a drop
+  // with no eye of its own most likely means that eye.
+  const noteEyes = new Set(eyesIn(note));
+  const onlyEye = noteEyes.size === 1 && !noteEyes.has("OU") ? [...noteEyes][0] : null;
   const drops = [];
   const skipped = [];
   let sectionEye = null;
@@ -217,7 +242,12 @@ export function parseNote(input, formulary) {
     // A numbered problem ("2. Left POAG") or an eye heading ("OD:") sets the
     // eye for the lines under it, until a blank line.
     const eyeHeading = raw.match(/^\s*(OD|OS|OU|RE|LE|BE|right eye|left eye|both eyes)\s*:/i);
-    sectionEye = eyeHeading ? findEye(eyeHeading[1].length > 2 ? eyeHeading[1] : eyeHeading[1].toUpperCase()) : /^\s*\d+[.)]/.test(raw) ? headingEye(raw) : raw.trim() ? sectionEye : null;
+    const headEye = eyeHeading && findEye(eyeHeading[1].length > 2 ? eyeHeading[1] : eyeHeading[1].toUpperCase());
+    // "OD:" alone heads the lines below it. "Right eye: new CRAO" with text
+    // after it covers that line only.
+    const lineOnly = headEye && raw.slice(eyeHeading[0].length).trim() !== "";
+    sectionEye = headEye && !lineOnly ? headEye : lineOnly ? null : /^\s*\d+[.)]/.test(raw) ? headingEye(raw) : raw.trim() ? sectionEye : null;
+    const lineEye = lineOnly ? headEye : null;
     for (const sentence of sentences(raw)) {
       for (const [re, why, flags = "i"] of NOT_DROPS) {
         const m = sentence.match(new RegExp(re, flags));
@@ -271,16 +301,38 @@ export function parseNote(input, formulary) {
         // Past use is judged on the few words next to the drug, so "Allergic
         // conjunctivitis: start Pataday" and "s/p failed trab, continue
         // Cosopt" are kept.
-        const near = item.before.split(/[:;,.(]/).pop().split(/\s+/).slice(-4).join(" ");
+        // Abbreviations such as "incl." do not end the phrase.
+        const near = item.before.split(/[:;,(]|\.(?=\s+[A-Z])/).pop().split(/\s+/).slice(-4).join(" ");
         const ownStart = own.split(/[,;.]/)[0];
         if ((PAST.test(near) || PAST.test(ownStart)) && !CURRENT.test(near) && !CURRENT.test(ownStart)) {
           skipped.push({ name: brand, why: "mentioned as past use or an allergy" });
           continue;
         }
-        if (STOP.test(context) || /^\W*(?:stop|d\/c|discontinue)/i.test(own)) {
+        if (LABEL_ALLERGY.test(item.before)) {
+          skipped.push({ name: brand, why: "listed as an allergy" });
+          continue;
+        }
+        if (STOP.test(context) || /^\W*(?:stop|d\/c|discontinue)/i.test(own) || (STOPPED_AFTER.test(own) && !CURRENT.test(near))) {
           skipped.push({ name: brand, why: "marked as stopped" });
           continue;
         }
+        if (HYPOTHETICAL.test(near)) {
+          skipped.push({ name: brand, why: "considered, not started" });
+          continue;
+        }
+        if (REPLACED.test(item.before)) {
+          skipped.push({ name: brand, why: "being replaced" });
+          continue;
+        }
+        if (IN_CLINIC.test(sentence) && !CURRENT.test(near)) {
+          skipped.push({ name: brand, why: "given in clinic, not a drop to use at home" });
+          continue;
+        }
+        if (ORAL.test(own)) {
+          skipped.push({ name: brand, why: "taken by mouth" });
+          continue;
+        }
+        entry.started = CURRENT.test(near) || CURRENT.test(ownStart);
         if (PRN.test(own) || (shared && PRN.test(shared))) {
           skipped.push({ name: brand, why: "as needed, so it is not on the calendar" });
           continue;
@@ -293,10 +345,20 @@ export function parseNote(input, formulary) {
 
         const named = eyesIn(own);
         if (new Set(named).size > 1) flags.push("The note names more than one eye for this drop. Check which eye is meant.");
-        entry.eye = findEye(own) || (shared && findEye(shared));
-        if (!entry.eye && sectionEye) {
+        entry.eye = SAME_OTHER_EYE.test(own) ? "OU" : findEye(own) || (shared && findEye(shared));
+        const firstInSentence = item === items[0];
+        const before = firstInSentence ? findEye(item.before) : null;
+        if (!entry.eye && lineEye) {
+          entry.eye = lineEye;
+        } else if (!entry.eye && before) {
+          entry.eye = before;
+          flags.push("The eye was taken from earlier in the sentence. Check it.");
+        } else if (!entry.eye && sectionEye) {
           entry.eye = sectionEye;
           flags.push(`The note does not say which eye. ${sectionEye === "OS" ? "Left" : sectionEye === "OD" ? "Right" : "Both"} was taken from the heading it sits under.`);
+        } else if (!entry.eye && onlyEye) {
+          entry.eye = onlyEye;
+          flags.push(`The drop does not say which eye. ${onlyEye === "OS" ? "Left" : "Right"} was used, the only eye this note names.`);
         } else if (!entry.eye) {
           entry.eye = "OU";
           flags.push("The note does not say which eye, so both eyes was used.");
@@ -320,19 +382,15 @@ export function parseNote(input, formulary) {
         } else if (sched.after) {
           entry.freq = sched.after.freq;
           if (sched.after.note) flags.push(sched.after.note);
-          if (/\btaper\w*\b/i.test(own)) {
-            entry.mode = "taper";
-            entry.steps = TAPER_PRESETS[0].build(entry.freq);
-            flags.push("The note says taper without the steps, so a weekly taper was used.");
-          }
+          // A taper without its steps is never invented. The drop stays at
+          // its current frequency until the clinician chooses the steps.
+          if (/\btaper\w*\b/i.test(own)) flags.push("The note says taper without the steps. Choose the taper steps before printing, or the drop stays at this frequency.");
         } else {
           entry.freq = usual;
           flags.push(`The note gives no frequency, so the usual ${usual === 1 ? "once" : `${usual} times`} a day was used.`);
-          if (/\btaper\w*\b/i.test(own)) {
-            entry.mode = "taper";
-            entry.steps = TAPER_PRESETS[0].build(entry.freq);
-            flags.push("The note says taper without the steps, so a weekly taper was used.");
-          }
+          // A taper without its steps is never invented. The drop stays at
+          // its current frequency until the clinician chooses the steps.
+          if (/\btaper\w*\b/i.test(own)) flags.push("The note says taper without the steps. Choose the taper steps before printing, or the drop stays at this frequency.");
         }
         if (entry.eye === "OD" && OD_ALONE.test(own) && !sched.steps.length && !sched.after)
           flags.push('"OD" can mean once daily as well as right eye. Check which eye is meant.');
@@ -355,7 +413,14 @@ export function parseNote(input, formulary) {
       }
     }
   }
-  const found = dedupe(drops);
+  // A drug stopped, replaced or listed as an allergy anywhere in the note is
+  // not kept from another mention ("on timolol ... D/C timolol"), unless that
+  // mention starts it again.
+  const notOrdered = new Set(skipped.filter((x) => /stopped|replaced|allergy/.test(x.why)).map((x) => x.name));
+  const found = dedupe(drops.filter((d) => !notOrdered.has(d.brand) || d.started)).map((d) => {
+    delete d.started;
+    return d;
+  });
   for (const c of corrections) {
     const d = found.find((x) => names.some((n) => n.brand === x.brand && new RegExp(`^(?:${n.pattern})$`, "i").test(c.to)));
     if (d) d.flags.unshift(`The note says "${c.from}", read as ${d.brand}. Check the spelling.`);
@@ -376,7 +441,21 @@ function dedupe(drops) {
       out.push(d);
     } else if (d.flags.length < out[seen.get(key)].flags.length) out[seen.get(key)] = d;
   }
-  return out;
+  const plan = (d) => JSON.stringify([d.freq, d.mode, d.durationDays, d.startDay, d.steps]);
+  const merged = [];
+  for (const d of out) {
+    // Different plans for the right and the left eye are both kept.
+    const overlaps = (a, b) => a === b || a === "OU" || b === "OU";
+    const same = merged.find((m) => m.brand === d.brand && m.startDay === d.startDay && (overlaps(m.eye, d.eye) || plan(m) === plan(d)));
+    if (!same) merged.push(d);
+    // The same plan for the right eye and the left eye is one plan for both.
+    else if (plan(same) === plan(d) && new Set([same.eye, d.eye]).size === 2 && same.eye !== "OU" && d.eye !== "OU") same.eye = "OU";
+    // The same drug written twice with different instructions is kept once,
+    // and flagged, rather than put on the calendar twice.
+    else if (!same.flags.some((f) => f.startsWith("The note gives")))
+      same.flags.unshift(`The note gives ${d.brand} more than once with different instructions. Check which is right.`);
+  }
+  return merged;
 }
 
 // Medication list entries from Oscar Rx (brand, generic or custom name with
