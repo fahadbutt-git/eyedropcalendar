@@ -70,8 +70,8 @@ const FREQS = [
 const SIDE_PHRASE = "(?!\\s*(?:away|now|after|before|here|there|over|behind|alone|side of)\\b)";
 const EYE_WORDS = [
   [/\b[Oo][Uu]\b|\bBE\b/, /\bboth eyes\b|\bbilateral(?:ly)?\b/i, "OU"],
-  [/\b[Oo][Dd]\b|\bRE\b/, new RegExp(`\\bright\\b${SIDE_PHRASE}`, "i"), "OD"],
-  [/\b[Oo][Ss]\b|\bLE\b/, new RegExp(`\\bleft\\b${SIDE_PHRASE}`, "i"), "OS"],
+  [/\b[Oo][Dd]\b|\bRE\b|\b[Rr]\.? eye\b/, new RegExp(`\\bright\\b${SIDE_PHRASE}`, "i"), "OD"],
+  [/\b[Oo][Ss]\b|\bLE\b|\b[Ll]\.? eye\b/, new RegExp(`\\bleft\\b${SIDE_PHRASE}`, "i"), "OS"],
 ];
 // "OD" also means once daily, which is why ISMP Canada lists it as error-prone.
 const OD_ALONE = /\b[Oo][Dd]\b/;
@@ -82,12 +82,17 @@ const HOURLY = /\bq\.?\s?(?:1\s?h(?:r|rs|ours?)?|30\s?min)\b|\bhourly\b|\bevery 
 const CURRENT = /\b(start|started|begin|continue|cont|restart|resume|use|add|new)\b/i;
 // Mentioned but not ordered: something considered, given once in clinic,
 // replaced, or stopped after the fact.
-const HYPOTHETICAL = /\b(consider\w*|may add|could add|might add|option of|discuss\w* adding|if (?:iop|pressure|needed|not)\b)/i;
+const HYPOTHETICAL = /\b(consider\w*|may add|could add|might add|may use|can use|could use|option of|discuss\w* adding|if (?:iop|pressure|needed|not)\b)/i;
 const IN_CLINIC = /\b(?:given|instilled|administered|applied)\b[^.;]{0,40}\b(?:in clinic|in (?:the )?office|today)\b|\bin clinic\b|\bx\s?[12] (?:given|in clinic)\b/i;
 const REPLACED = /\b(?:replacing|instead of|in place of|change|switch(?:ed)?(?: from)?|swap)\s+$/i;
 const STOPPED_AFTER = /\b(?<!then )(?:has been |was |were |is )?(?:stopped|discontinued|d\/c'?d|dc'?d)\b/i;
 const ORAL = /\b\d+\s*mg\b|\bp\.?o\.?\b|\bby mouth\b|\btab(?:let)?s?\b/i;
 const LABEL_ALLERGY = /\b(?:allerg\w*|intoleran\w*|adverse reactions?)\s*:[^:]*$/i;
+// Drops for someone else, planned for later, or ruled out.
+const SOMEONE_ELSE = /\b(?:husband|wife|spouse|partner|son|daughter|mother|father|parent|sibling|brother|sister|family member)'?s?\b[^.;]{0,40}$/i;
+const LATER = /\b(?:post-?op drops|to start (?:on )?(?:the )?day of surgery|after (?:the )?surgery|per protocol)\b/i;
+const RULED_OUT = /\bno\s*$/i;
+const GIVEN_NOW = /^\s*(?:\d[^a-z]*)?(?:was |were )?(?:given|instilled|administered)\b/i;
 const SAME_OTHER_EYE = /\bsame (?:in|for|to) (?:the )?(?:fellow|other) eye\b/i;
 
 const UNIT_DAYS = { d: 1, day: 1, days: 1, w: 7, wk: 7, wks: 7, week: 7, weeks: 7, mo: 30, month: 30, months: 30 };
@@ -308,7 +313,28 @@ export function parseNote(input, formulary) {
           skipped.push({ name: brand, why: "mentioned as past use or an allergy" });
           continue;
         }
-        if (LABEL_ALLERGY.test(item.before)) {
+        // The line so far, for labels such as "ALLERGIES:" that head a list
+        // split by semicolons.
+        const lineSoFar = raw.slice(0, Math.max(0, raw.indexOf(sentence))) + item.before;
+        // A drug in brackets takes its context from the words before them.
+        const bracketed = /\(\s*$/.test(item.before) ? item.before.replace(/\(\s*$/, "") : "";
+        if (SOMEONE_ELSE.test(item.before)) {
+          skipped.push({ name: brand, why: "for someone else" });
+          continue;
+        }
+        if (LATER.test(sentence)) {
+          skipped.push({ name: brand, why: "planned for later" });
+          continue;
+        }
+        if (RULED_OUT.test(item.before) || GIVEN_NOW.test(own)) {
+          skipped.push({ name: brand, why: RULED_OUT.test(item.before) ? "ruled out" : "given in clinic, not a drop to use at home" });
+          continue;
+        }
+        if (bracketed && (STOP.test(bracketed) || PAST.test(bracketed))) {
+          skipped.push({ name: brand, why: "marked as stopped" });
+          continue;
+        }
+        if (LABEL_ALLERGY.test(item.before) || LABEL_ALLERGY.test(lineSoFar)) {
           skipped.push({ name: brand, why: "listed as an allergy" });
           continue;
         }

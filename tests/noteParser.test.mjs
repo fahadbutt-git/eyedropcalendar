@@ -214,3 +214,35 @@ test("notes from the independent review are read safely", () => {
   assert.equal(parseNote("TobraDex ung OS hs x 5/7", F).drops[0].durationDays, 5);
   assert.equal(parseNote("rx vigamox 1gtt od qid x7d", F).drops[0].eye, "OD");
 });
+
+test("drops for someone else, for later or ruled out are not added", () => {
+  for (const note of [
+    "Pt's husband is on Xalatan for glaucoma (seen separately). No drops required.",
+    "Plan phaco/IOL OD Dec 3. Post-op drops (Vigamox, Pred Forte, Ilevro) to start day of surgery per protocol.",
+    "If mucopurulent discharge, may use Polytrim OD qid x 7 days.",
+    "Pt allergic to neomycin -> no Maxitrol.",
+    "Pt stopped all drops on own 2 mo ago (Xalatan OU). No drops for now.",
+    "s/p SLT OD today. Pre-tx Iopidine given.",
+    "ALLERGIES: sulfa (rash); timolol (bronchospasm, asthma)",
+    "Cont rest.",
+  ])
+    assert.deepEqual(parseNote(note, F).drops, [], note);
+  // A plan to start now is still read.
+  assert.equal(parseNote("Will start latanoprost 0.005% one drop in both eyes at bedtime.", F).drops[0].brand, "Xalatan");
+});
+
+test("misspelled and shortened names are recognised, and only in dosing context", () => {
+  const read = (note) => parseNote(note, F).drops.map((d) => d.brand);
+  assert.deepEqual(read("Azop OU tid, cont"), ["Azopt"]);
+  assert.deepEqual(read("dorzolamid-timolol OD bid"), ["Cosopt"]);
+  assert.deepEqual(read("Lumigan RC OU qhs; Alfagan P OU tid"), ["Lumigan RC", "Alphagan-P"]);
+  assert.deepEqual(read("Vigamax OD qid x1 wk, Pred Fort OD qid x1 wk"), ["Vigamox", "Pred Forte"]);
+  assert.deepEqual(read("cipro gtts LE qid x 5 days"), ["Ciloxan"]);
+  assert.deepEqual(read("Erythro oint OU qhs x 2 wks"), ["Erythromycin Ointment"]);
+  assert.deepEqual(read("Xalitin qhs OU"), ["Xalatan"]);
+  // Not close to any drug, or not beside a dose: never a drug.
+  assert.deepEqual(read("Zorbax qid OU"), []);
+  assert.deepEqual(parseNote("Zorbax qid OU", F).unknown, ["Zorbax"]);
+  assert.deepEqual(read("Prednisone 40 mg PO daily"), []);
+  assert.deepEqual(read("Discussed Xalatn options at length"), []);
+});

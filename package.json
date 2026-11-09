@@ -17,6 +17,8 @@
     "app:screens": "node scripts/store-screens.mjs",
     "ext:build": "node scripts/extension.mjs",
     "reader:bench": "node scripts/reader-bench.mjs",
+    "reader:spelling": "node scripts/spelling-bench.mjs",
+    "reader:score": "node scripts/reader-score.mjs tests/fixtures/independent-notes-1.json && node scripts/reader-score.mjs tests/fixtures/independent-notes-2.json",
     "oscar:standin": "node oscar/standin/server.mjs",
     "oscar:e2e": "node oscar/e2e.mjs",
     "oscar:resilience": "node oscar/resilience.mjs",
