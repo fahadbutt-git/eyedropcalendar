@@ -35,7 +35,7 @@ const COMMON = new Set(
   reduce change switch minutes hours dilated dilation drops exam check follow-up followup visit clinic office given prior previous
   operated operative fellow other affected surgery post-op postop pre-op preop inflammation infection discharge redness pain itch
   itching itchy burning gtts lubricate lubricating lubricant ointment refresh systane optive genteal thera
-  prednisone methylprednisolone acetazolamide methazolamide rest`.split(/\s+/)
+  prednisone methylprednisolone acetazolamide methazolamide rest alpha beta gamma interferon`.split(/\s+/)
 );
 
 // Optimal string alignment distance: insertions, deletions, substitutions
@@ -91,7 +91,7 @@ export function recognise(word, names, doseAfter = true) {
   if (w.length < 4 || COMMON.has(w)) return null;
   // Written without its space or hyphen ("LumiganRC"): the same name.
   const same = names.find((n) => n.key === w);
-  if (same) return compact(word) === compact(same.text) && word.replace(/[^A-Za-z]/g, "") !== same.text.replace(/[^A-Za-z]/g, "") ? same.text : null;
+  if (same) return word !== same.text ? same.text : null;
   // One answer only. Names that are the same word ("timolol" the generic
   // and "Timolol 0.25%") count once, and a name that starts every other
   // match ("erythromycin" and "Erythromycin Ointment") is that match.
@@ -163,7 +163,8 @@ export function correctSpelling(note, formulary, pattern) {
           edits.push({ at: w.at, end: w.end, from: w.text, to: "ointment", form: true });
           continue;
         }
-        const one = recognise(w.text, names, DOSING.test(line.slice(w.end, w.end + 30)));
+        // Part of a longer hyphenated name ("alpha-2b") is not a drug name.
+        const one = /^-\w/.test(line.slice(w.end)) ? null : recognise(w.text, names, DOSING.test(line.slice(w.end, w.end + 30)));
         if (one) {
           edits.push({ at: w.at, end: w.end, from: w.text, to: one });
           continue;

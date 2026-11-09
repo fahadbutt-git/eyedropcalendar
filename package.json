@@ -18,7 +18,7 @@
     "ext:build": "node scripts/extension.mjs",
     "reader:bench": "node scripts/reader-bench.mjs",
     "reader:spelling": "node scripts/spelling-bench.mjs",
-    "reader:score": "node scripts/reader-score.mjs tests/fixtures/independent-notes-1.json && node scripts/reader-score.mjs tests/fixtures/independent-notes-2.json",
+    "reader:score": "node scripts/reader-score.mjs tests/fixtures/independent-notes-1.json && node scripts/reader-score.mjs tests/fixtures/independent-notes-2.json && node scripts/reader-score.mjs tests/fixtures/independent-notes-3.json",
     "oscar:standin": "node oscar/standin/server.mjs",
     "oscar:e2e": "node oscar/e2e.mjs",
     "oscar:resilience": "node oscar/resilience.mjs",
@@ -54,5 +54,5 @@
     "type": "git",
     "url": "https://github.com/fahadbutt-git/eyedropcalendar"
   },
-  "extensionVersion": "0.5.1"
+  "extensionVersion": "0.5.2"
 }
