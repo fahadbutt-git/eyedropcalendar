@@ -171,7 +171,7 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
               <SignaturePad signature={signature} setSignature={setSignature} />
               <span className="field-hint">
                 Signing confirms you have reviewed this prescription. The signature is used for this prescription only, is not
-                saved, and comes off if the drops or patient change. Or leave it blank and sign the printout by hand.
+                saved, and comes off if the drops or patient change. You can also leave it blank and sign the printout by hand.
               </span>
             </div>
             <Field label="Notes" optional>

@@ -154,7 +154,7 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
         {qr && (
           <div className="aside-qr">
             <img src={qr} alt="QR code that opens this drop plan on a phone" />
-            <p>Before the patient leaves, scan this with their phone camera so the plan is on the phone, not only on paper.</p>
+            <p>Before the patient leaves, scan this with their phone camera so the plan is on the phone as well as on paper.</p>
           </div>
         )}
         <p className="hint">The link holds the drops and dates only, never the patient&apos;s name or health details.</p>

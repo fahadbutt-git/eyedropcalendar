@@ -114,7 +114,7 @@ function Footer({ patientView }) {
         </p>
         {!patientView && (
           <p>
-            A clinical aid, not a substitute for clinical judgement. Check every calendar and prescription before it goes to a
+            A clinical aid that does not replace clinical judgement. Check every calendar and prescription before it goes to a
             patient. Defaults follow Canadian product monographs and the Ontario Drug Benefit formulary. Patient details are not
             sent to us.
           </p>
@@ -153,7 +153,7 @@ class ErrorBoundary extends Component {
     return (
       <main className="empty" id="main">
         <h1>Something went wrong</h1>
-        <p>Your formulary and prescriber details are safe. The current patient will need to be entered again.</p>
+        <p>Your formulary and prescriber details are safe. Enter the current patient again.</p>
         <button className="btn primary" onClick={restart}>
           Start again
         </button>

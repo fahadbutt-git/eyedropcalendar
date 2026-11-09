@@ -170,7 +170,7 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
       </section>
       <p className="small muted">
         Cap colours follow the American Academy of Ophthalmology class convention. Confirm against the dispensed product. LU codes
-        are the Ontario Drug Benefit Limited Use codes that can apply to each drug; the prescriber picks one on the prescription.
+        are the Ontario Drug Benefit Limited Use codes that can apply to each drug. The prescriber picks one on the prescription.
       </p>
 
       {editing && <MedEditor initial={editing} existing={formulary} onSave={save} onClose={() => setEditing(null)} />}

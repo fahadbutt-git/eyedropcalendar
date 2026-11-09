@@ -22,7 +22,7 @@ export default function OpenPlan({ formulary, hasDrops, onOpen }) {
     const missing = plan.entries.map((x) => x.brand).filter((b) => !formulary.some((m) => m.brand === b));
     onOpen(plan, missing);
     setText("");
-    setError(missing.length ? `Not in your formulary, so check these drops: ${[...new Set(missing)].join(", ")}.` : "");
+    setError(missing.length ? `These drops are not in your formulary. Check them: ${[...new Set(missing)].join(", ")}.` : "");
   };
 
   return (

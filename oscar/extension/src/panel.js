@@ -116,7 +116,7 @@ function start() {
       ? `<h2>Not recognised</h2><ul class="skipped">${r.unknown.map((w) => `<li><strong>${esc(w)}</strong>: not on the drug list. If it is a drop, add it by hand in Eye Drop Tracker.</li>`).join("")}</ul>`
       : "";
     if (!r.drops.length && !r.skipped.length)
-      return `<p class="muted">No eye drops recognised here. Choose another note, select the plan in the note and click the button again, or open Eye Drop Tracker and add the drops by hand. The patient is filled in, and the plan can still be added to this chart.</p>${unknown}`;
+      return `<p class="muted">No eye drops recognised here. Choose another note, select the plan in the note and click the button again, or open Eye Drop Tracker and add the drops by hand. The patient's details are filled in, and the plan can still be added to this chart.</p>${unknown}`;
     const items = r.drops
       .map((d, i) => {
         const med = medOf(d.brand);
