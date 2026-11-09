@@ -97,4 +97,17 @@ RTC 1 week with IOP.`,
     notes: [{ date: "2026-11-05T09:00:00-05:00", text: "POD1 CE/IOL OD. Gtts: Vgmx 1 gtt QID OD x7d. RTC 1 wk." }],
     rx: [],
   },
+  {
+    // A new patient: no notes and no medications yet.
+    id: 6,
+    firstName: "Robin",
+    lastName: "NEWCHART",
+    sex: "F",
+    dob: "1970-07-07",
+    hin: "0000000006",
+    address: "6 Example Street",
+    reason: "New patient",
+    notes: [],
+    rx: [],
+  },
 ];

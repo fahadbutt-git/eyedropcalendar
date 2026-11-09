@@ -172,6 +172,33 @@ await panel.locator("text=Drops found").waitFor();
 assert.equal(await panel.locator('[data-act="source"]').inputValue(), "selection");
 assert.match(await panel.locator(".drops").textContent(), /3 times a day for 7 days/);
 
+// The clinician keeps typing after the panel read the note: the panel offers
+// to read it again, and the new drop appears.
+await panel.locator('[data-act="close"]').click();
+await third.reload();
+await openPanel(third);
+await panel.locator("text=Drops found").waitFor();
+await third.locator('textarea[name="caseNote_note"]').press("End");
+await third.locator('textarea[name="caseNote_note"]').pressSequentially(" Xalatan 1 gtt qhs OU.");
+await panel.locator(".note-changed").waitFor();
+await panel.locator('[data-act="reread"]').click();
+await panel.locator(".note-changed").waitFor({ state: "detached" });
+assert.deepEqual((await panel.locator(".drops > li strong").allTextContents()).sort(), ["Vigamox", "Xalatan"], "today's note read again");
+
+// A new chart with no notes or medications says so.
+const fresh = await context.newPage();
+await fresh.goto(`${OSCAR}/casemgmt/forward.jsp?action=view&demographicNo=6`);
+await openPanel(fresh);
+await fresh.locator("#edt-oscar-panel").locator("text=no notes or medications to read yet").waitFor();
+
+// Oscar refused the encounter: the panel reads nothing and says why.
+await fresh.goto(`${OSCAR}/casemgmt/forward.jsp?action=view&demographicNo=6&denied=1`);
+await openPanel(fresh);
+await fresh.locator("#edt-oscar-panel .error").waitFor();
+assert.match(await fresh.locator("#edt-oscar-panel .error").textContent(), /does not allow you to open this patient/);
+assert.equal(await fresh.locator("#edt-oscar-panel .who").count(), 0, "no patient details shown");
+await fresh.close();
+
 // Prototype.js on the Oscar page does not reach the extension: the plan and
 // the saved note above went through JSON intact.
 assert.equal(await third.evaluate(() => JSON.stringify({ list: [1, 2] })), '{"list":"[\\"1\\",\\"2\\"]"}', "the page itself is affected");

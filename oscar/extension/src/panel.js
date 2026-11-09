@@ -70,6 +70,8 @@ function start() {
     }
   };
   const read = () => {
+    state.readDraft = draft();
+    state.stale = false;
     state.result = state.source === "rx" ? parseRxList(state.rx, formulary) : fromLink(sourceText()) || parseNote(sourceText(), formulary);
     state.chosen = new Set(state.result.drops.map((_, i) => i));
     state.opened = false;
@@ -97,10 +99,12 @@ function start() {
         ${state.error ? `<p class="error" role="alert">${esc(state.error)}${state.errorDetail ? `<span class="detail">Details for support: ${esc(state.errorDetail)}</span>` : ""}</p>` : ""}
         ${(state.partial || []).map((m) => `<p class="note-partial">${esc(m)}. Select the drops in the note, or use today's note.</p>`).join("")}
         ${state.busy ? `<p class="muted">Reading the chart…</p>` : ""}
+        ${state.stale ? `<div class="note-changed" role="status"><p>Today's note has changed since it was read.</p><button class="secondary" data-act="reread">Read today's note again</button></div>` : ""}
         ${state.patient ? `<p class="who"><strong>${esc(state.patient.name)}</strong>${state.patient.dob ? `<span>Born ${esc(state.patient.dob)}</span>` : ""}</p>` : ""}
         ${options.length ? `<label class="field">Read drops from<select data-act="source">${options.join("")}</select></label>` : ""}
         ${state.source && state.source !== "rx" ? `<details class="src"><summary>Show the text</summary><pre>${esc(sourceText())}</pre></details>` : ""}
         ${r ? drops(r) : ""}
+        ${state.patient && !state.busy && !state.error && !state.source ? `<p class="muted">This chart has no notes or medications to read yet. Write the plan in today's note and open the panel again, or add the drops by hand.</p>` : ""}
       </div>
       <footer>
         <button class="primary" data-act="open" ${!state.patient || state.opened ? "disabled" : ""}>${state.opened ? "Opened in Eye Drop Tracker" : state.chosen.size ? `Open ${state.chosen.size} in Eye Drop Tracker` : "Open Eye Drop Tracker and add drops by hand"}</button>
@@ -155,6 +159,12 @@ function start() {
     if (!e.isTrusted) return;
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (act === "close") close();
+    if (act === "reread") {
+      if (draft()) state.source = "draft";
+      if (state.source) read();
+      state.stale = false;
+      return render();
+    }
     if (act === "setup") {
       await chrome.runtime.sendMessage({ type: "setup" }).catch(() => {});
       state.offerButton = false;
@@ -184,6 +194,13 @@ function start() {
 
   async function load() {
     const id = openPatientId(window.location, document);
+    // Oscar has refused this encounter to the person signed in, so the panel
+    // reads nothing either.
+    if (id && /access denied/i.test(document.title + " " + (document.body?.innerText || "").slice(0, 400))) {
+      state.busy = false;
+      state.error = "Oscar does not allow you to open this patient's encounter, so nothing was read.";
+      return render();
+    }
     if (!id) {
       state.busy = false;
       state.error = "Open a patient's encounter in Oscar, then click the Eye Drop Tracker button.";
@@ -203,8 +220,9 @@ function start() {
       // Selected text first, then today's unsaved note if it names a drop,
       // then the newest saved note that does.
       const draftHasDrops = draft() && (fromLink(draft()) || parseNote(draft(), formulary).drops.length);
-      state.source = selection.length > 10 ? "selection" : draftHasDrops ? "draft" : withDrops?.id || notes[0]?.id || (rx.length ? "rx" : null);
+      state.source = selection.length > 10 ? "selection" : draftHasDrops ? "draft" : withDrops?.id || notes[0]?.id || (rx.length ? "rx" : draft() ? "draft" : null);
       if (state.source) read();
+      else state.readDraft = draft();
     } catch (e) {
       state.error = e.message || "Oscar could not be read.";
       state.errorDetail = e.detail || "";
@@ -239,7 +257,18 @@ function start() {
   // Keyboard: focus moves into the panel when it opens, Escape closes it and
   // returns focus to where the clinician was in Oscar.
   const returnTo = document.activeElement;
+  // Typing in today's note after the panel read it: offer to read it again,
+  // so the panel never shows a plan the note no longer says.
+  const onNoteInput = (e) => {
+    if (e.target?.name !== "caseNote_note" || state.busy || state.stale || !state.patient) return;
+    if (draft() !== (state.readDraft ?? "")) {
+      state.stale = true;
+      render();
+    }
+  };
+  document.addEventListener("input", onNoteInput, true);
   function close() {
+    document.removeEventListener("input", onNoteInput, true);
     host.remove();
     window.__edtPanel = null;
     if (returnTo?.isConnected) returnTo.focus?.();

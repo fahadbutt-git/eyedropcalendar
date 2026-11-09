@@ -160,7 +160,10 @@ const server = createServer(async (req, res) => {
   if (path === "/oscar/CaseManagementEntry.do" || path === "/oscar/casemgmt/forward.jsp") {
     const p = PATIENTS.find((x) => x.id === Number(url.searchParams.get("demographicNo")));
     if (!p) return send(res, 404, page("Not found", "No such patient"), "text/html");
-    const latest = [...p.notes].sort((a, b) => b.date.localeCompare(a.date))[0];
+    // Oscar refuses an encounter outside the clinician's program with this page.
+    if (url.searchParams.get("denied") === "1")
+      return send(res, 200, `<html><head><title></title></head><body><input type="hidden" name="demographicNo" value="${p.id}"><h3 style="color:red">Access Denied</h3><p>You cannot access this client's Encounter because he/she is not in your program domain.</p></body></html>`, "text/html");
+    const latest = [...p.notes].sort((a, b) => b.date.localeCompare(a.date))[0] || { text: "" };
     return send(res, 200, page(`Encounter - ${p.lastName}, ${p.firstName}`, `<input type="hidden" name="demographicNo" value="${p.id}">
       <div class="bar">Encounter: ${escapeHtml(p.lastName)}, ${escapeHtml(p.firstName)} &middot; ${p.dob}</div>
       <div class="note">${escapeHtml(latest.text)}</div>
