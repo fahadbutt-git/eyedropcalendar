@@ -6,6 +6,7 @@ import { downloadFile } from "../../lib/download.js";
 import { APP_SCHEME, allowExactTimes, cancelReminders, isNative, onAppResume, scheduleReminders } from "../../lib/native.js";
 import { usePersistentState } from "../../lib/storage.js";
 import { Icon } from "../ui.jsx";
+import { NATIVE_APP_LIVE } from "../../config.js";
 
 const platform = () => (/iphone|ipad|ipod/i.test(navigator.userAgent) ? "ios" : /android/i.test(navigator.userAgent) ? "android" : "other");
 const HOW = {
@@ -148,7 +149,7 @@ export default function Reminders({ plan: shared, id, code }) {
               ))}
             <p className="small">{REMOVE_ONE}</p>
           </details>
-          {platform() !== "other" && (
+          {NATIVE_APP_LIVE && platform() !== "other" && (
             <a className="small" href={`${APP_SCHEME}://p/${code}`}>
               Have the Eye Drop Tracker app? Open this plan in the app
             </a>

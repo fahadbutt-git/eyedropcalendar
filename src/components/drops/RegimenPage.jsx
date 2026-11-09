@@ -10,7 +10,7 @@ import ImportReview from "./ImportReview.jsx";
 import Cautions from "../Cautions.jsx";
 import { cautionsFor } from "../../data/cautions.js";
 
-function PatientForm({ patient, setPatient }) {
+function PatientForm({ patient, setPatient, checkIdentity }) {
   const bind = (key) => ({ value: patient[key], onChange: (e) => setPatient({ ...patient, [key]: e.target.value }) });
   return (
     <section className="patient-form" aria-labelledby="pt-h">
@@ -18,10 +18,10 @@ function PatientForm({ patient, setPatient }) {
         Patient
       </h2>
       <Field label="Patient name">
-        <input className="input" autoComplete="off" {...bind("name")} />
+        <input className="input" autoComplete="off" {...bind("name")} onBlur={checkIdentity} />
       </Field>
       <Field label="Date of birth">
-        <input className="input mono" type="date" max={toISO(new Date())} {...bind("dob")} />
+        <input className="input mono" type="date" max={toISO(new Date())} {...bind("dob")} onBlur={checkIdentity} />
       </Field>
       <Field label="Health card number" optional>
         <input className="input" autoComplete="off" {...bind("hcn")} />
@@ -33,7 +33,26 @@ function PatientForm({ patient, setPatient }) {
   );
 }
 
-export default function RegimenPage({ patient, setPatient, drops, setDrops, formulary, startDate, warnings, go, reset, openPlan, imported, setReviewed, setConfirmed }) {
+// Shown when the name or date of birth is changed to someone else while the
+// last plan is still on screen, so it never carries over to the next patient.
+function NewPatientCheck({ startNewPatient, keepSamePatient }) {
+  return (
+    <div className="notice warn new-patient-check" role="alert" aria-labelledby="np-h">
+      <h2 id="np-h">Is this a new patient?</h2>
+      <p>The patient details changed, but the drops, start date and print choices are still from the last plan.</p>
+      <div className="row">
+        <button className="btn primary" onClick={startNewPatient}>
+          New patient, clear the plan
+        </button>
+        <button className="btn" onClick={keepSamePatient}>
+          Same patient, keep the plan
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function RegimenPage({ patient, setPatient, drops, setDrops, formulary, startDate, warnings, go, reset, openPlan, checkIdentity, askNew, startNewPatient, keepSamePatient, imported, setReviewed, setConfirmed }) {
   const list = drops.filter((d) => d.brand);
   const update = (i, patch) => setDrops(list.map((d, j) => (j === i ? { ...d, ...patch } : d)));
   const remove = (i) => setDrops(list.filter((_, j) => j !== i));
@@ -57,7 +76,8 @@ export default function RegimenPage({ patient, setPatient, drops, setDrops, form
 
       <OpenPlan formulary={formulary} hasDrops={list.length > 0} onOpen={openPlan} />
 
-      <PatientForm patient={patient} setPatient={setPatient} />
+      <PatientForm patient={patient} setPatient={setPatient} checkIdentity={checkIdentity} />
+      {askNew && list.length > 0 && <NewPatientCheck startNewPatient={startNewPatient} keepSamePatient={keepSamePatient} />}
 
       <section aria-labelledby="drops-h" className="drops-section">
         <div className="section-head">
@@ -101,9 +121,15 @@ export default function RegimenPage({ patient, setPatient, drops, setDrops, form
 
       <div className="actionbar">
         <span>
-          {!list.length ? "Add at least one drop to continue" : imported && !imported.reviewed ? "Confirm the drops read from Oscar to continue" : `${list.length} drop${list.length > 1 ? "s" : ""}`}
+          {!list.length
+            ? "Add at least one drop to continue"
+            : askNew
+              ? "Answer whether this is a new patient to continue"
+              : imported && !imported.reviewed
+                ? "Confirm the drops read from Oscar to continue"
+                : `${list.length} drop${list.length > 1 ? "s" : ""}`}
         </span>
-        <button className="btn primary lg" disabled={!list.length || (imported && !imported.reviewed)} onClick={() => go("schedule")}>
+        <button className="btn primary lg" disabled={!list.length || askNew || (imported && !imported.reviewed)} onClick={() => go("schedule")}>
           Next: calendar
         </button>
       </div>

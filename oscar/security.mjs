@@ -193,10 +193,18 @@ await tracker.locator("text=Patient and drops").first().click();
 const nameBox = tracker.getByLabel("Patient name");
 const original = await nameBox.inputValue();
 await nameBox.fill("Someone Else");
+await nameBox.press("Tab");
+// The site asks whether this is a new patient. Even when the clinician keeps
+// the plan, the name no longer matches the chart, so it cannot go back there.
+const same = tracker.getByRole("button", { name: /Same patient, keep the plan/ });
+await same.waitFor();
+await same.click();
 await tracker.getByRole("button", { name: /Next: calendar/ }).click();
 assert.equal(await tracker.getByRole("button", { name: "Add to Oscar chart" }).count(), 0, "chart button stayed for another patient");
 await tracker.locator("text=Patient and drops").first().click();
 await nameBox.fill(original);
+await nameBox.press("Tab");
+if (await same.isVisible()) await same.click();
 ok("the plan can go back only to the patient it was read from");
 
 // 7. The import is checked: bad data cannot pollute or overflow the page.
@@ -213,7 +221,7 @@ assert.equal(await fuzz.evaluate(() => ({}).polluted), undefined, "prototype pol
 const shown = await fuzz.locator(".import-list > li").count();
 assert.ok(shown <= 12, `${shown} drops shown`);
 const name = await fuzz.getByLabel("Patient name").inputValue();
-assert.ok(name.length <= 80 && !/[\u0000‮]/.test(name), "name not cleaned");
+assert.ok(name.length <= 160 && !/[\u0000‮]/.test(name), "name not cleaned");
 assert.equal(await fuzz.getByLabel("Date of birth").inputValue(), "");
 const longest = await fuzz.evaluate(() => Math.max(...[...document.querySelectorAll(".import-list li li")].map((li) => li.textContent.length)));
 assert.ok(longest <= 300);

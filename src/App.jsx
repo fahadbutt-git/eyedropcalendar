@@ -3,7 +3,8 @@ import { APP_NAME, CONTACT_EMAIL, COPYRIGHT_YEAR, OWNERS, REPO_URL } from "./con
 import TermsGate, { TERMS_VERSION, legalLink } from "./components/TermsGate.jsx";
 import { DRUG_CLASSES, FORMULARY_VERSION, SEED_FORMULARY } from "./data/formulary.js";
 import { dropWarnings } from "./lib/checks.js";
-import { isValidISO, parseISO, toISO } from "./lib/dates.js";
+import { fmtLong, isValidISO, parseISO, toISO } from "./lib/dates.js";
+import { differentPerson } from "./lib/samePerson.js";
 import { newSlot, toEntries } from "./lib/regimen.js";
 import { codeFromUrl, decodeRegimen, newNonce } from "./lib/share.js";
 import { isNative, onPlanLink } from "./lib/native.js";
@@ -29,6 +30,8 @@ const TITLES = { regimen: "Patient and drops", schedule: "Calendar", rx: "Prescr
 const IDLE_MS = 30 * 60 * 1000;
 const blankRx = () => ({ date: toISO(new Date()), notes: "", items: {} });
 const BLANK_PATIENT = { name: "", dob: "", hcn: "", address: "" };
+const BLANK_OWNER = { name: "", dob: "" };
+const todayISO = () => toISO(new Date());
 const BLANK_PRESCRIBER = { name: "", license: "", clinic: "", street: "", city: "", phone: "", fax: "" };
 const defaultSettings = () => ({
   start: toISO(new Date()),
@@ -40,6 +43,9 @@ const defaultSettings = () => ({
   capColours: true,
   size: "standard",
   nonce: newNonce(),
+  // The start date of a plan opened from a link, so moving it can warn that
+  // tapers and courses restart.
+  opened: "",
 });
 
 // Text from the extension or storage: trimmed, limited and without control
@@ -61,7 +67,7 @@ function checkImport(v) {
     confirmed: Array.isArray(v.confirmed) ? v.confirmed.slice(0, 20).map((k) => cleanText(k, 40)) : [],
     reviewed: v.reviewed === true,
     fromLink: v.fromLink === true,
-    patient: { name: cleanText(v.patient?.name, 80), dob: isValidISO(v.patient?.dob) ? v.patient.dob : "" },
+    patient: { name: cleanText(v.patient?.name, 160), dob: isValidISO(v.patient?.dob) ? v.patient.dob : "" },
   };
 }
 
@@ -82,8 +88,10 @@ function checkSettings(s) {
     // Older saved settings had only a large print tick box.
     size: ["standard", "large", "compact"].includes(s.size) ? s.size : s.large === true ? "large" : "standard",
     nonce: typeof s.nonce === "string" && /^[a-z0-9]{4,16}$/.test(s.nonce) ? s.nonce : d.nonce,
+    opened: isValidISO(s.opened) ? s.opened : "",
   };
 }
+const checkOwner = (o) => (o && typeof o === "object" ? { name: cleanText(o.name, 160), dob: isValidISO(o.dob) ? o.dob : "" } : null);
 const checkDrops = (list) =>
   Array.isArray(list)
     ? list.slice(0, 12).flatMap((d) => {
@@ -160,6 +168,28 @@ class ErrorBoundary extends Component {
       </main>
     );
   }
+}
+
+// Who the calendar or prescription is for, so a plan is never printed under
+// the wrong name.
+function PatientBar({ patient, go }) {
+  const dob = isValidISO(patient.dob) ? fmtLong(parseISO(patient.dob)) : "";
+  const name = patient.name.trim();
+  return (
+    <p className={`patient-bar no-print ${name ? "" : "missing"}`}>
+      {name ? (
+        <>
+          <span className="field-label">Patient</span> <b>{name}</b>
+          {dob && <span className="mono">Born {dob}</span>}
+        </>
+      ) : (
+        <b>No patient name entered</b>
+      )}
+      <button className="link-btn" onClick={() => go("regimen")}>
+        {name ? "Change" : "Add the patient"}
+      </button>
+    </p>
+  );
 }
 
 function Header({ children }) {
@@ -258,6 +288,24 @@ function ClinicianApp() {
   const [drops, setDrops] = usePersistentState("edt.drops", [], { ...session, check: checkDrops });
   const [settings, setSettings] = usePersistentState("edt.schedule.v3", defaultSettings, { ...session, check: checkSettings });
   const [rx, setRx] = usePersistentState("edt.rx", blankRx, session);
+  // The person the plan on screen was made for. A different name or date of
+  // birth typed over it asks whether this is a new patient.
+  const [owner, setOwner] = usePersistentState("edt.owner", BLANK_OWNER, { ...session, check: checkOwner });
+  const [askNew, setAskNew] = useState(false);
+  // Saved prescriber details are confirmed once in each tab before a
+  // prescription prints, so no one prints under another prescriber's licence.
+  // Held in memory only.
+  const [prescriberOk, setPrescriberOk] = useState("");
+  const prescriberKey = (p) => `${(p.name || "").trim()}|${(p.license || "").trim()}`;
+  // Typing a new name or licence number is a choice made in this tab, so it
+  // counts as confirmed. Editing only the address or phone does not.
+  const editPrescriber = (p) => {
+    if (prescriberKey(p) !== prescriberKey(prescriber)) setPrescriberOk(prescriberKey(p));
+    setPrescriber(p);
+  };
+  // Today, refreshed when the tab comes back into use, so dates never go
+  // stale in a tab left open overnight.
+  const [today, setToday] = useState(todayISO);
   // A signature is drawn for one prescription and held in memory only, never
   // in browser storage. Any change to the drops or patient means the
   // prescription has not been reviewed in its new form, so it comes off.
@@ -303,6 +351,8 @@ function ClinicianApp() {
   const clearPatient = () => {
     setImported(null);
     setPatient(BLANK_PATIENT);
+    setOwner(BLANK_OWNER);
+    setAskNew(false);
     setDrops([]);
     setRx(blankRx());
     setSignature("");
@@ -317,8 +367,75 @@ function ClinicianApp() {
   const hasPatient = Object.values(patient).some(Boolean) || drops.length > 0;
   useIdle(hasPatient, IDLE_MS, () => {
     clearPatient();
+    setPrescriberOk("");
     setCleared(true);
   });
+
+  // A name or date of birth changed while drops are on screen: same person,
+  // or a new patient? Blank details are filled in without asking.
+  const checkIdentity = () => {
+    if (!drops.length) return;
+    if (differentPerson(owner, patient)) setAskNew(true);
+    else {
+      setAskNew(false);
+      setOwner({ name: patient.name.trim() || owner.name, dob: patient.dob || owner.dob });
+    }
+  };
+  // New patient: the plan, dates, print choices and patient code all start
+  // again. Only the details just typed for the new person stay.
+  const startNewPatient = () => {
+    const keep = {
+      ...BLANK_PATIENT,
+      name: !owner.name || differentPerson({ name: owner.name }, { name: patient.name }) ? patient.name : "",
+      dob: !owner.dob || owner.dob !== patient.dob ? patient.dob : "",
+    };
+    clearPatient();
+    setPatient(keep);
+    setOwner({ name: keep.name.trim(), dob: keep.dob });
+  };
+  const keepSamePatient = () => {
+    setAskNew(false);
+    setOwner({ name: patient.name.trim(), dob: patient.dob });
+  };
+
+  // The first drop for a patient. If the name or date of birth on screen is
+  // not the person the last plan was for, that plan's dates, print choices
+  // and patient code do not carry over. A start date left in the past by an
+  // idle tab moves to today, unless the plan was opened from a link.
+  const dropCount = useRef(drops.length);
+  useEffect(() => {
+    const was = dropCount.current;
+    dropCount.current = drops.length;
+    if (was > 0 || !drops.length) return;
+    setAskNew(false);
+    if (differentPerson(owner, patient)) {
+      setSettings(defaultSettings());
+      setRx(blankRx());
+    } else if (!settings.opened && settings.start < todayISO()) setSettings((s) => ({ ...s, start: todayISO() }));
+    setOwner({ name: patient.name.trim() || owner.name, dob: patient.dob || owner.dob });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drops.length]);
+
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "hidden") return;
+      const now = todayISO();
+      setToday(now);
+      setSettings((s) => (!dropCount.current && !s.opened && s.start < now ? { ...s, start: now } : s));
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [setSettings]);
+
+  // The QR code library is fetched while online, so a calendar opened later
+  // without a connection still gets its code.
+  useEffect(() => {
+    import("qrcode").catch(() => {});
+  }, []);
   // The notice is for whoever comes back to the desk. It goes once a new
   // patient is started.
   useEffect(() => {
@@ -328,7 +445,7 @@ function ClinicianApp() {
   // The extension's drops are checked like any other outside data, and only
   // drugs in this clinic's drug list are taken.
   const oscar = useOscarBridge((d) => {
-    const patientFromOscar = { ...BLANK_PATIENT, name: cleanText(d.patient?.name, 80), dob: isValidISO(d.patient?.dob) ? d.patient.dob : "" };
+    const patientFromOscar = { ...BLANK_PATIENT, name: cleanText(d.patient?.name, 160), dob: isValidISO(d.patient?.dob) ? d.patient.dob : "" };
     // A plan link from an earlier Eye Drop Tracker chart note opens exactly
     // as saved, keeping its patient code so the patient's ticks carry over.
     if (typeof d.code === "string" && d.code) {
@@ -341,6 +458,7 @@ function ClinicianApp() {
       if (hasPatient && !window.confirm("Replace the patient on screen with the one from Oscar?")) return;
       clearPatient();
       setPatient(patientFromOscar);
+      setOwner({ name: patientFromOscar.name, dob: patientFromOscar.dob });
       openPlan(plan);
       setImported({ handoff: cleanText(d.handoff, 64), patient: patientFromOscar, flags: {}, skipped: [], reviewed: false, fromLink: true });
       return;
@@ -357,6 +475,7 @@ function ClinicianApp() {
     const stamp = Date.now().toString(36);
     const ids = rows.map((_, i) => `d${stamp}x${i}`);
     setPatient(patientFromOscar);
+    setOwner({ name: patientFromOscar.name, dob: patientFromOscar.dob });
     setDrops(rows.length ? rows.map((r, i) => ({ ...r.entry, id: ids[i] })) : [newSlot()]);
     setImported({
       handoff: cleanText(d.handoff, 64),
@@ -373,15 +492,23 @@ function ClinicianApp() {
 
   // A plan opened from a patient's link keeps its start date, dose times and
   // plan ID. Each drop gets a fresh row id for editing.
+  // Print choices start fresh, and a link without a patient code gets a new one.
   const openPlan = (plan) => {
+    dropCount.current = plan.entries.length;
     setDrops(plan.entries.map((e, i) => ({ ...e, id: `d${Date.now().toString(36)}o${i}` })));
-    setSettings((s) => ({ ...s, start: plan.start, wake: plan.wake, bed: plan.bed, nonce: plan.nonce || s.nonce }));
+    setSettings({ ...defaultSettings(), start: plan.start, wake: plan.wake, bed: plan.bed, nonce: plan.nonce || newNonce(), opened: plan.start });
   };
 
   // A plan opened by hand (Change a plan from an earlier visit) is no longer
-  // the one read from Oscar, so the link back to that chart is dropped.
+  // the one read from Oscar, so the link back to that chart is dropped. The
+  // link carries no patient details, so none are kept from the last patient.
   const openPlanByHand = (plan) => {
     setImported(null);
+    setPatient(BLANK_PATIENT);
+    setOwner(BLANK_OWNER);
+    setAskNew(false);
+    setRx(blankRx());
+    setSignature("");
     openPlan(plan);
   };
   // The plan goes back to Oscar only while the patient on screen is still the
@@ -401,7 +528,7 @@ function ClinicianApp() {
               key={key}
               className={`step ${tab === key ? "active" : ""}`}
               aria-current={tab === key ? "step" : undefined}
-              disabled={i > 0 && (!entries.length || needsReview)}
+              disabled={i > 0 && (!entries.length || needsReview || askNew)}
               onClick={() => go(key)}
             >
               <span className="step-num">{i + 1}</span> <span className="long">{label}</span>
@@ -435,11 +562,16 @@ function ClinicianApp() {
             go={go}
             reset={reset}
             openPlan={openPlanByHand}
+            checkIdentity={checkIdentity}
+            askNew={askNew}
+            startNewPatient={startNewPatient}
+            keepSamePatient={keepSamePatient}
             imported={imported}
             setReviewed={(reviewed) => setImported((v) => (v ? { ...v, reviewed, confirmed: reviewed ? v.confirmed : [] } : v))}
             setConfirmed={(confirmed, reviewed) => setImported((v) => (v ? { ...v, confirmed, reviewed } : v))}
           />
         )}
+        {terms === TERMS_VERSION && (tab === "schedule" || tab === "rx") && entries.length > 0 && <PatientBar patient={patient} go={go} />}
         {terms === TERMS_VERSION && tab === "schedule" && (
           <SchedulePage
             entries={entries}
@@ -458,7 +590,11 @@ function ClinicianApp() {
             formulary={formulary.list}
             patient={patient}
             prescriber={prescriber}
-            setPrescriber={setPrescriber}
+            setPrescriber={editPrescriber}
+            prescriberConfirmed={!!(prescriber.name || "").trim() && prescriberOk === prescriberKey(prescriber)}
+            confirmPrescriber={() => setPrescriberOk(prescriberKey(prescriber))}
+            today={today}
+            setToday={setToday}
             rx={rx}
             setRx={setRx}
             signature={signature}

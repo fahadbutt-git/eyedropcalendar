@@ -1,3 +1,5 @@
+import { flushSync } from "react-dom";
+import { toISO } from "../../lib/dates.js";
 import { LU_CRITERIA, LU_NOT_MET } from "../../data/formulary.js";
 import { EYES } from "../../lib/regimen.js";
 import { Field, Icon, printSheets } from "../ui.jsx";
@@ -33,7 +35,7 @@ function PrescriberForm({ prescriber, setPrescriber }) {
             <span className="prefix" aria-hidden="true">
               Dr.
             </span>
-            <input className="input" aria-label="Prescriber name and credentials, after Dr." placeholder="Jane Smith, MD FRCSC"
+            <input id="rx-prescriber-name" className="input" aria-label="Prescriber name and credentials, after Dr." placeholder="Jane Smith, MD FRCSC"
               value={prescriber.name}
               onChange={(e) => setPrescriber({ ...prescriber, name: e.target.value.replace(/^\s*dr\.?\s+/i, "") })}
             />
@@ -107,11 +109,41 @@ function ItemRow({ entry, med, opt, setOpt }) {
   );
 }
 
-export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, rx, setRx, signature: drawn, setSignature, start, warnings, go }) {
+// Saved prescriber details are confirmed once in each browser tab, so a
+// prescription is never printed under someone else's name and licence.
+function PrescriberCheck({ prescriber, confirm }) {
+  const change = () => {
+    const box = document.getElementById("rx-prescriber-name");
+    box?.scrollIntoView({ block: "center" });
+    box?.focus({ preventScroll: true });
+  };
+  return (
+    <section className="notice info prescriber-check" aria-labelledby="rx-who-h">
+      <h2 id="rx-who-h" className="field-label">
+        Confirm the prescriber
+      </h2>
+      <p>
+        Prescribing as <b>{drName(prescriber.name)}</b>, CPSO {prescriber.license}
+      </p>
+      <div className="row">
+        <button className="btn sm primary" onClick={confirm}>
+          That&apos;s me
+        </button>
+        <button className="btn sm" onClick={change}>
+          Change
+        </button>
+      </div>
+    </section>
+  );
+}
+
+export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, prescriberConfirmed, confirmPrescriber, today, setToday, rx, setRx, signature: drawn, setSignature, start, warnings, go }) {
   // A signature is drawn for each prescription and never saved, as the
   // Ontario College of Pharmacists does not accept a stored signature image
   // pasted onto prescriptions. It is held in memory by the clinician app.
   const signature = isSignature(drawn);
+  // `today` changes when the tab comes back into use, so this renders again.
+  const date = rx.dateEdited ? rx.date : today && toISO(new Date());
   if (!entries.length)
     return (
       <div className="card card-b empty">
@@ -141,9 +173,21 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
     !patient.name && "patient name",
     !(prescriber.street && prescriber.city) && "practice address",
     !patient.dob && "date of birth",
-    !rx.date && "prescription date",
+    !date && "prescription date",
   ].filter(Boolean);
-  const print = () => printSheets("rx");
+  // Until the date is changed by hand, the prescription is dated the day it prints.
+  const print = () => {
+    if (!rx.dateEdited) flushSync(() => setToday(toISO(new Date())));
+    printSheets("rx");
+  };
+  const saved = !!(prescriber.name || "").trim() && !!(prescriber.license || "").trim();
+  const why = !items.length
+    ? "Tick at least one drug to print."
+    : missing.length
+      ? "Complete the details still needed to print."
+      : !prescriberConfirmed
+        ? "Confirm the prescriber to print."
+        : "";
 
   return (
     <div className="rx-layout">
@@ -156,7 +200,7 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
           </div>
           <div className="card-b stack" style={{ gap: 10 }}>
             <Field label="Date">
-              <input className="input" type="date" value={rx.date} onChange={(e) => setRx({ ...rx, date: e.target.value })} />
+              <input className="input" type="date" value={date} onChange={(e) => setRx({ ...rx, date: e.target.value, dateEdited: true })} />
             </Field>
             <div className="rx-items">
               {entries.map((e) => (
@@ -180,16 +224,22 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
           </div>
         </section>
         {missing.length > 0 && <div className="notice warn small">Still needed: {missing.join(", ")}. Prescriber details are under the preview.</div>}
-        <button className="btn primary lg" onClick={print} disabled={!items.length}>
+        {saved && !prescriberConfirmed && <PrescriberCheck prescriber={prescriber} confirm={confirmPrescriber} />}
+        <button className="btn primary lg" onClick={print} disabled={!!why} aria-describedby={why ? "rx-print-why" : undefined}>
           {Icon.print} Print prescription
         </button>
+        {why && (
+          <p className="hint print-why" id="rx-print-why">
+            {why}
+          </p>
+        )}
       </aside>
       <div className="rx-print">
         <PrescriptionSheet
           items={items}
           prescriber={{ ...prescriber, name: drName(prescriber.name) }}
           patient={patient}
-          date={rx.date}
+          date={date}
           notes={rx.notes}
           start={start}
           signature={signature}

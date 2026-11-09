@@ -12,9 +12,27 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Eye Drops" />
     <title>Eye Drop Tracker</title>
+    <style>
+      .boot-fail { visibility: hidden; animation: edt-boot 0s 8s forwards; max-width: 36rem; margin: 64px auto; padding: 0 24px; font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a; }
+      .boot-fail h1 { font-size: 1.5rem; margin: 0 0 12px; }
+      @keyframes edt-boot { to { visibility: visible; } }
+      noscript .boot-fail { visibility: visible; animation: none; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot-fail">
+        <h1>Eye Drop Tracker did not load</h1>
+        <p>Check the internet connection and reload the page. Once the site has opened with a connection, it also opens without one.</p>
+        <p>Patients: your printed calendar still shows every dose.</p>
+      </div>
+    </div>
+    <noscript>
+      <div class="boot-fail">
+        <h1>Eye Drop Tracker needs JavaScript</h1>
+        <p>Turn on JavaScript in this browser, then reload the page.</p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

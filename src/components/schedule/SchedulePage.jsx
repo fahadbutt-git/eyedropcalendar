@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSheetMeasure } from "./useSheetMeasure.js";
-import { addDays, fmtShort, isValidISO, parseISO } from "../../lib/dates.js";
+import { addDays, fmtLong, fmtShort, isValidISO, parseISO } from "../../lib/dates.js";
 import { scheduleSpan } from "../../lib/calendar.js";
-import { dosesOnDay } from "../../lib/regimen.js";
+import { dosesOnDay, modeOf } from "../../lib/regimen.js";
 import { chartNote } from "../../lib/chartNote.js";
 import AddToChart from "./AddToChart.jsx";
 import { codeFromUrl, encodeRegimen, patientLink } from "../../lib/share.js";
@@ -27,25 +27,27 @@ export const PAGE_TYPES = [
 
 // Medium error correction survives a creased or smudged page. A very long
 // plan falls back to low correction, and if it still does not fit the QR is
-// left off and the clinician is told to share the link instead.
+// left off and the clinician is told to share the link instead. If the QR
+// library itself cannot load, the clinician is told that instead ("load").
 function useQrCode(text, enabled) {
   const [src, setSrc] = useState("");
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState("");
   useEffect(() => {
     let live = true;
     if (!enabled || !text) {
       setSrc("");
-      setFailed(false);
+      setFailed("");
       return;
     }
     import("qrcode")
+      .catch(() => Promise.reject(new Error("load")))
       .then((QR) =>
-        QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "M" }).catch(() =>
-          QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "L" })
-        )
+        QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "M" })
+          .catch(() => QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "L" }))
+          .catch(() => Promise.reject(new Error("long")))
       )
-      .then((url) => live && (setSrc(url), setFailed(false)))
-      .catch(() => live && (setSrc(""), setFailed(true)));
+      .then((url) => live && (setSrc(url), setFailed("")))
+      .catch((e) => live && (setSrc(""), setFailed(e?.message === "load" ? "load" : "long")));
     return () => {
       live = false;
     };
@@ -55,7 +57,7 @@ function useQrCode(text, enabled) {
 
 // Start date and dose times only change when the new value is complete and
 // valid, so clearing a field can never break the page.
-function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, addToChart, print, go }) {
+function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, addToChart, print, go, named, restarts }) {
   const [times, setTimes] = useState({ wake: s.wake, bed: s.bed });
   const [startText, setStartText] = useState(s.start);
   const setStart = (v) => {
@@ -76,6 +78,12 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
         <input className="input mono" type="date" value={startText} aria-invalid={startText !== s.start} onChange={(e) => setStart(e.target.value)} />
         {startText !== s.start && <span className="num-error">Incomplete date. Still using {fmtShort(parseISO(s.start))}, {s.start.slice(0, 4)}.</span>}
       </Field>
+      {restarts && (
+        <p className="notice warn small" role="status">
+          This plan was opened from a link and started on {fmtLong(parseISO(s.opened))}. Moving the start date restarts every taper and
+          fixed course from {fmtLong(parseISO(s.start))}. Check each one on the calendar before printing.
+        </p>
+      )}
       {span.hasOngoing && (
         <Field label="Print ongoing drops for">
           <select className="select" value={s.months} onChange={(e) => set({ months: Number(e.target.value) })}>
@@ -143,9 +151,14 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
         </div>
         <p className="hint">Doses are spread through the day from the first dose. Bedtime drops go at bedtime.</p>
       </details>
-      <button className="btn primary lg" onClick={print} disabled={nothing}>
+      <button className="btn primary lg" onClick={print} disabled={nothing || !named} aria-describedby={!named ? "cal-print-why" : undefined}>
         {Icon.print} Print {sheetCount} page{sheetCount === 1 ? "" : "s"}
       </button>
+      {!named && (
+        <p className="hint print-why" id="cal-print-why">
+          Enter the patient&apos;s name on the Patient and drops step to print.
+        </p>
+      )}
       <p className="hint mono">
         {fmtShort(parseISO(s.start))} to {fmtShort(span.end)}, {span.end.getFullYear()} · {span.days} days
       </p>
@@ -274,13 +287,20 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
         addToChart={addToChart}
         print={() => printSheets("schedule")}
         go={go}
+        named={!!patient.name.trim()}
+        restarts={!!s.opened && s.start !== s.opened && entries.some((e) => modeOf(e) !== "ongoing" || e.startDay > 1)}
       />
       <div className={`sched-print ${size}`} ref={sheetsRef}>
         <div className="no-print">
           <Warnings warnings={warnings} compact />
-          {qrFailed && (
+          {qrFailed === "long" && (
             <p className="notice warn small" role="status">
               This plan is too long for a QR code. Use Copy link and send it to the patient instead.
+            </p>
+          )}
+          {qrFailed === "load" && (
+            <p className="notice warn small" role="status">
+              The QR code could not load. Check the internet connection and open this step again.
             </p>
           )}
         </div>

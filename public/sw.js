@@ -1,9 +1,20 @@
-// Offline support: network first, falling back to the cached copy. Only good
-// responses are cached, and old cached files are cleared when the app updates.
-const CACHE = "edt-v6";
+// Offline support. The app files are saved when the service worker installs,
+// so the site opens without a connection after the first visit. Pages are
+// network first, falling back to the saved copy. The build's hashed files
+// never change, so they are served from the saved copy first, whatever the
+// Vary header of the response that saved them. Only good
+// responses are saved, and old saved files are cleared when the app updates.
+// The build writes the list of app files and a version into the two lines
+// below (see vite.config.js).
+const PRECACHE = [];
+const CACHE = "edt-v7-dev";
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./manifest.webmanifest", "./icon-192.png"])));
-  self.skipWaiting();
+  e.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(["./", "./manifest.webmanifest", "./icon-192.png", ...PRECACHE]))
+      .then(() => self.skipWaiting())
+  );
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil(
@@ -15,10 +26,28 @@ self.addEventListener("activate", (e) => {
 });
 self.addEventListener("fetch", (e) => {
   const req = e.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) return;
+  const url = new URL(req.url);
+  if (req.method !== "GET" || url.origin !== self.location.origin) return;
+  // Files under /assets/ have a content hash in their name.
+  if (url.pathname.startsWith("/assets/")) {
+    e.respondWith(
+      caches.match(req, { ignoreVary: true }).then(
+        (hit) =>
+          hit ||
+          fetch(req).then((res) => {
+            if (res.ok && res.type === "basic") {
+              const copy = res.clone();
+              e.waitUntil(caches.open(CACHE).then((c) => c.put(req, copy)));
+            }
+            return res;
+          })
+      )
+    );
+    return;
+  }
   // The app is one page with hash routes, so only "/" is the app shell. The
   // privacy, terms and licence pages are cached under their own address.
-  const page = req.mode === "navigate" && !/\.[a-z]+$/i.test(new URL(req.url).pathname);
+  const page = req.mode === "navigate" && !/\.[a-z]+$/i.test(url.pathname);
   e.respondWith(
     fetch(req)
       .then((res) => {
@@ -28,6 +57,6 @@ self.addEventListener("fetch", (e) => {
         }
         return res;
       })
-      .catch(() => caches.match(page ? "./" : req).then((r) => r || (page ? caches.match("./") : Response.error())))
+      .catch(() => caches.match(page ? "./" : req, { ignoreVary: true }).then((r) => r || (page ? caches.match("./", { ignoreVary: true }) : Response.error())))
   );
 });

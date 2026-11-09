@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from "react";
+import { searchFormulary, soleMatch } from "../../lib/drugSearch.js";
 
 // Search results are grouped the way clinicians think about them.
 const GROUPS = [
@@ -17,43 +18,47 @@ const groupOf = (m) => GROUPS.findIndex(([, test]) => test(m.cls));
 
 // Type to search the formulary, then choose with the mouse or the arrow keys
 // and Enter. Nothing is chosen until the clinician confirms a drug, so
-// moving through the list can never change a drop by accident.
+// moving through the list can never change a drop by accident. Enter alone
+// picks only a single match or an exact name: when several strengths or
+// forms match, the clinician highlights one first.
 export default function MedPicker({ formulary, onPick, onCancel, label, autoFocus = false }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
+  // -1 is no highlight: nothing has been pointed at yet.
+  const [active, setActive] = useState(-1);
+  const [ask, setAsk] = useState(false);
   const listId = useId();
+  const hintId = useId();
   const input = useRef(null);
 
   const q = query.trim().toLowerCase();
-  const matches = [...formulary]
-    .filter((m) => !q || `${m.brand} ${m.generic} ${m.aka || ""}`.toLowerCase().includes(q))
-    .sort((a, b) => {
-      const ga = groupOf(a);
-      const gb = groupOf(b);
-      const starts = (m) => (m.brand.toLowerCase().startsWith(q) ? 0 : 1);
-      return (q ? starts(a) - starts(b) : ga - gb) || a.brand.localeCompare(b.brand);
-    });
+  const matches = searchFormulary(formulary, query, groupOf);
 
   const choose = (m) => {
     setQuery("");
     setOpen(false);
+    setActive(-1);
+    setAsk(false);
     onPick(m.brand);
   };
   const onKey = (e) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      // The first press only opens the list, on the top match.
-      if (!open) setOpen(true);
-      else setActive((i) => Math.min(i + 1, matches.length - 1));
+      setOpen(true);
+      setAsk(false);
+      setActive((i) => (open ? Math.min(i + 1, matches.length - 1) : Math.max(i, 0)));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
+      setAsk(false);
       setActive((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && open && matches[active]) {
+    } else if (e.key === "Enter" && open) {
       e.preventDefault();
-      choose(matches[active]);
+      const pick = matches[active] || soleMatch(matches, query);
+      if (pick) choose(pick);
+      else if (matches.length > 1) setAsk(true);
     } else if (e.key === "Escape") {
-      setActive(0);
+      setActive(-1);
+      setAsk(false);
       if (open) setOpen(false);
       else onCancel?.();
     }
@@ -71,19 +76,26 @@ export default function MedPicker({ formulary, onPick, onCancel, label, autoFocu
         aria-controls={listId}
         aria-autocomplete="list"
         aria-activedescendant={open && matches[active] ? `${listId}-${matches[active].id}` : undefined}
+        aria-describedby={ask ? hintId : undefined}
         placeholder="Type a drug name"
         autoComplete="off"
         autoFocus={autoFocus}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
-          setActive(0);
+          setActive(-1);
+          setAsk(false);
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={onKey}
       />
+      {open && ask && (
+        <p className="picker-ask" id={hintId} role="status">
+          More than one product matches. Use the arrow keys to choose one, then press Enter.
+        </p>
+      )}
       {open && (
         <ul className="picker-list" id={listId} role="listbox" aria-label="Formulary">
           {matches.length === 0 && <li className="picker-none">No match. Add it in the Formulary first.</li>}

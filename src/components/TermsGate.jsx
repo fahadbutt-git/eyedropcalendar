@@ -41,6 +41,7 @@ export default function TermsGate({ onAccept }) {
           Continue
         </button>
       </div>
+      <p className="terms-patient">Patient? Scan the QR code on your calendar or open the link your clinic gave you.</p>
     </div>
   );
 }
