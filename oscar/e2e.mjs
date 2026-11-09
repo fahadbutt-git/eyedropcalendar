@@ -114,6 +114,8 @@ await tracker.locator(".import-done").waitFor();
 await tracker.getByRole("button", { name: /Next: calendar/ }).click();
 await tracker.getByRole("button", { name: "Add to Oscar chart" }).click();
 await tracker.locator("text=Added to today's note in Oscar").waitFor();
+// The panel does not mistake its own write for the clinician changing the note.
+assert.equal(await enc.locator("#edt-oscar-panel .note-changed").count(), 0, "panel reacted to its own write");
 await shot(tracker, "3-added");
 
 // The plan goes into today's open note, below what was written, and nothing

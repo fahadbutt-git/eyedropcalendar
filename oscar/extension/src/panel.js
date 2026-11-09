@@ -267,7 +267,12 @@ function start() {
         if (box) {
           const before = box.value.replace(/\s+$/, "");
           box.value = `${before}${before ? "\n\n" : ""}${msg.text}\n`;
+          // The panel's own write is not a change by the clinician.
+          state.readDraft = draft();
           for (const type of ["input", "keyup", "change"]) box.dispatchEvent(new Event(type, { bubbles: true }));
+          state.readDraft = draft();
+          state.stale = false;
+          render();
           return "draft";
         }
         return client.addNote(msg.patientId, msg.text).then(() => "note");

@@ -26,3 +26,4 @@ dist-ssr
 # Oscar extension zips
 oscar/extension/*.zip
 oscar/extension/*.zip.sha256.txt
+.video/
