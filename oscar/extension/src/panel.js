@@ -105,7 +105,7 @@ function start() {
       <footer>
         <button class="primary" data-act="open" ${!state.patient || state.opened ? "disabled" : ""}>${state.opened ? "Opened in Eye Drop Tracker" : state.chosen.size ? `Open ${state.chosen.size} in Eye Drop Tracker` : "Open Eye Drop Tracker and add drops by hand"}</button>
         <p class="muted small">Read on this computer only. Check every drop against the chart before anything is printed.</p>
-        ${state.offerButton ? `<p class="small"><button class="linkish" data-act="setup">Show an Eye drops button on every encounter</button></p>` : ""}
+        ${state.offerButton ? `<div class="setup"><button class="secondary" data-act="setup">Add an Eye drops button to every encounter</button><p class="muted small">Opens this panel in one click, without the shortcut. You can remove it at any time in Chrome.</p></div>` : ""}
       </footer>`;
     const select = panel.querySelector('[data-act="source"]');
     if (select && state.source) select.value = state.source;
