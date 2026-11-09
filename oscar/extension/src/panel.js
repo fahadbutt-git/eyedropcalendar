@@ -103,7 +103,7 @@ function start() {
         ${r ? drops(r) : ""}
       </div>
       <footer>
-        <button class="primary" data-act="open" ${!r || !state.chosen.size || state.opened ? "disabled" : ""}>${state.opened ? "Opened in Eye Drop Tracker" : `Open ${state.chosen.size || ""} in Eye Drop Tracker`}</button>
+        <button class="primary" data-act="open" ${!state.patient || state.opened ? "disabled" : ""}>${state.opened ? "Opened in Eye Drop Tracker" : state.chosen.size ? `Open ${state.chosen.size} in Eye Drop Tracker` : "Open Eye Drop Tracker and add drops by hand"}</button>
         <p class="muted small">Read on this computer only. Check every drop against the chart before anything is printed.</p>
         ${state.offerButton ? `<p class="small"><button class="linkish" data-act="setup">Show an Eye drops button on every encounter</button></p>` : ""}
       </footer>`;
@@ -112,7 +112,11 @@ function start() {
   }
 
   function drops(r) {
-    if (!r.drops.length && !r.skipped.length) return `<p class="muted">No eye drops found here. Choose another note, or select the plan in the note and click the button again.</p>`;
+    const unknown = (r.unknown || []).length
+      ? `<h2>Not recognised</h2><ul class="skipped">${r.unknown.map((w) => `<li><strong>${esc(w)}</strong>: not on the drug list. If it is a drop, add it by hand in Eye Drop Tracker.</li>`).join("")}</ul>`
+      : "";
+    if (!r.drops.length && !r.skipped.length)
+      return `<p class="muted">No eye drops recognised here. Choose another note, select the plan in the note and click the button again, or open Eye Drop Tracker and add the drops by hand. The patient is filled in, and the plan can still be added to this chart.</p>${unknown}`;
     const items = r.drops
       .map((d, i) => {
         const med = medOf(d.brand);
@@ -127,7 +131,7 @@ function start() {
       ? `<h2>Not added</h2><ul class="skipped">${r.skipped.map((s) => `<li><strong>${esc(s.name)}</strong>: ${esc(s.why)}</li>`).join("")}</ul>`
       : "";
     const link = r.code ? `<p class="link-note">This note has an Eye Drop Tracker plan link. The plan opens exactly as it was saved, and the patient keeps their check marks.</p>` : "";
-    return `<h2>Drops found</h2>${link}<ul class="drops">${items}</ul>${skipped}`;
+    return `${r.drops.length ? `<h2>Drops found</h2>${link}<ul class="drops">${items}</ul>` : `<p class="muted">No eye drops recognised here. Open Eye Drop Tracker to add them by hand.</p>`}${skipped}${unknown}`;
   }
 
   panel.addEventListener("change", (e) => {
@@ -157,7 +161,7 @@ function start() {
       return draw();
     }
     if (act === "open") {
-      const chosen = state.result.drops.filter((_, i) => state.chosen.has(i));
+      const chosen = (state.result?.drops || []).filter((_, i) => state.chosen.has(i));
       const reply = await chrome.runtime.sendMessage({
         type: "open",
         payload: {
@@ -167,8 +171,9 @@ function start() {
           // The note stays here. Each drop takes only the sentence it was read
           // from, so the clinician can check it against the chart.
           drops: chosen.map((d) => ({ ...d, source: typeof d.source === "string" ? d.source.slice(0, 200) : "" })),
-          code: state.result.code || "",
-          skipped: state.result.skipped,
+          code: state.result?.code || "",
+          // Unknown words go with the skipped ones, so the review lists them.
+          skipped: [...(state.result?.skipped || []), ...(state.result?.unknown || []).map((w) => ({ name: w, why: "not on the drug list, so add it by hand if it is a drop" }))],
         },
       });
       state.opened = !!reply?.ok;

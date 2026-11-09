@@ -84,4 +84,17 @@ RTC 1 week with IOP.`,
     ],
     rx: [{ brandName: '<img src=x onerror="window.__pwned=5">XALATAN', instructions: "1 gtt OS qhs" }],
   },
+  {
+    // A note written in scribe shorthand the reader does not know.
+    id: 5,
+    firstName: "Casey",
+    lastName: "SHORTHAND",
+    sex: "M",
+    dob: "1958-02-14",
+    hin: "0000000005",
+    address: "5 Example Street",
+    reason: "Post-op",
+    notes: [{ date: "2026-11-05T09:00:00-05:00", text: "POD1 CE/IOL OD. Gtts: Vgmx 1 gtt QID OD x7d. RTC 1 wk." }],
+    rx: [],
+  },
 ];

@@ -16,6 +16,7 @@
     "app:icons": "node scripts/icons.cjs",
     "app:screens": "node scripts/store-screens.mjs",
     "ext:build": "node scripts/extension.mjs",
+    "reader:bench": "node scripts/reader-bench.mjs",
     "oscar:standin": "node oscar/standin/server.mjs",
     "oscar:e2e": "node oscar/e2e.mjs",
     "oscar:resilience": "node oscar/resilience.mjs",

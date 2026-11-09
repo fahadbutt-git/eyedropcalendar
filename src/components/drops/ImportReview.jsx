@@ -17,6 +17,26 @@ export default function ImportReview({ imported, drops, setReviewed, setConfirme
     setConfirmed([...next], fromChart.every((d) => next.has(d.id)));
   };
 
+  if (!imported.fromLink && Object.keys(imported.flags).length === 0)
+    return (
+      <section className="notice caution import-review" aria-labelledby="import-h">
+        <h2 id="import-h">Patient read from the Oscar chart</h2>
+        <p>No eye drops were recognised in the note, so add them below. The plan can still be added to this patient&apos;s chart.</p>
+        {imported.skipped.length > 0 && (
+          <>
+            <h3>Seen in the note but not added</h3>
+            <ul>
+              {imported.skipped.map((s) => (
+                <li key={s.name + s.why}>
+                  <b>{s.name}</b>: {s.why}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
+    );
+
   if (imported.reviewed)
     return (
       <p className="notice info small import-done" role="status">

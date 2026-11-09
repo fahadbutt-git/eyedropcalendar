@@ -99,8 +99,8 @@ test("Eye Drop Tracker's own chart note reads back as the same plan", async () =
 });
 
 test("a note with no drops gives nothing", () => {
-  assert.deepEqual(parseNote("Patient doing well. RTC 6 months.", F), { drops: [], skipped: [] });
-  assert.deepEqual(parseNote("", F), { drops: [], skipped: [] });
+  assert.deepEqual(parseNote("Patient doing well. RTC 6 months.", F), { drops: [], skipped: [], unknown: [] });
+  assert.deepEqual(parseNote("", F), { drops: [], skipped: [], unknown: [] });
 });
 
 test("Oscar Rx entries read the same way, skipping archived and PRN", () => {
@@ -168,4 +168,22 @@ test("ophthalmology note styles from the pre-pilot scenarios", () => {
   // The strength written picks the product, with either spelling.
   assert.equal(parseNote("Alphagan 0.15% TID OU", F).drops[0].brand, "Alphagan-P");
   assert.equal(parseNote("Alphagan P TID OU", F).drops[0].brand, "Alphagan-P");
+});
+
+test("misspelled drug names beside a dose are read and flagged", () => {
+  const r = parseNote("Xalatn qhs OU. Combigen BID OS.", F);
+  assert.deepEqual(r.drops.map((d) => [d.brand, d.eye]), [["Xalatan", "OU"], ["Combigan", "OS"]]);
+  assert.match(r.drops[0].flags[0], /The note says "Xalatn", read as Xalatan/);
+  assert.equal(parseNote("latanaprost 1 gtt qhs OU", F).drops[0].brand, "Xalatan");
+});
+
+test("ordinary words are never corrected into drugs", () => {
+  for (const note of ["Patient stable. Follow up in four months. Pressure stable OU.", "Return daily for drops check OD.", "Lumigan qhs OU, return in 3 months, pressure stable"])
+    assert.ok(parseNote(note, F).drops.every((d) => !d.flags.some((f) => /Check the spelling/.test(f))), note);
+});
+
+test("unknown words in a drug's place are listed, not dropped silently", () => {
+  const r = parseNote("Gtts: Vgmx 1 gtt QID OD x7d; Pred Forte QID OD", F);
+  assert.deepEqual(r.drops.map((d) => d.brand), ["Pred Forte"]);
+  assert.deepEqual(r.unknown, ["Vgmx"]);
 });

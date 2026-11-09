@@ -4,7 +4,7 @@ import TermsGate, { TERMS_VERSION, legalLink } from "./components/TermsGate.jsx"
 import { DRUG_CLASSES, FORMULARY_VERSION, SEED_FORMULARY } from "./data/formulary.js";
 import { dropWarnings } from "./lib/checks.js";
 import { isValidISO, parseISO, toISO } from "./lib/dates.js";
-import { toEntries } from "./lib/regimen.js";
+import { newSlot, toEntries } from "./lib/regimen.js";
 import { codeFromUrl, decodeRegimen, newNonce } from "./lib/share.js";
 import { isNative, onPlanLink } from "./lib/native.js";
 import { adoptPlan, currentPlanCode, forgetCurrentPlan } from "./lib/patientStore.js";
@@ -348,13 +348,14 @@ function ClinicianApp() {
       .slice(0, MAX_DROPS)
       .map((x) => ({ entry: cleanEntry(x), flags: cleanFlags(x?.flags), source: cleanText(x?.source, 200) }))
       .filter((r) => r.entry && known.has(r.entry.brand));
-    if (!rows.length) return;
+    // With no drops recognised, the patient still comes across, so the
+    // clinician adds the drops by hand and can still add the plan to the chart.
     if (hasPatient && !window.confirm("Replace the patient on screen with the one from Oscar?")) return;
     clearPatient();
     const stamp = Date.now().toString(36);
     const ids = rows.map((_, i) => `d${stamp}x${i}`);
     setPatient(patientFromOscar);
-    setDrops(rows.map((r, i) => ({ ...r.entry, id: ids[i] })));
+    setDrops(rows.length ? rows.map((r, i) => ({ ...r.entry, id: ids[i] })) : [newSlot()]);
     setImported({
       handoff: cleanText(d.handoff, 64),
       patient: patientFromOscar,
@@ -362,7 +363,9 @@ function ClinicianApp() {
       sources: Object.fromEntries(rows.map((r, i) => [ids[i], r.source])),
       confirmed: [],
       skipped: cleanSkipped(d.skipped),
-      reviewed: false,
+      // Nothing read from the chart means nothing to tick. The clinician adds
+      // the drops by hand.
+      reviewed: rows.length === 0,
     });
   });
 

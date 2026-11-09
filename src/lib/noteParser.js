@@ -1,3 +1,4 @@
+import { correctSpelling } from "./spelling.js";
 // Reads eye drop orders out of chart note shorthand ("Maxidex QID OS x1wk
 // then BID x1wk", "on 0/2 (brimonidine, dorzolamide left)") and returns
 // draft drops for the clinician to check. Nothing here is trusted: every
@@ -95,6 +96,10 @@ function nameIndex(formulary) {
     if (m.generic?.includes("/")) continue;
     const generic = m.generic?.split(/[\d(]/)[0].trim();
     if (generic && generic.length > 3) names.push({ pattern: escape(generic), brand: m.brand, generic: true });
+    // Notes often write only the first word ("loteprednol", not
+    // "loteprednol etabonate").
+    const first = generic?.split(" ")[0];
+    if (first && first !== generic && first.length > 5) names.push({ pattern: escape(first), brand: m.brand, generic: true });
   }
   return names.filter((n) => formulary.some((m) => m.brand === n.brand));
 }
@@ -198,9 +203,12 @@ const headingEye = (line) => {
   return m ? findEye(m[1].split(/[.:]/)[0]) : null;
 };
 
-export function parseNote(note, formulary) {
+export function parseNote(input, formulary) {
   const names = nameIndex(formulary);
   const pattern = new RegExp(`(?<![\\w-])(${names.map((n) => n.pattern).sort((a, b) => b.length - a.length).join("|")})(?![\\w])`, "gi");
+  // Misspelled drug names beside a dose are corrected and flagged. Unknown
+  // words in a drug's place are listed, so nothing is dropped silently.
+  const { text: note, corrections, unknown } = correctSpelling(input, formulary, pattern);
   const drops = [];
   const skipped = [];
   let sectionEye = null;
@@ -347,7 +355,12 @@ export function parseNote(note, formulary) {
       }
     }
   }
-  return { drops: dedupe(drops), skipped };
+  const found = dedupe(drops);
+  for (const c of corrections) {
+    const d = found.find((x) => names.some((n) => n.brand === x.brand && new RegExp(`^(?:${n.pattern})$`, "i").test(c.to)));
+    if (d) d.flags.unshift(`The note says "${c.from}", read as ${d.brand}. Check the spelling.`);
+  }
+  return { drops: found, skipped, unknown };
 }
 
 // The same drug, eye and plan written twice (in the summary and the plan)
