@@ -25,7 +25,7 @@ On a patient's encounter in Oscar, click the Eye Drop Tracker button, choose "Re
 - Each drop shows what was read and flags for checking anything that had to be assumed, such as an eye that was not stated.
 - Past drops, allergies, stopped drops, as-needed drops and medicines taken by mouth are listed but left out.
 - Eye Drop Tracker opens with the drops filled in. The calendar and prescription stay locked until the clinician confirms every drop against the chart.
-- Add to Oscar chart saves the finished plan to the same patient as an unsigned note, with a link that reopens the plan exactly at the next visit, so a taper can be changed without starting over. The extension writes the note itself from the plan, only after a click, only for the patient and clinician it was read from, and only once.
+- Add to Oscar chart puts the finished plan into the note open in that patient's encounter, for the clinician to sign, with a link that reopens the plan exactly at the next visit, so a taper can be changed without starting over. The extension writes the note itself from the plan, only after a click, only for the patient and clinician it was read from, and only once.
 
 Privacy: the extension reads Oscar with your own Oscar login, in your browser. It has no server, sends nothing to its makers or anyone else, and runs on a page only when you ask it to.
 

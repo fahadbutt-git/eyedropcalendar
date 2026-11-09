@@ -137,6 +137,12 @@ const server = createServer(async (req, res) => {
   }
   if (path.startsWith("/oscar/ws/rs/")) return rest(req, res, path.slice("/oscar/ws/rs/".length), url);
   if (path === "/oscar/__standin/saved") return send(res, 200, saved);
+  // What the encounter's Sign & Save does with today's note, for tests.
+  if (path === "/oscar/__standin/sign" && req.method === "POST") {
+    const body = JSON.parse((await readBody(req)) || "{}");
+    saved.push({ demographicNo: Number(body.demographicNo), note: String(body.note || ""), isSigned: true, date: new Date().toISOString(), byEncounter: true });
+    return send(res, 200, { ok: true });
+  }
   // Each test run starts from no saved notes and the usual clinician.
   if (path === "/oscar/__standin/reset") {
     saved.length = 0;

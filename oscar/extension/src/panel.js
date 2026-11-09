@@ -245,10 +245,28 @@ function start() {
       .catch(() => "")
       .then((now) => {
         if (msg.provider && now !== msg.provider) throw new Error("A different person is now signed in to Oscar, so nothing was added. Read the chart again.");
-        return client.addNote(msg.patientId, msg.text);
+        // Today's note is open in this encounter: the plan goes into it, below
+        // what the clinician has written, and is signed with it. A separate
+        // note saved behind it would make Oscar drop the unsaved draft the
+        // next time the encounter opens.
+        const box = [...document.querySelectorAll('textarea[name="caseNote_note"]')].filter((t) => !t.disabled && !t.readOnly && t.offsetParent !== null).pop();
+        if (box) {
+          const before = box.value.replace(/\s+$/, "");
+          box.value = `${before}${before ? "\n\n" : ""}${msg.text}\n`;
+          for (const type of ["input", "keyup", "change"]) box.dispatchEvent(new Event(type, { bubbles: true }));
+          return "draft";
+        }
+        return client.addNote(msg.patientId, msg.text).then(() => "note");
       })
       .then(
-        () => reply({ ok: true, message: "Added to the Oscar chart as an unsigned note. Sign it in the chart." }),
+        (where) =>
+          reply({
+            ok: true,
+            message:
+              where === "draft"
+                ? "Added to today's note in Oscar, below what was already written. Review it and sign the note as usual."
+                : "Added to the Oscar chart as an unsigned note. Sign it in the chart.",
+          }),
         (e) => reply({ ok: false, message: e.message || "Oscar did not save the note." })
       );
     return true;

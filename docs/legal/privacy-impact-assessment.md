@@ -43,7 +43,7 @@ The clinic, as health information custodian, adopts or adapts this assessment an
 2. The clinician selects the drops and opens Eye Drop Tracker. Drops, the sentence each was read from, and the name and date of birth pass inside the same browser to the Eye Drop Tracker tab.
 3. The clinician ticks each drop as checked against its source sentence. The calendar, prescription and plan link are made in the browser.
 4. The clinician prints, hands the calendar to the patient, and the patient scans the QR code. The plan opens on the patient's phone from the link. No server receives it.
-5. The clinician clicks Add to Oscar chart. The extension writes an unsigned note to the same patient and the clinician signs it in Oscar.
+5. The clinician clicks Add to Oscar chart. The extension adds the plan to the note open in the same patient's encounter, or saves it as an unsigned note when none is open, and the clinician signs it in Oscar.
 
 No step sends patient information outside the clinic computer, the clinic's Oscar or the patient's phone.
 

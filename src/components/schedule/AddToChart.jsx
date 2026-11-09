@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-// Adds the plan to the Oscar chart it was read from, as an unsigned note the
+// Adds the plan to the Oscar chart it was read from, into the open note the
 // clinician signs there. Shown only when the plan came from Oscar through the
 // extension and the patient on screen is still that patient.
 export default function AddToChart({ code, patient, add }) {
@@ -15,7 +15,7 @@ export default function AddToChart({ code, patient, add }) {
         {state.busy ? "Adding to Oscar…" : state.result?.ok ? "Added to Oscar chart" : "Add to Oscar chart"}
       </button>
       <p className={`hint ${state.result && !state.result.ok ? "error-text" : ""}`} role="status">
-        {state.result?.message || `Adds this plan to ${patient}'s chart in Oscar, as an unsigned note.`}
+        {state.result?.message || `Adds this plan to today's note in ${patient}'s Oscar encounter, for you to sign.`}
       </p>
     </>
   );

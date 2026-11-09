@@ -112,15 +112,21 @@ await ticks.last().click();
 await tracker.locator(".import-done").waitFor();
 await tracker.getByRole("button", { name: /Next: calendar/ }).click();
 await tracker.getByRole("button", { name: "Add to Oscar chart" }).click();
-await tracker.locator("text=Added to the Oscar chart").waitFor();
+await tracker.locator("text=Added to today's note in Oscar").waitFor();
 await shot(tracker, "3-added");
 
+// The plan goes into today's open note, below what was written, and nothing
+// is saved behind it, so Oscar never drops the clinician's draft.
+assert.equal((await (await fetch(`${OSCAR}/__standin/saved`)).json()).length, 0, "no separate note saved");
+const today = await enc.locator('textarea[name="caseNote_note"]').inputValue();
+assert.match(today, /Pred Forte/);
+assert.doesNotMatch(today, /Vigamox/);
+assert.match(today, /^\[06-Nov-2026 \.: \][\s\S]*Eye drop plan/, "added below what was already there");
+// The clinician signs today's note as usual.
+await fetch(`${OSCAR}/__standin/sign`, { method: "POST", body: JSON.stringify({ demographicNo: 1, note: today }) });
 const saved = await (await fetch(`${OSCAR}/__standin/saved`)).json();
 assert.equal(saved.length, 1);
 assert.equal(saved[0].demographicNo, 1);
-assert.equal(saved[0].isSigned, false);
-assert.match(saved[0].note, /Pred Forte/);
-assert.doesNotMatch(saved[0].note, /Vigamox/);
 
 // A different patient on the Oscar tab: nothing is added.
 await enc.goto(`${OSCAR}/casemgmt/forward.jsp?action=view&demographicNo=2`);

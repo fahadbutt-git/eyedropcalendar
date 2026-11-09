@@ -160,6 +160,7 @@ ok("a made-up hand-off is refused");
 
 let saved = await (await fetch(`${OSCAR}/__standin/saved`)).json();
 assert.equal(saved.length, 0, "a forged request reached Oscar");
+assert.doesNotMatch(await oscar.locator('textarea[name="caseNote_note"]').inputValue(), /Eye drop plan/, "a forged request reached today's note");
 ok("nothing reached Oscar from the forged requests");
 
 // 5b. If another clinician signs in to Oscar in the meantime, nothing is written.
@@ -171,20 +172,21 @@ await tracker.getByRole("button", { name: "Add to Oscar chart" }).click();
 await tracker.locator("text=different person is now signed in").waitFor();
 await fetch(`${OSCAR}/__standin/provider?no=999998`);
 assert.equal((await (await fetch(`${OSCAR}/__standin/saved`)).json()).length, 0);
+assert.doesNotMatch(await oscar.locator('textarea[name="caseNote_note"]').inputValue(), /Eye drop plan/);
 ok("a note is never saved under a different clinician who signed in later");
 await tracker.reload();
 
-// 6. The real button adds the plan once. The same plan again is refused.
+// 6. The real button adds the plan once, into today's note on the right
+// patient's encounter. The same plan again is refused.
 await tracker.getByRole("button", { name: "Add to Oscar chart" }).click();
-await tracker.locator("text=Added to the Oscar chart").waitFor();
+await tracker.locator("text=Added to today's note in Oscar").waitFor();
 await tracker.reload();
 await tracker.getByRole("button", { name: "Add to Oscar chart" }).click();
 await tracker.locator("text=already in the Oscar chart").waitFor();
-saved = await (await fetch(`${OSCAR}/__standin/saved`)).json();
-assert.equal(saved.length, 1);
-assert.equal(saved[0].demographicNo, 4);
-assert.equal(saved[0].isSigned, false);
-ok("the plan is added once, unsigned, to the right patient, and a repeat is refused");
+const todayNote = await oscar.locator('textarea[name="caseNote_note"]').inputValue();
+assert.equal((todayNote.match(/Eye drop plan/g) || []).length, 1, "the plan is in today's note once");
+assert.equal((await (await fetch(`${OSCAR}/__standin/saved`)).json()).length, 0, "nothing saved behind the open note");
+ok("the plan is added once, into the right patient's open note, and a repeat is refused");
 
 // 6b. Changing the patient on screen removes the way back to that chart.
 await tracker.locator("text=Patient and drops").first().click();
