@@ -46,6 +46,7 @@ For eye care teams using Oscar. Eye Drop Tracker is a scheduling and education a
 | Permission | Why it is needed |
 | --- | --- |
 | activeTab | To read the open Oscar encounter only after the clinician clicks the button, uses the shortcut or chooses the menu item, and only in that tab. |
+| Optional host permission (clinic copies only) | The clinic's copy names its own Oscar address. If a clinician chooses to add the Eye drops button, Chrome asks to allow that one address, so the button can appear on encounters, which Oscar opens in pop-up windows without the toolbar. The general listing requests no host permission. |
 | scripting | To show the panel on that Oscar page and read the patient's notes and medication list through Oscar's own interface. |
 | contextMenus | Oscar opens encounters in pop-up windows, which have no extension buttons. The right-click menu item is how the panel opens there. |
 | storage | To hold the plan while it passes from the Oscar tab to the Eye Drop Tracker tab. It uses session storage, which Chrome clears when the browser closes. The drops, the sentence each was read from, the name and the date of birth are deleted as soon as Eye Drop Tracker takes them. What remains is the Oscar tab and patient number, so the plan can go back to the right chart. It is deleted when either tab closes, and after two hours at most. |

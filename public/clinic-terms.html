@@ -72,7 +72,8 @@
 
       <h2>5. How the Oscar extension uses its permissions</h2>
       <ul>
-        <li>It runs on an Oscar page only when a clinician opens it there, with the toolbar button, the right-click menu or the keyboard shortcut.</li>
+        <li>It reads a chart only when a clinician opens it, with the toolbar button, the right-click menu, the keyboard shortcut or, where the clinic allows it, the Eye drops button on the encounter.</li>
+        <li>The Eye drops button is optional. It can be allowed only on the clinic's own Oscar address, which is fixed in the clinic's copy of the extension. Allowing it gives the extension standing access to that one address until it is removed in Chrome's settings. The clinic accepts this when it allows the button, and can use the extension without it.</li>
         <li>It reads only the open patient's notes, the note being written and the medication list, through Oscar's own interface and the clinician's own login. It sees only what that clinician can see.</li>
         <li>It passes the drops, the sentence each was read from, and the name and date of birth to Eye Drop Tracker in the same browser, then deletes them. It keeps the Oscar tab and patient number until either tab closes, or for two hours at most.</li>
         <li>It writes to the chart only after a click, only to the patient the plan was read from, only while the same clinician is signed in, only once per plan, and only text it builds itself from a valid plan.</li>

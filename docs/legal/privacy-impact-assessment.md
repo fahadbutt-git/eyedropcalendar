@@ -77,7 +77,8 @@ Likelihood and impact are rated low, medium or high after the listed controls.
 | Lost printed calendar | Calendar carries name and date of birth. Plan link carries none | Medium | Low |
 | Plan link shared beyond the patient | Link holds drops and dates only | Medium | Low |
 | Lock screen shows drug names | Option to hide drug names | Medium | Low |
-| Tampered extension or site code | Extension installed from the official store. Site served over HTTPS with HSTS. Public source | Low | High |
+| Tampered extension or site code | Extension installed from the official store. Site served over HTTPS with HSTS. Public source. Uploads signed with an offline key | Low | High |
+| Standing access through the optional Eye drops button | Offered only on the clinic's own Oscar address, fixed at build. Allowed by a clinician in Chrome, removable at any time. Button reads nothing until clicked, scripted clicks ignored. Clinic may decline and use the toolbar, menu or shortcut | Low | High |
 | Clinic computer compromised | Out of scope for the software. Clinic device controls apply | Clinic to complete | Clinic to complete |
 | Incorrect plan reaches patient | Review gate, clinician signs the chart note, patient reminded to follow the doctor's instructions | Low | Medium |
 
