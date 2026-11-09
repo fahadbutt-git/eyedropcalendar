@@ -103,3 +103,10 @@ test("the note the extension writes from the plan code matches the site's chart 
   assert.equal(fromExtension, fromSite);
   assert.throws(() => decodeRegimen("not-a-plan"));
 });
+
+test("errors name the Oscar service that failed, without the patient number", async () => {
+  const { client } = fake({ "demographics/3": () => reply(500, "boom") });
+  await assert.rejects(client.patient("3"), (e) => e.detail === "GET demographics/#: 500");
+  const missing = fake({}).client;
+  await assert.rejects(missing.notes("1234"), (e) => e.detail === "POST notes/#/all: 404" && !e.detail.includes("1234"));
+});

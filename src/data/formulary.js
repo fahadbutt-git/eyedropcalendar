@@ -89,7 +89,7 @@ const PGA = { cap: "teal", qhs: true, maxFreq: 1 };
 
 const SEED = [
   // Glaucoma
-  d("Alphagan", "Brimonidine 0.2%", ["AA"], 2, LU_SINGLE, { cap: "purple", maxFreq: 2, aka: "generic brimonidine 0.2%" }),
+  d("Alphagan", "Brimonidine 0.2%", ["AA"], 2, LU_SINGLE, { cap: "purple", maxFreq: 3, aka: "generic brimonidine 0.2%" }),
   d("Alphagan-P", "Brimonidine 0.15%", ["AA"], 3, LU_SINGLE, { cap: "purple", maxFreq: 3, aka: "Brimonidine P" }),
   d("Azarga", "Brinzolamide 1% / timolol 0.5%", ["CAI", "BB"], 2, LU_COMBO, { cap: "darkblue", form: "suspension", maxFreq: 2 }),
   d("Azopt", "Brinzolamide 1%", ["CAI"], 2, LU_SINGLE, { cap: "orange", form: "suspension", maxFreq: 3 }),

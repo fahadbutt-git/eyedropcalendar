@@ -17,7 +17,9 @@
     "app:screens": "node scripts/store-screens.mjs",
     "ext:build": "node scripts/extension.mjs",
     "oscar:standin": "node oscar/standin/server.mjs",
-    "oscar:e2e": "node oscar/e2e.mjs"
+    "oscar:e2e": "node oscar/e2e.mjs",
+    "oscar:resilience": "node oscar/resilience.mjs",
+    "oscar:lock": "EDT_LOCK_TEST=1 node scripts/extension.mjs --dev --oscar=https://other-clinic.example.com && node oscar/lock.mjs && node scripts/extension.mjs --dev"
   },
   "dependencies": {
     "@capacitor-community/text-to-speech": "6.1.0",
@@ -49,5 +51,5 @@
     "type": "git",
     "url": "https://github.com/fahadbutt-git/eyedropcalendar"
   },
-  "extensionVersion": "0.5.0"
+  "extensionVersion": "0.5.1"
 }

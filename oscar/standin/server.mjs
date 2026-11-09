@@ -20,6 +20,7 @@ const PORT = Number(process.env.PORT || 8080);
 const sessions = new Set();
 const saved = []; // notes written back, for tests to read
 let provider = "999998"; // who is signed in; tests can switch it
+const broken = new Set(); // services a test makes fail, like an Oscar build that differs
 
 const str = (v) => (v == null ? v : String(v));
 const cookieOf = (req) => /JSESSIONID=([\w]+)/.exec(req.headers.cookie || "")?.[1];
@@ -84,6 +85,8 @@ async function rest(req, res, path, url) {
     const p = patient(m[1]);
     return p ? send(res, 200, demographicTo(p)) : send(res, 404, "");
   }
+  if (broken.has("notes") && /^notes\/\d+\/all$/.test(path)) return send(res, 500, "");
+  if (broken.has("rx") && /^rx\//.test(path)) return send(res, 500, "");
   if ((m = path.match(/^notes\/(\d+)\/all$/)) && req.method === "POST") {
     const p = patient(m[1]);
     if (!p) return send(res, 200, { moreNotes: "false" });
@@ -138,7 +141,12 @@ const server = createServer(async (req, res) => {
   if (path === "/oscar/__standin/reset") {
     saved.length = 0;
     provider = "999998";
+    broken.clear();
     return send(res, 200, { reset: true });
+  }
+  if (path === "/oscar/__standin/break") {
+    broken.add(url.searchParams.get("service"));
+    return send(res, 200, { broken: [...broken] });
   }
   if (path === "/oscar/__standin/provider") {
     provider = url.searchParams.get("no") || "999998";

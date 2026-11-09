@@ -18,7 +18,7 @@ test("a postoperative taper with a fixed course and a glaucoma drop", () => {
     ["Vigamox", "OD", 4, "duration", 7],
     ["Xalatan", "OS", 1, "ongoing", 1],
   ]);
-  assert.match(flagged(r, "Pred Forte"), /numbered problem/);
+  assert.match(flagged(r, "Pred Forte"), /heading it sits under/);
   assert.match(flagged(r, "Pred Forte"), /Every 2 hours/);
   assert.match(flagged(r, "Vigamox"), /not used more than 3 times/);
   assert.equal(flagged(r, "Xalatan"), "");
@@ -156,4 +156,16 @@ test("a strength in the note that differs from the drug chosen is flagged", () =
   assert.match(flagged(parseNote("Atropine 0.01% qhs OU.", F), "Atropine"), /^Strength: the note says 0\.01%/m);
   assert.doesNotMatch(flagged(parseNote("Atropine 1% BID OD.", F), "Atropine"), /Strength/);
   assert.doesNotMatch(flagged(parseNote("Xalatan 0.005% qhs OU.", F), "Xalatan"), /Strength/);
+});
+
+test("ophthalmology note styles from the pre-pilot scenarios", () => {
+  // "at bedtime" is not artificial tears.
+  assert.deepEqual(parseNote("Lumigan once daily in both eyes at bedtime", F).skipped, []);
+  // A taper written in words.
+  assert.deepEqual(brief(parseNote("Pred Forte four times a day in the right eye for one week then three times a day for a week then twice a day for a week then once a day for a week.", F)), [["Pred Forte", "OD", 4, "taper", "4x7,3x7,2x7,1x7"]]);
+  // Eye headings above a list.
+  assert.deepEqual(brief(parseNote("OD:\n- Vigamox QID x 1 wk\nOS:\n- Xalatan qhs", F)).map((d) => [d[0], d[1]]), [["Vigamox", "OD"], ["Xalatan", "OS"]]);
+  // The strength written picks the product, with either spelling.
+  assert.equal(parseNote("Alphagan 0.15% TID OU", F).drops[0].brand, "Alphagan-P");
+  assert.equal(parseNote("Alphagan P TID OU", F).drops[0].brand, "Alphagan-P");
 });

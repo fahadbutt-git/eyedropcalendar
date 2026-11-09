@@ -18,9 +18,12 @@ const isoDate = (v) => {
 };
 
 export class OscarError extends Error {
-  constructor(kind, message) {
+  constructor(kind, message, detail = "") {
     super(message);
     this.kind = kind;
+    // Which Oscar service failed and how, for support. Patient numbers are
+    // replaced with #, so it is safe to read out or copy into an email.
+    this.detail = detail;
   }
 }
 
@@ -43,6 +46,7 @@ export function openPatientId(location, document) {
 
 export function oscarClient(base, fetcher = fetch) {
   const call = async (path, { method = "GET", body } = {}) => {
+    const where = `${method} ${path.split("?")[0].replace(/\d+/g, "#")}`;
     let res;
     try {
       res = await fetcher(`${base}/${path}`, {
@@ -52,17 +56,17 @@ export function oscarClient(base, fetcher = fetch) {
         body: body ? JSON.stringify(body) : undefined,
       });
     } catch {
-      throw new OscarError("network", "Oscar could not be reached.");
+      throw new OscarError("network", "Oscar could not be reached.", `${where}: no answer`);
     }
-    if (res.status === 401 || res.status === 403) throw new OscarError("signed-out", "Oscar says you are not signed in. Sign in to Oscar and try again.");
-    if (res.status === 404) throw new OscarError("missing", "This Oscar does not offer that service.");
-    if (!res.ok) throw new OscarError("server", `Oscar answered with an error (${res.status}).`);
+    if (res.status === 401 || res.status === 403) throw new OscarError("signed-out", "Oscar says you are not signed in. Sign in to Oscar and try again.", `${where}: ${res.status}`);
+    if (res.status === 404) throw new OscarError("missing", "This Oscar does not offer that service.", `${where}: 404`);
+    if (!res.ok) throw new OscarError("server", `Oscar answered with an error (${res.status}).`, `${where}: ${res.status}`);
     const text = await res.text();
     if (!text) return null;
     try {
       return JSON.parse(text);
     } catch {
-      throw new OscarError("format", "Oscar answered in a form the extension does not read.");
+      throw new OscarError("format", "Oscar answered in a form the extension does not read.", `${where}: not JSON`);
     }
   };
 

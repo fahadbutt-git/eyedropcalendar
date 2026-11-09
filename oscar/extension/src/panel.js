@@ -94,7 +94,8 @@ function start() {
     panel.innerHTML = `
       <header><div><h1>Eye Drop Tracker</h1><p class="origin">Reading ${esc(window.location.host)}</p></div><button class="x" data-act="close" aria-label="Close">×</button></header>
       <div class="body">
-        ${state.error ? `<p class="error" role="alert">${esc(state.error)}</p>` : ""}
+        ${state.error ? `<p class="error" role="alert">${esc(state.error)}${state.errorDetail ? `<span class="detail">Details for support: ${esc(state.errorDetail)}</span>` : ""}</p>` : ""}
+        ${(state.partial || []).map((m) => `<p class="note-partial">${esc(m)}. Select the drops in the note, or use today's note.</p>`).join("")}
         ${state.busy ? `<p class="muted">Reading the chart…</p>` : ""}
         ${state.patient ? `<p class="who"><strong>${esc(state.patient.name)}</strong>${state.patient.dob ? `<span>Born ${esc(state.patient.dob)}</span>` : ""}</p>` : ""}
         ${options.length ? `<label class="field">Read drops from<select data-act="source">${options.join("")}</select></label>` : ""}
@@ -184,7 +185,14 @@ function start() {
       return render();
     }
     try {
-      const [patient, notes, rx, provider] = await Promise.all([client.patient(id), client.notes(id), client.currentDrugs(id), client.me().catch(() => "")]);
+      // The patient is required. Saved notes and the Rx list are not, so a
+      // clinic whose Oscar differs can still read today's note or a selection.
+      const [patient, notes, rx, provider] = await Promise.all([
+        client.patient(id),
+        client.notes(id).catch((e) => ((state.partial = state.partial || []).push(`Saved notes could not be read (${e.detail || e.message})`), [])),
+        client.currentDrugs(id).catch((e) => ((state.partial = state.partial || []).push(`The medication list could not be read (${e.detail || e.message})`), [])),
+        client.me().catch(() => ""),
+      ]);
       Object.assign(state, { patient, notes, rx, provider });
       const withDrops = notes.find((n) => fromLink(n.text) || parseNote(n.text, formulary).drops.length);
       // Selected text first, then today's unsaved note if it names a drop,
@@ -194,6 +202,7 @@ function start() {
       if (state.source) read();
     } catch (e) {
       state.error = e.message || "Oscar could not be read.";
+      state.errorDetail = e.detail || "";
     }
     state.busy = false;
     render();

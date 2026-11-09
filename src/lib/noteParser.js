@@ -38,7 +38,9 @@ const EXTRA_NAMES = [
 // reported so the clinician knows they were seen and left out.
 const NOT_DROPS = [
   ["acetazolamide|diamox|methazolamide", "taken by mouth"],
-  ["artificial tears|tear gel|tears|\\bATs?\\b|lubricant|refresh|systane|hylo|genteal|thera ?tears|lacrilube", "lubricant, not in the drug list"],
+  ["artificial tears|tear gel|tears|lubricant|refresh|systane|hylo|genteal|thera ?tears|lacrilube", "lubricant, not in the drug list"],
+  // "AT" and "ATs" only in capitals, so "at bedtime" is not read as tears.
+  ["\\bATs?\\b", "lubricant, not in the drug list", ""],
 ];
 
 const PAST = /\b(allerg\w*|intoleran\w*|previously|prior(?:ly)?|failed|was on|were on|history of|hx of|switched from|reaction to|stopped (?:due|because)|in the past)\b/i;
@@ -75,7 +77,8 @@ const HOURLY = /\bq\.?\s?(?:1\s?h(?:r|rs|ours?)?|30\s?min)\b|\bhourly\b|\bevery 
 const CURRENT = /\b(start|started|begin|continue|cont|restart|resume|use|add|new)\b/i;
 
 const UNIT_DAYS = { d: 1, day: 1, days: 1, w: 7, wk: 7, wks: 7, week: 7, weeks: 7, mo: 30, month: 30, months: 30 };
-const DURATION = /(?:\bx|×|\bfor)\s*(\d{1,3})\s*(days?|d|wks?|w|weeks?|mo|months?)\b/i;
+const DURATION = /(?:\bx|×|\bfor)\s*(\d{1,3}|an?|one|two|three|four|five|six|seven|eight|ten|fourteen)\s*(days?|d|wks?|w|weeks?|mo|months?)\b/i;
+const WORD_NUMBERS = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, ten: 10, fourteen: 14 };
 const DROPS = /\b([1-3])\s*(?:gtts?|drops?)\b/i;
 
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -85,7 +88,8 @@ const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 function nameIndex(formulary) {
   const names = EXTRA_NAMES.map(([pattern, brand]) => ({ pattern, brand, extra: true }));
   for (const m of formulary) {
-    names.push({ pattern: escape(m.brand), brand: m.brand });
+    // "Alphagan-P" is also written "Alphagan P" or "AlphaganP".
+    names.push({ pattern: m.brand.split("-").map(escape).join("[- ]?"), brand: m.brand });
     // Combination products are found by their brand or a combined name only,
     // so "latanoprost" alone never means Xalacom.
     if (m.generic?.includes("/")) continue;
@@ -140,7 +144,8 @@ const findEye = (text) => eyesIn(text)[0] || null;
 
 const findDays = (text) => {
   const m = text.match(DURATION);
-  return m ? Math.min(MAX_DAYS, Number(m[1]) * UNIT_DAYS[m[2].toLowerCase()]) : null;
+  const n = WORD_NUMBERS[m?.[1].toLowerCase()] ?? Number(m?.[1]);
+  return m ? Math.min(MAX_DAYS, n * UNIT_DAYS[m[2].toLowerCase()]) : null;
 };
 
 // "QID x1wk then TID x1wk then BID" gives steps, and an open-ended last part
@@ -201,10 +206,13 @@ export function parseNote(note, formulary) {
   let sectionEye = null;
 
   for (const raw of String(note || "").split(/\r?\n/)) {
-    sectionEye = /^\s*\d+[.)]/.test(raw) ? headingEye(raw) : raw.trim() ? sectionEye : null;
+    // A numbered problem ("2. Left POAG") or an eye heading ("OD:") sets the
+    // eye for the lines under it, until a blank line.
+    const eyeHeading = raw.match(/^\s*(OD|OS|OU|RE|LE|BE|right eye|left eye|both eyes)\s*:/i);
+    sectionEye = eyeHeading ? findEye(eyeHeading[1].length > 2 ? eyeHeading[1] : eyeHeading[1].toUpperCase()) : /^\s*\d+[.)]/.test(raw) ? headingEye(raw) : raw.trim() ? sectionEye : null;
     for (const sentence of sentences(raw)) {
-      for (const [re, why] of NOT_DROPS) {
-        const m = sentence.match(new RegExp(re, "i"));
+      for (const [re, why, flags = "i"] of NOT_DROPS) {
+        const m = sentence.match(new RegExp(re, flags));
         if (m && !skipped.some((s) => s.name.toLowerCase() === m[0].toLowerCase())) skipped.push({ name: m[0], why });
       }
       const mentions = [...sentence.matchAll(pattern)];
@@ -231,15 +239,23 @@ export function parseNote(note, formulary) {
       }
       for (const item of items) {
         const flags = [];
-        const { brand, flag } = chooseBrand(item.found, item.clause, formulary);
+        let { brand, flag } = chooseBrand(item.found, item.clause, formulary);
         if (flag) flags.push(flag);
         const own = item.clause;
         const shared = item.shared?.clause || "";
-        const med = formulary.find((m) => m.brand === brand);
+        let med = formulary.find((m) => m.brand === brand);
         // A strength written straight after the name must match the drug
         // chosen. Atropine 0.01% is not atropine 1%.
         const stated = own.match(/^[\s(]*(\d*\.?\d+)\s*%/)?.[1];
-        if (stated && med && !new RegExp(`(^|[^\\d.])${stated.replace(".", "\\.")}%`).test(med.generic))
+        const hasStrength = (m) => new RegExp(`(^|[^\\d.])${stated.replace(".", "\\.")}%`).test(m.generic);
+        // "Alphagan 0.15%" is Alphagan-P: the same drug in the strength the note names.
+        const sameDrug = stated && med && !hasStrength(med) && formulary.find((f) => f.generic.split(" ")[0] === med.generic.split(" ")[0] && hasStrength(f));
+        if (sameDrug) {
+          flags.push(`The note says ${stated}%, so ${sameDrug.brand} (${sameDrug.generic}) was chosen.`);
+          brand = sameDrug.brand;
+          med = sameDrug;
+        }
+        if (stated && med && !hasStrength(med))
           flags.push(`Strength: the note says ${stated}%, but ${brand} is ${med.generic}. Choose the right strength, or add it to the drug list.`);
         const context = item.before.split(/[,(]/).pop();
         const entry = { brand, eye: null, drops: 1, mode: "ongoing", freq: null, durationDays: 7, startDay: 1, steps: [], source: sentence, flags };
@@ -272,7 +288,7 @@ export function parseNote(note, formulary) {
         entry.eye = findEye(own) || (shared && findEye(shared));
         if (!entry.eye && sectionEye) {
           entry.eye = sectionEye;
-          flags.push(`The note does not say which eye. ${sectionEye === "OS" ? "Left" : sectionEye === "OD" ? "Right" : "Both"} was taken from the numbered problem it sits under.`);
+          flags.push(`The note does not say which eye. ${sectionEye === "OS" ? "Left" : sectionEye === "OD" ? "Right" : "Both"} was taken from the heading it sits under.`);
         } else if (!entry.eye) {
           entry.eye = "OU";
           flags.push("The note does not say which eye, so both eyes was used.");

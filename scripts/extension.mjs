@@ -27,7 +27,8 @@ const oscars = process.argv
   .filter((a) => a.startsWith("--oscar="))
   .flatMap((a) => a.slice(8).split(","))
   .map((o) => new URL(o.trim()).origin);
-if (dev) oscars.push("http://localhost:8080");
+// The demo Oscar, unless a test needs a copy locked elsewhere.
+if (dev && process.env.EDT_LOCK_TEST !== "1") oscars.push("http://localhost:8080");
 
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
