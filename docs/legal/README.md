@@ -7,7 +7,7 @@ What Eye Drop Tracker publishes and keeps, the law each document answers to, and
 | Document | Where | Audience | Answers to |
 | --- | --- | --- | --- |
 | Terms of use | public/terms.html | Everyone | Ontario contract and consumer law, Health Canada SaMD guidance |
-| Clinic terms | public/clinic-terms.html | Clinics and clinicians | PHIPA s. 10(4), O. Reg. 329/04 s. 6(1) and 6(4), Alberta HIA and Manitoba PHIA agreements on request. Serves as the written agreement with each custodian |
+| Clinic terms | public/clinic-terms.html | Clinics and clinicians | PHIPA s. 10(4), O. Reg. 329/04 s. 6(1) and 6(4), Alberta HIA and Manitoba PHIA agreements on request. It is the written agreement with each custodian |
 | Privacy notice | public/privacy.html | Everyone | PHIPA, PIPEDA and its ten principles, Quebec Law 25, other provinces |
 | Security page | public/security.html | Clinics, reviewers | Public description of the software and its safeguards |
 | security.txt | public/.well-known/security.txt | Security researchers | RFC 9116 |

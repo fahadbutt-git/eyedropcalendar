@@ -36,8 +36,9 @@ Adherence to glaucoma and post-operative drops is poor, and complex regimens (se
 - Three printed layouts the patient can choose from, in any mix: month calendar, daily chart (one page a week, a row for each time of day) and checklist
 
 **Prescription**
-- Prescriber details saved on the device; clinic, address, phone and fax optional
-- Full sig with the eye written out (no OD, OS or OU), dispense, refills and an ODB LU code chosen per drug from the codes that apply; the patient's address and healthcare number appear only when entered
+- Prescriber details saved on the device, with clinic, address, phone and fax optional
+- Full sig with the eye written out (no OD, OS or OU), dispense, refills and an ODB LU code chosen per drug from the codes that apply
+- Patient's address and healthcare number appear only when entered
 - Leave off any drug the patient already has
 
 **Phone**
@@ -48,7 +49,7 @@ Adherence to glaucoma and post-operative drops is poor, and complex regimens (se
 
 **Formulary**
 - 29 glaucoma and post-operative drops with generic name, class, usual dose (from the Canadian product monographs), label maximum, the ODB LU codes that can apply, AAO cap colour and formulation
-- Add, edit, delete, search and sort; export and import to share a list across a clinic
+- Add, edit, delete, search and sort drugs, and export or import a list to share it across a clinic
 - An unedited formulary follows the latest defaults automatically
 
 ## Privacy
@@ -57,7 +58,7 @@ There is no server and no account. Patient details are kept only in the open bro
 
 ## Accessibility
 
-- Text and controls aim for WCAG 2.2 AA: AA contrast, visible focus, native radio controls, sizes in rem so the phone's text size setting applies, and support for high contrast mode
+- Text and controls aim for WCAG 2.1 AA: AA contrast, native radio controls, sizes in rem so the phone's text size setting applies, and support for high contrast mode
 - Drugs are identified by number and name as well as colour, and eyes are written out
 - Large print schedule and larger text phone view for low vision
 - Keyboard focus is visible throughout, with a skip link and labelled controls
@@ -104,7 +105,7 @@ src/
     checks.js                safety checks: duplicate therapy, label maximum, age, beta blockers in both eyes
     changes.js               plain-language notes when a drop starts, changes or stops
     hash.js                  plan fingerprint for check marks and calendar events
-    calendar.js              how many days a schedule covers; ongoing drops never end on the phone
+    calendar.js              how many days a schedule covers (ongoing drops never end on the phone)
     doses.js                 doses grouped by time (phone view, alarms, notifications)
     ics.js                   calendar alarm file
     share.js                 phone link encoding and decoding

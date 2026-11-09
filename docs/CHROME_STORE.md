@@ -22,7 +22,7 @@ Eye Drop Tracker for Oscar connects the Oscar EMR to Eye Drop Tracker (eyedroptr
 
 On a patient's encounter in Oscar, click the Eye Drop Tracker button, choose "Read eye drops with Eye Drop Tracker" from the right-click menu, or press Option+Shift+E (Alt+Shift+E on Windows). The extension reads the drops from the chart note being written, from text you select, from a saved note, or from the medication list.
 
-- Each drop shows what was read and what had to be assumed (for example, an eye that was not stated), flagged for checking.
+- Each drop shows what was read and flags for checking anything that had to be assumed, such as an eye that was not stated.
 - Past drops, allergies, stopped drops, as-needed drops and medicines taken by mouth are listed but left out.
 - Eye Drop Tracker opens with the drops filled in. The calendar and prescription stay locked until the clinician confirms every drop against the chart.
 - Add to Oscar chart saves the finished plan to the same patient as an unsigned note, with a link that reopens the plan exactly at the next visit, so a taper can be changed without starting over. The extension writes the note itself from the plan, only after a click, only for the patient and clinician it was read from, and only once.

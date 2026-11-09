@@ -5,7 +5,7 @@ Eye Drop Tracker for Oscar is a Chrome extension. On an Oscar encounter it reads
 ## How it works
 
 1. The clinician opens a patient's encounter in Oscar and clicks the Eye Drop Tracker button in Chrome's toolbar. Oscar usually opens encounters in a pop-up window, which Chrome shows without extension buttons, so the panel also opens from the right-click menu (Read eye drops with Eye Drop Tracker) or with Option+Shift+E (Alt+Shift+E on Windows).
-2. A panel on the right reads, in this order of preference: text the clinician selected, today's note while it is still being typed, the newest saved note that names a drop, or the medication list. It reads the patient's notes and medication list through Oscar's REST interface (`/ws/rs`), using the clinician's own Oscar login. It shows each drop it found, what it had to assume (the eye, the frequency, a strength), and what it saw but left out (past drugs, allergies, stopped drops, PRN drops, pills, lubricants).
+2. A panel on the right reads, in this order of preference: text the clinician selected, today's note while it is still being typed, the newest saved note that names a drop, or the medication list. It reads the patient's notes and medication list through Oscar's REST interface (`/ws/rs`) with the clinician's own Oscar login. It shows each drop it found, what it had to assume (the eye, the frequency, a strength), and what it saw but left out (past drugs, allergies, stopped drops, PRN drops, pills, lubricants).
 3. The clinician unticks anything wrong and clicks Open in Eye Drop Tracker. The drops, the sentence each was read from, and the name and date of birth go to a new Eye Drop Tracker tab through the extension, not the address bar.
 4. Eye Drop Tracker shows the assumptions again. The calendar and prescription stay closed until the clinician confirms every drop has been checked against the chart.
 5. On the calendar page, Add to Oscar chart adds the plan to that same patient as an unsigned note, which the clinician signs in Oscar. The website sends only the plan code. The extension checks it is a real plan and writes the note text itself, so a page can never put its own words in a chart.
@@ -18,7 +18,7 @@ Eye Drop Tracker for Oscar is a Chrome extension. On an Oscar encounter it reads
 - Eye Drop Tracker keeps the clinician's work in the tab's session storage only, and clears it after 30 minutes without use, including when a closed tab is reopened later.
 - The clinic needs no keys, accounts or setup in Oscar.
 
-Oscar also offers an OAuth interface (`/ws/services`), which needs the clinic's administrator to register the app. It is not used, because the notes service needs a logged-in session that OAuth calls do not have.
+Oscar also offers an OAuth interface (`/ws/services`), which needs the clinic's administrator to register the app. The extension does not use it, because the notes service needs a logged-in session that OAuth calls do not have.
 
 ## Safeguards
 
@@ -96,7 +96,7 @@ node oscar/security.mjs
 ## Tested
 
 - Unit tests for the note reader and the Oscar client (`tests/noteParser.test.mjs`, `tests/oscarApi.test.mjs`).
-- `oscar/e2e.mjs` runs the built extension in Chrome against the stand-in, which copies Open-O 25: encounters in pop-up windows at casemgmt/forward.jsp, dates as milliseconds, the note being written in a textarea named caseNote_note, and Prototype.js on every page, which corrupts lists in JSON written from the page itself. The extension's code runs in Chrome's separate extension context, so it is not affected, and the test checks that.
+- `oscar/e2e.mjs` runs the built extension in Chrome against the stand-in. The stand-in copies Open-O 25: encounters in pop-up windows at casemgmt/forward.jsp, dates as milliseconds, the note being written in a textarea named caseNote_note, and Prototype.js on every page. Prototype.js corrupts lists in JSON written from the page itself. The extension's code runs in Chrome's separate extension context and is not affected, which the test also checks.
 - `oscar/security.mjs` runs 18 checks: markup in every chart field never runs, pages cannot message the extension, scripted clicks and forged requests reach nothing, free text cannot reach a chart, a different patient or clinician is refused, repeats are refused, malformed imports are cut down, storage is cleared, and all 135 requests stay on Oscar or Eye Drop Tracker with no patient details in any address.
 - On a demo Open-O 25 (5 November 2026): the REST calls work with the browser login and need no CSRF token, the panel read a real note correctly, and Add to Oscar chart saved an unsigned note. Patients created through the REST interface are not admitted to a program and Oscar hides their notes, so demo patients must be added through Oscar's Add Patient screen.
 

@@ -20,7 +20,7 @@ The clinic, as health information custodian, adopts or adapts this assessment an
 
 - The clinic is the custodian under PHIPA (or the equivalent law of its province) for all patient information entered, printed, charted or given to the patient.
 - Use of patient information to prepare the patient's own drop plan is a use for providing health care. Within the circle of care the clinic may rely on assumed implied consent under PHIPA section 20(2), unless the patient has said otherwise.
-- The makers supply electronic goods under PHIPA section 10(4). The software is designed so that patient information is not sent to them, so no disclosure to them occurs (O. Reg. 329/04, section 6(4)). They are not a health information network provider.
+- The makers supply electronic goods under PHIPA section 10(4). The software is designed not to send patient information to them, so no disclosure to them occurs (O. Reg. 329/04, section 6(4)). They are not a health information network provider.
 - Clinic to confirm whether its policies need express consent before the plan link is sent to a patient by email or text.
 
 ## 3. Data inventory
