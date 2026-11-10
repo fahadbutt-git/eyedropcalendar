@@ -15,6 +15,7 @@
 import { createServer } from "node:http";
 import { randomBytes } from "node:crypto";
 import { PATIENTS } from "./patients.mjs";
+import { eyeformPage } from "./eyeform.mjs";
 
 const PORT = Number(process.env.PORT || 8080);
 const sessions = new Set();
@@ -121,6 +122,8 @@ async function rest(req, res, path, url) {
   }
   if ((m = path.match(/^rx\/drugs\/current\/(\d+)$/))) {
     const p = patient(m[1]);
+    // Some clinics' Oscar answers this with a server error (seen 10 November 2026).
+    if (p?.rxError) return send(res, 500, "");
     const drugs = (p?.rx || []).map((d, i) => ({ drugId: str(p.id * 10 + i), demographicNo: str(p.id), archived: "false", prn: "false", ...d }));
     return send(res, 200, drugs.length ? { content: cxfList(drugs) } : {});
   }
@@ -150,6 +153,13 @@ const server = createServer(async (req, res) => {
   if (path === "/oscar/__standin/sign" && req.method === "POST") {
     const body = JSON.parse((await readBody(req)) || "{}");
     saved.push({ demographicNo: Number(body.demographicNo), note: String(body.note || ""), isSigned: true, date: new Date().toISOString(), byEncounter: true });
+    return send(res, 200, { ok: true });
+  }
+  // What the Eye Form's Sign, Save & Exit does: each box becomes its own note.
+  if (path === "/oscar/__standin/eyeformsign" && req.method === "POST") {
+    const body = JSON.parse((await readBody(req)) || "{}");
+    for (const part of ["current", "impression", "plan"])
+      if (String(body[part] || "").trim()) saved.push({ demographicNo: Number(body.demographicNo), note: String(body[part]), isSigned: true, date: new Date().toISOString(), byEncounter: true, part });
     return send(res, 200, { ok: true });
   }
   // Each test run starts from no saved notes and the usual clinician.
@@ -182,8 +192,14 @@ const server = createServer(async (req, res) => {
   if (!authed(req)) return res.writeHead(302, { Location: "/oscar/index.jsp" }).end();
   if (path === "/oscar/provider/providercontrol.jsp")
     return send(res, 200, page("Schedule", `<h2>Today</h2><table><tr><th>Patient</th><th>Reason</th></tr>${PATIENTS.map(
-      (p) => `<tr><td><a href="/oscar/casemgmt/forward.jsp?action=view&demographicNo=${p.id}&providerNo=999998" onclick="window.open(this.href, 'encounter${p.id}', 'height=710,width=1024,location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes'); return false;">${escapeHtml(p.lastName)}, ${escapeHtml(p.firstName)}</a></td><td>${escapeHtml(p.reason)}</td></tr>`
+      (p) => `<tr><td><a href="${p.screen?.startsWith("eyeform") ? `/oscar/eyeform/eyeform.jsp?reason=Progress+Note&appointment_no=&demographic_no=${p.id}${p.screen === "eyeform-kai" ? "&variant=kai" : ""}` : `/oscar/casemgmt/forward.jsp?action=view&demographicNo=${p.id}&providerNo=999998`}" onclick="window.open(this.href, 'encounter${p.id}', 'height=710,width=1024,location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes'); return false;">${escapeHtml(p.lastName)}, ${escapeHtml(p.firstName)}</a></td><td>${escapeHtml(p.reason)}</td></tr>`
     ).join("")}</table>`), "text/html");
+  if (path === "/oscar/eyeform/eyeform.jsp") {
+    const p = PATIENTS.find((x) => x.id === Number(url.searchParams.get("demographic_no")));
+    if (!p) return send(res, 404, page("Not found", "No such patient"), "text/html");
+    const signed = [...p.notes, ...saved.filter((s) => s.demographicNo === p.id).map((s) => ({ date: s.date, text: s.note }))].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
+    return send(res, 200, eyeformPage(p, url.searchParams.get("variant"), signed), "text/html");
+  }
   if (path === "/oscar/CaseManagementEntry.do" || path === "/oscar/casemgmt/forward.jsp") {
     const p = PATIENTS.find((x) => x.id === Number(url.searchParams.get("demographicNo")));
     if (!p) return send(res, 404, page("Not found", "No such patient"), "text/html");

@@ -40,8 +40,8 @@ await worker.evaluate(async (url) => {
 const panel = enc.locator("#edt-oscar-panel");
 await panel.locator(".note-partial").first().waitFor();
 const text = await enc.evaluate(() => document.getElementById("edt-oscar-panel").shadowRoot.querySelector("aside").innerText);
-assert.match(text, /Saved notes could not be read \(POST notes\/#\/all: 500\)/);
-assert.match(text, /medication list could not be read/);
+assert.match(text, /Oscar did not send the saved notes \(POST notes\/#\/all: 500\)/);
+assert.match(text, /medication list was not available/);
 assert.match(text, /Vigamox/, "today's unsaved note is still read");
 assert.doesNotMatch(text, /notes\/3\//, "no patient number in the details");
 await enc.close();

@@ -3,7 +3,8 @@
 // allowed once, reads nothing, and opens the panel only on a person's click.
 import { openPatientId } from "./oscarApi.js";
 
-const ENCOUNTER = /casemgmt\/forward\.jsp|CaseManagementEntry|oscarEncounter|encounter/i;
+// Oscar's encounter, and its ophthalmology Eye Form (eyeform/eyeform.jsp).
+const ENCOUNTER = /casemgmt\/forward\.jsp|CaseManagementEntry|oscarEncounter|encounter|eyeform/i;
 
 function add() {
   if (window.top !== window || document.getElementById("edt-oscar-launcher")) return;

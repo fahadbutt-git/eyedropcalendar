@@ -23,6 +23,7 @@
     "oscar:e2e": "node oscar/e2e.mjs",
     "oscar:resilience": "node oscar/resilience.mjs",
     "oscar:edge": "node oscar/edge.mjs",
+    "oscar:eyeform": "node oscar/eyeform.mjs",
     "oscar:lock": "EDT_LOCK_TEST=1 node scripts/extension.mjs --dev --oscar=https://other-clinic.example.com && node oscar/lock.mjs && node scripts/extension.mjs --dev"
   },
   "dependencies": {
@@ -55,5 +56,5 @@
     "type": "git",
     "url": "https://github.com/fahadbutt-git/eyedropcalendar"
   },
-  "extensionVersion": "0.6.1"
+  "extensionVersion": "0.6.2"
 }

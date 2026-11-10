@@ -6,6 +6,7 @@ import { parseNote, parseRxList } from "../../../src/lib/noteParser.js";
 import { patientInstruction } from "../../../src/lib/wording.js";
 import { codeFromUrl, decodeRegimen } from "../../../src/lib/share.js";
 import { oscarClient, openPatientId, restBase } from "./oscarApi.js";
+import { todayText, planTarget, isTodayBox, eyeMedsList, todayBoxes } from "./todayBoxes.js";
 import STYLE from "./panel.css";
 
 const SITE_HOST = new URL(__EDT_SITE__).host;
@@ -45,18 +46,17 @@ function start() {
   };
   const selection = String(window.__edtSelection || window.getSelection?.() || fieldSelection() || "").trim();
   window.__edtSelection = "";
-  // The note being written at this visit, not saved yet. Oscar starts it with
-  // a date line such as "[05-Nov-2026 .: ]", which is not part of the plan.
-  const draft = () =>
-    [...document.querySelectorAll('textarea[name="caseNote_note"]')]
-      .map((t) => t.value.replace(/^\s*\[[^\]\n]{0,60}\]\s*/, "").trim())
-      .filter((t) => t.length > 10)
-      .join("\n\n");
+  // What is being written at this visit, not saved yet: Oscar's note box, or
+  // the Eye Form's Plan, Impression and Current Hx boxes.
+  const draft = () => todayText(document);
+  const eyeForm = () => todayBoxes(document).some((b) => b.role !== "note");
+  const eyeMeds = eyeMedsList(document);
   const state = { patient: null, notes: [], rx: [], source: null, result: null, chosen: new Set(), error: "", busy: true, opened: false, offerButton: false };
 
   const sourceText = () => {
     if (state.source === "selection") return selection;
     if (state.source === "draft") return draft();
+    if (state.source === "eyemeds") return eyeMeds;
     return state.notes.find((n) => n.id === state.source)?.text || "";
   };
   // A note Eye Drop Tracker wrote carries the plan link, which gives the
@@ -91,7 +91,8 @@ function start() {
     const r = state.result;
     const options = [
       selection.length > 10 && `<option value="selection">Text selected on this page</option>`,
-      draft() && `<option value="draft">Today's note, not saved yet</option>`,
+      draft() && `<option value="draft">${eyeForm() ? "Today's Eye Form, not saved yet" : "Today's note, not saved yet"}</option>`,
+      eyeMeds && `<option value="eyemeds">Eye medication list in the chart</option>`,
       ...state.notes.map((n) => `<option value="${esc(n.id)}">Note, ${esc(fmtDate(n.date))}${n.provider ? `, ${esc(n.provider)}` : ""}</option>`),
       state.rx.length && `<option value="rx">Medication list (Rx)</option>`,
     ].filter(Boolean);
@@ -100,13 +101,14 @@ function start() {
       <div class="body">
         ${state.error ? `<p class="error" role="alert">${esc(state.error)}${state.errorDetail ? `<span class="detail">Details for support: ${esc(state.errorDetail)}</span>` : ""}</p>` : ""}
         ${state.retry ? `<button class="secondary" data-act="retry">Try again</button>` : ""}
-        ${(state.partial || []).map((m) => `<p class="note-partial">${esc(m)}. Select the drops in the note, or use today's note.</p>`).join("")}
+        ${(state.partial || []).map((m) => `<p class="note-partial">${esc(m)}</p>`).join("")}
         ${state.busy ? `<p class="muted">Reading the chart…</p>` : ""}
-        ${state.stale ? `<div class="note-changed" role="status"><p>Today's note has changed since it was read.</p><button class="secondary" data-act="reread">Read today's note again</button></div>` : ""}
+        ${state.stale ? `<div class="note-changed" role="status"><p>${eyeForm() ? "Today's Eye Form" : "Today's note"} has changed since it was read.</p><button class="secondary" data-act="reread">Read it again</button></div>` : ""}
         ${state.patient ? `<p class="who"><strong>${esc(state.patient.name)}</strong>${state.patient.dob ? `<span>Born ${esc(state.patient.dob)}</span>` : ""}</p>` : ""}
         ${options.length ? `<label class="field">Read drops from<select data-act="source">${options.join("")}</select></label>` : ""}
         ${state.source && state.source !== "rx" ? `<details class="src"><summary>Show the text</summary><pre>${esc(sourceText())}</pre></details>` : ""}
         ${r ? drops(r) : ""}
+        ${state.rxNote && !state.busy ? `<p class="muted small">${esc(state.rxNote)}</p>` : ""}
         ${state.patient && !state.busy && !state.error && !state.source && !state.stale && !state.partial?.length ? `<p class="muted">This chart has no notes or medications to read yet. Write the plan in today's note and open the panel again, or add the drops by hand.</p>` : ""}
       </div>
       <footer>
@@ -219,16 +221,24 @@ function start() {
       // clinic whose Oscar differs can still read today's note or a selection.
       const [patient, notes, rx, provider] = await Promise.all([
         client.patient(id),
-        client.notes(id).catch((e) => ((state.partial = state.partial || []).push(`Saved notes could not be read (${e.detail || e.message})`), [])),
-        client.currentDrugs(id).catch((e) => ((state.partial = state.partial || []).push(`The medication list could not be read (${e.detail || e.message})`), [])),
+        client.notes(id, 40).catch((e) => ((state.partial = state.partial || []).push(`Oscar did not send the saved notes (${e.detail || e.message}), so only today's writing can be read.`), [])),
+        // Some Oscars do not offer the Rx list to other screens. The notes
+        // still hold the plan, so this is only mentioned, quietly.
+        client.currentDrugs(id).catch((e) => ((state.rxNote = `Oscar's medication list was not available (${e.detail || e.message}). The notes were read as usual.`), [])),
         client.me().catch(() => ""),
       ]);
       Object.assign(state, { patient, notes, rx, provider });
-      const withDrops = notes.find((n) => fromLink(n.text) || parseNote(n.text, formulary).drops.length);
+      // The Eye Form saves Impression, Plan and Current Hx as separate notes at
+      // the same moment, so a plan link from the newest visit day wins over
+      // another note of that day that only names a drop.
+      const named = notes.find((n) => fromLink(n.text) || parseNote(n.text, formulary).drops.length);
+      const linked = notes.find((n) => fromLink(n.text));
+      const withDrops = linked && named && linked.date.slice(0, 10) >= named.date.slice(0, 10) ? linked : named;
       // Selected text first, then today's unsaved note if it names a drop,
       // then the newest saved note that does.
       const draftHasDrops = draft() && (fromLink(draft()) || parseNote(draft(), formulary).drops.length);
-      state.source = selection.length > 10 ? "selection" : draftHasDrops ? "draft" : withDrops?.id || notes[0]?.id || (rx.length ? "rx" : draft() ? "draft" : null);
+      const medsHaveDrops = eyeMeds && parseNote(eyeMeds, formulary).drops.length;
+      state.source = selection.length > 10 ? "selection" : draftHasDrops ? "draft" : withDrops?.id || (medsHaveDrops ? "eyemeds" : null) || (draft() ? "draft" : null) || notes[0]?.id || (rx.length ? "rx" : null);
       if (state.source) read();
       else state.readDraft = draft();
     } catch (e) {
@@ -263,7 +273,7 @@ function start() {
         // what the clinician has written, and is signed with it. A separate
         // note saved behind it would make Oscar drop the unsaved draft the
         // next time the encounter opens.
-        const box = [...document.querySelectorAll('textarea[name="caseNote_note"]')].filter((t) => !t.disabled && !t.readOnly && t.offsetParent !== null).pop();
+        const box = planTarget(document);
         if (box) {
           const before = box.value.replace(/\s+$/, "");
           box.value = `${before}${before ? "\n\n" : ""}${msg.text}\n`;
@@ -273,7 +283,7 @@ function start() {
           state.readDraft = draft();
           state.stale = false;
           render();
-          return "draft";
+          return box.name === "caseNote_note" ? "draft" : "plan";
         }
         return client.addNote(msg.patientId, msg.text).then(() => "note");
       })
@@ -284,7 +294,9 @@ function start() {
             message:
               where === "draft"
                 ? "Added to today's note in Oscar, below what was already written. Review it and sign the note as usual."
-                : "Added to the Oscar chart as an unsigned note. Sign it in the chart.",
+                : where === "plan"
+                  ? "Added to the Plan box in Oscar, below what was already written. Review it and sign as usual."
+                  : "Added to the Oscar chart as an unsigned note. Sign it in the chart.",
           }),
         (e) => reply({ ok: false, message: e.message || "Oscar did not save the note." })
       );
@@ -297,7 +309,7 @@ function start() {
   // Typing in today's note after the panel read it: offer to read it again,
   // so the panel never shows a plan the note no longer says.
   const onNoteInput = (e) => {
-    if (e.target?.name !== "caseNote_note" || state.busy || state.stale || !state.patient) return;
+    if (!isTodayBox(e.target, document) || state.busy || state.stale || !state.patient) return;
     if (draft() !== (state.readDraft ?? "")) {
       state.stale = true;
       render();

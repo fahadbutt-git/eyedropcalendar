@@ -1,4 +1,6 @@
 // Made-up patients and notes for the stand-in Oscar. None of them are real.
+import { COMPLEX } from "./complex.mjs";
+
 export const PATIENTS = [
   {
     id: 1,
@@ -154,4 +156,5 @@ RTC 1 week with IOP.`,
     notes: [],
     rx: [],
   },
+  ...COMPLEX,
 ];

@@ -178,8 +178,8 @@ await scenario("3a. Oscar 500 on notes and Rx: plain message, add by hand offere
   await panelOf(enc).locator(".note-partial").first().waitFor();
   await panelOf(enc).locator("text=Reading the chart").waitFor({ state: "detached" });
   const text = await panelText(enc);
-  assert.match(text, /Saved notes could not be read/);
-  assert.match(text, /medication list could not be read/);
+  assert.match(text, /Oscar did not send the saved notes/);
+  assert.match(text, /medication list was not available/);
   assert.ok(await panelOf(enc).getByRole("button", { name: /add drops by hand/ }).isEnabled(), "add by hand not offered");
   ok("partial failure named, add by hand enabled");
   assert.doesNotMatch(text, /no notes or medications to read yet/, "panel says the chart has no notes, though they could not be read");
