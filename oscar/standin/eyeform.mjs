@@ -31,17 +31,18 @@ export function eyeformPage(p, variant, signedHistory) {
   const head = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(p.lastName)}, ${esc(p.firstName)} - Eyeform</title><style>${CSS}</style></head><body>`;
   const hdr = `<div class="hdr"><b>${esc(p.lastName)}, ${esc(p.firstName)}</b> (${p.sex}) (DOB: ${p.dob}) &nbsp; MRP Demo, Doctor</div>`;
   if (variant === "kai")
-    return `${head}${hdr}<div class="wrap"><div class="col">
-      <div class="smallBox"><div class="boxTitle">Current Hx</div><textarea data-part="current">${esc(f.current || "")}</textarea></div>
-      <div class="smallBox"><div class="boxTitle">Past Eye History</div><div class="content">${list(f.pastEye || [])}</div></div>
-      <div class="smallBox"><div class="boxTitle">Eye Meds</div><div class="content">${list(f.meds || [])}</div></div>
-      <div class="smallBox"><div class="boxTitle">Other Meds</div><div class="content">${list(f.otherMeds || [])}</div></div>
+    return `${head.replace(".title,.boxTitle{", ".title,.bt{")}${hdr}<div class="wrap"><div class="col">
+      <div class="smallBox"><div class="bt">Current Hx</div><textarea data-part="current">${esc(f.current || "")}</textarea></div>
+      <div class="smallBox"><div class="bt">Past Eye History</div><div class="content">${list(f.pastEye || [])}</div></div>
+      <div class="smallBox"><div class="bt">Eye Meds</div><div class="content">${list(f.meds || [])}</div></div>
+      <div class="smallBox"><div class="bt">Other Meds</div><div class="content">${list(f.otherMeds || [])}</div></div>
     </div><div class="col">
-      <div class="smallBox"><div class="boxTitle">Office Communication</div><textarea>${esc(f.office || "")}</textarea></div>
-      <div class="smallBox"><div class="boxTitle">Research/Notes</div><textarea>${esc(f.research || "")}</textarea></div>
-      <div class="halfBox"><div class="boxTitle">Impression History</div><div class="content">${history}</div></div>
-      <div class="wideBox"><div class="boxTitle">Impression</div><textarea data-part="impression">${esc(f.impression || "")}</textarea></div>
-      <div class="halfBox"><div class="boxTitle">Plan</div><textarea data-part="plan">${esc(f.plan || "")}</textarea></div>
+      <div class="smallBox"><div class="bt">Office Communication</div><textarea>${esc(f.office || "")}</textarea></div>
+      <div class="smallBox"><div class="bt">Research/Notes</div><textarea>${esc(f.research || "")}</textarea></div>
+      <div class="halfBox"><div class="bt">Measurements</div><div class="content">IOP OD <b>27</b> OS <b>26</b></div></div>
+      <div class="halfBox"><div class="bt">Impression History</div><div class="content">${history}</div></div>
+      <div class="wideBox"><div class="bt">Impression</div><textarea data-part="impression">${esc(f.impression || "")}</textarea></div>
+      <div class="halfBox"><div class="bt">Plan</div><textarea data-part="plan">${esc(f.plan || "")}</textarea></div>
     </div></div><div class="btns"><span id="saveMsg"></span><div id="sign">Sign, Save &amp; Exit</div></div>${sign}</body></html>`;
   return `${head}${hdr}<div class="wrap"><div class="col">
     <div class="smallBox boxTitleLink" id="eyedrops"><div class="title">Eye drops</div><div class="content">${list(f.meds || [])}</div></div>

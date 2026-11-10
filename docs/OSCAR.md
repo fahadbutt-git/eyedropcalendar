@@ -134,9 +134,10 @@ Run in Chrome on a local Open-O 25 in Docker, with made-up patients only, on ext
 
 ## First clinic install, 10 November 2026
 
-The clinic installed 0.6.1 from the setup video without help. Their photo of the panel showed three things, all addressed in 0.6.2:
+The clinic installed 0.6.1 from the setup video without help. Their photo of the panel showed three things, all addressed in 0.6.2 and 0.6.3:
 
 - The clinic charts in a customised Eye Form (eyeform/eyeform.jsp), not the standard encounter. The Eye drops button did not appear there, and the panel found no note box, so it fell back to an old saved note that only said "Smart Encounter". The button now appears on the Eye Form. The panel reads the Eye Form's Plan, Impression and Current Hx boxes, found by Oscar's ids or, on a customised form, by the titles above them. Boxes about other things (Office Communication, Research/Notes, Past Eye History, Family History, Patient Log and similar) are never read. The plan goes back into the Plan box.
+- On a customised Eye Form, a box's title is taken only from inside its own box. In 0.6.2 the search could climb past a box whose title used an unfamiliar style and take a number from elsewhere on the page, so Office Communication was read as part of today's note. A rehearsal for the second setup video found this before any clinic used 0.6.2, and the stand-in's customised Eye Form now uses an unfamiliar title style so the test catches it.
 - Their Oscar answered the medication list request with a server error (GET rx/drugs/current: 500). This is now one quiet line under the drops, not a warning, since the notes hold the plan.
 - The Eye Form saves Impression, Plan and Current Hx as separate notes at the same moment. At the next visit, a plan link saved that day wins over another note of the same day that only names a drop.
 - When the plan is signed, the open-source Eye Form also sends the Plan box text to the clinic's receptionists as a tickler. The plan added by Eye Drop Tracker is part of that text, as anything else written in the Plan box would be.

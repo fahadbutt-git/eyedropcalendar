@@ -17,8 +17,10 @@ const usable = (t) => t && !t.disabled && !t.readOnly && t.offsetParent !== null
 
 const clean = (s) => String(s || "").replace(/\s+/g, " ").trim();
 
-// The title shown above a box: its label, or the first heading-like text in
-// the boxes around it.
+// The title shown above a box: its label, or the first short text before it
+// inside its own box. The search never climbs into a container that holds
+// another writing box, so one box can never take another's title, or a
+// number from elsewhere on the page.
 function titleOf(t) {
   if (t.getAttribute("aria-label")) return clean(t.getAttribute("aria-label"));
   if (t.id) {
@@ -28,8 +30,13 @@ function titleOf(t) {
   let el = t;
   for (let up = 0; up < 4 && el.parentElement; up++) {
     el = el.parentElement;
-    const h = el.querySelector(".title, .boxTitle, legend, h1, h2, h3, h4, th, strong, b");
-    if (h && !h.contains(t) && clean(h.textContent)) return clean(h.textContent).slice(0, 40);
+    if ([...el.querySelectorAll("textarea, input[type=text], [contenteditable=true]")].some((x) => x !== t)) break;
+    for (const h of el.querySelectorAll("*")) {
+      if (h === t || h.contains(t) || t.contains(h)) continue;
+      if (!(h.compareDocumentPosition(t) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
+      const text = clean(h.textContent);
+      if (text && text.length <= 40 && /[A-Za-z]{2}/.test(text) && ![...h.children].some((c) => clean(c.textContent) === text)) return text;
+    }
   }
   return "";
 }
@@ -82,17 +89,21 @@ export const isTodayBox = (el, doc = document) => !!el && todayBoxes(doc).some((
 // The chart's list of eye medications (the Eye Form's "Eye Meds" or "Eye
 // drops" box), as plain lines.
 export function eyeMedsList(doc = document) {
-  for (const h of doc.querySelectorAll(".title, .boxTitle, th, legend, h2, h3, h4, strong, b, a")) {
+  const TITLE = /^(?:eye|ocular) ?(?:meds|medications?|drops)$|^eyedrops$/i;
+  for (const h of doc.querySelectorAll("body *")) {
+    if (h.children.length || h.closest("#edt-oscar-panel, #edt-oscar-launcher, script, style")) continue;
     const title = clean(h.textContent);
-    if (!/^(?:eye|ocular) ?(?:meds|medications?|drops)\b|^eyedrops\b/i.test(title) || title.length > 40) continue;
-    const box = h.closest(".smallBox, .halfBox, .wideBox, td, fieldset, section, div[id]") || h.parentElement;
-    if (!box) continue;
-    const content = box.querySelector(".content") || box;
-    const lines = (content.innerText || content.textContent || "")
-      .split("\n")
-      .map(clean)
-      .filter((l) => l && l !== title && !/^[+x]$/i.test(l));
-    if (lines.length) return lines.join("\n");
+    if (!TITLE.test(title)) continue;
+    // The list is in the title's own box, a level or two up.
+    let box = h.parentElement;
+    for (let up = 0; up < 3 && box; up++, box = box.parentElement) {
+      if (box.querySelectorAll("textarea").length) break;
+      const lines = (box.innerText || box.textContent || "")
+        .split("\n")
+        .map(clean)
+        .filter((l) => l && l !== title && !/^[+x]$/i.test(l) && !/^none$/i.test(l));
+      if (lines.length) return lines.join("\n");
+    }
   }
   return "";
 }
