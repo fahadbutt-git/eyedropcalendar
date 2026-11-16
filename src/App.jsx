@@ -303,6 +303,19 @@ function ClinicianApp() {
     if (prescriberKey(p) !== prescriberKey(prescriber)) setPrescriberOk(prescriberKey(p));
     setPrescriber(p);
   };
+  // The clinician signed in to Oscar fills in the prescriber. It is never
+  // marked as confirmed, so the clinician still checks the details before a
+  // prescription prints. The clinic name and fax stay as typed.
+  const fillPrescriber = (c) => {
+    if (!c || typeof c !== "object") return;
+    const from = Object.fromEntries(["name", "license", "phone", "street", "city"].map((k) => [k, cleanText(c[k], k === "license" ? 20 : 160)]));
+    if (!from.name) return;
+    setPrescriber((p) => {
+      const same = (p.name || "").trim() === from.name && (!from.license || (p.license || "").trim() === from.license);
+      if (same) return { ...p, ...Object.fromEntries(Object.entries(from).filter(([k, v]) => v && !(p[k] || "").trim())) };
+      return { ...p, ...from, phone: from.phone || "", street: from.street || "", city: from.city || "" };
+    });
+  };
   // Today, refreshed when the tab comes back into use, so dates never go
   // stale in a tab left open overnight.
   const [today, setToday] = useState(todayISO);
@@ -445,7 +458,14 @@ function ClinicianApp() {
   // The extension's drops are checked like any other outside data, and only
   // drugs in this clinic's drug list are taken.
   const oscar = useOscarBridge((d) => {
-    const patientFromOscar = { ...BLANK_PATIENT, name: cleanText(d.patient?.name, 160), dob: isValidISO(d.patient?.dob) ? d.patient.dob : "" };
+    const patientFromOscar = {
+      ...BLANK_PATIENT,
+      name: cleanText(d.patient?.name, 160),
+      dob: isValidISO(d.patient?.dob) ? d.patient.dob : "",
+      hcn: cleanText(d.patient?.hcn, 20),
+      address: cleanText(d.patient?.address, 200),
+    };
+    fillPrescriber(d.clinician);
     // A plan link from an earlier Eye Drop Tracker chart note opens exactly
     // as saved, keeping its patient code so the patient's ticks carry over.
     if (typeof d.code === "string" && d.code) {

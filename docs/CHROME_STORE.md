@@ -49,14 +49,14 @@ For eye care teams using Oscar. Eye Drop Tracker is a scheduling and education a
 | Optional host permission (clinic copies only) | The clinic's copy names its own Oscar address. If a clinician chooses to add the Eye drops button, Chrome asks to allow that one address, so the button can appear on encounters, which Oscar opens in pop-up windows without the toolbar. The general listing requests no host permission. |
 | scripting | To show the panel on that Oscar page and read the patient's notes and medication list through Oscar's own interface. |
 | contextMenus | Oscar opens encounters in pop-up windows, which have no extension buttons. The right-click menu item is how the panel opens there. |
-| storage | To hold the plan while it passes from the Oscar tab to the Eye Drop Tracker tab. It uses session storage, which Chrome clears when the browser closes. The drops, the sentence each was read from, the name and the date of birth are deleted as soon as Eye Drop Tracker takes them. What remains is the Oscar tab and patient number, so the plan can go back to the right chart. It is deleted when either tab closes, and after two hours at most. |
+| storage | To hold the plan while it passes from the Oscar tab to the Eye Drop Tracker tab. It uses session storage, which Chrome clears when the browser closes. The drops, the sentence each was read from, the patient's name, date of birth, health card number and address, and the clinician's provider details are deleted as soon as Eye Drop Tracker takes them. What remains is the Oscar tab and patient number, so the plan can go back to the right chart. It is deleted when either tab closes, and after two hours at most. |
 | Content script on eyedroptracker.com | To hand the plan to Eye Drop Tracker and take back the plan code when the clinician clicks Add to Oscar chart. It runs only on eyedroptracker.com, and the site address is fixed in the package. |
 
 **Remote code:** No, I am not using remote code. All code is in the package.
 
 **Data usage.** Tick these, because the extension handles them on the user's own computer:
 
-- Personally identifiable information (the patient's name and date of birth, passed from Oscar to Eye Drop Tracker in the same browser)
+- Personally identifiable information (the patient's name, date of birth, health card number and address, and the signed-in clinician's provider details, passed from Oscar to Eye Drop Tracker in the same browser)
 - Health information (the drops, and the sentence each was read from, passed the same way)
 - Health information (the eye drop plan and chart note text)
 

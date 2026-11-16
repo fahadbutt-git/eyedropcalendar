@@ -6,9 +6,18 @@ Eye Drop Tracker for Oscar is a Chrome extension. On an Oscar encounter it reads
 
 1. The clinician opens a patient's encounter in Oscar and clicks the Eye Drop Tracker button in Chrome's toolbar. Oscar usually opens encounters in a pop-up window, which Chrome shows without extension buttons, so the panel also opens from the right-click menu (Read eye drops with Eye Drop Tracker) or with Alt+Shift+E (Control+Shift+E on a Mac).
 2. A panel on the right reads, in this order of preference: text the clinician selected, today's note while it is still being typed, the newest saved note that names a drop, or the medication list. On Oscar's ophthalmology Eye Form (eyeform/eyeform.jsp), today's writing is the Plan, Impression and Current Hx boxes, read together under their titles, and the Eye Form's Eye Meds or Eye drops list is offered as another source. It reads the patient's notes and medication list through Oscar's REST interface (`/ws/rs`) with the clinician's own Oscar login. It shows each drop it found, what it had to assume (the eye, the frequency, a strength), and what it saw but left out (past drugs, allergies, stopped drops, PRN drops, pills, lubricants).
-3. The clinician unticks anything wrong and clicks Open in Eye Drop Tracker. The drops, the sentence each was read from, and the name and date of birth go to a new Eye Drop Tracker tab through the extension, not the address bar.
+3. The clinician unticks anything wrong and clicks Open in Eye Drop Tracker. The drops, the sentence each was read from, the patient's name, date of birth, health card number and address, and the signed-in clinician's name, CPSO number, phone and practice address go to a new Eye Drop Tracker tab through the extension, not the address bar.
 4. Eye Drop Tracker shows the assumptions again. The calendar and prescription stay closed until the clinician confirms every drop has been checked against the chart.
 5. On the calendar page, Add to Oscar chart adds the plan to today's note in that same patient's open encounter (on the Eye Form, to the Plan box), below what the clinician has written, and the clinician signs the note as usual. Only when no note is open is the plan saved as a separate unsigned note. Saving a separate note while a draft is open would make Oscar drop the draft the next time the encounter opens, which a test on Open-O 25 showed on 8 November 2026. The website sends only the plan code. The extension checks it is a real plan and writes the note text itself, so a page can never put its own words in a chart.
+
+## Filled in from Oscar
+
+Since 0.6.4, at a clinic's request on 16 November 2026:
+
+- The patient's health card number (with version code) and address come from Oscar's patient record, with the name and date of birth.
+- The prescriber's name, CPSO number (Oscar's practitioner number), phone and practice address come from the clinician signed in to Oscar. The clinic name and fax stay as typed. When a different person was saved before, the details are replaced, and the clinician still confirms the prescriber before a prescription prints.
+- The signature is never taken from Oscar. The Ontario College of Pharmacists does not accept a pasted image of a signature as a prescriber's unique authorization. The clinician signs each prescription by hand, on screen or on paper, and the on-screen signature is never saved.
+- None of these details go into the plan link, the QR code or the chart note.
 
 ## Privacy
 

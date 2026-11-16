@@ -98,6 +98,15 @@ await tracker.locator(".import-review").waitFor();
 assert.equal(await isPopup(tracker), "normal", "Eye Drop Tracker opens in an ordinary window");
 assert.equal(new URL(tracker.url()).hash, "#/oscar", "no chart content in the address");
 assert.equal(await tracker.getByLabel("Patient name").inputValue(), "Alex SAMPLE");
+// The health card and address come from Oscar's patient record, and the
+// prescriber from the clinician signed in to Oscar, still to be confirmed.
+assert.equal(await tracker.getByLabel("Health card number").inputValue(), "0000000001");
+assert.equal(await tracker.getByLabel("Address").inputValue(), "1 Example Street, Toronto, ON M5V 0A1");
+const rxer = JSON.parse(await tracker.evaluate(() => localStorage.getItem("edt.prescriber.v1")));
+assert.equal(rxer.name, "Doctor Oscardoc");
+assert.equal(rxer.license, "99999");
+assert.equal(rxer.phone, "905-555-0100");
+assert.equal(rxer.street, "100 Demo Street");
 const list = await tracker.locator(".import-list > li > b").allTextContents();
 assert.deepEqual(list, ["Xalatan", "Pred Forte"]);
 assert.ok(await tracker.getByRole("button", { name: /Next: calendar/ }).isDisabled(), "calendar closed until checked");
@@ -129,6 +138,10 @@ assert.match(today, /^\[06-Nov-2026 \.: \][\s\S]*Eye drop plan/, "added below wh
 await fetch(`${OSCAR}/__standin/sign`, { method: "POST", body: JSON.stringify({ demographicNo: 1, note: today }) });
 const saved = await (await fetch(`${OSCAR}/__standin/saved`)).json();
 assert.equal(saved.length, 1);
+// The chart note's plan link carries drops only.
+const linkCode = codeFromUrl(saved[0].note);
+const decoded = Buffer.from(linkCode, "base64url").toString();
+for (const secret of ["0000000001", "Example Street", "Alex", "SAMPLE", "1951"]) assert.ok(!decoded.includes(secret) && !saved[0].note.includes(secret), `plan link or note leaks ${secret}`);
 assert.equal(saved[0].demographicNo, 1);
 
 // A different patient on the Oscar tab: nothing is added.

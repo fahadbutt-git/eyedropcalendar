@@ -85,11 +85,35 @@ export function oscarClient(base, fetcher = fetch) {
       const p = await call("providerService/provider/me");
       return String(p?.providerNo ?? p?.id ?? "");
     },
+    // The clinician signed in to Oscar, for the prescription. Oscar keeps the
+    // CPSO number as the practitioner number.
+    async clinician() {
+      const p = (await call("providerService/provider/me")) || {};
+      const a = typeof p.address === "object" && p.address ? p.address : { address: p.address };
+      return {
+        id: String(p.providerNo ?? p.id ?? ""),
+        name: [p.firstName, p.lastName].filter(Boolean).join(" "),
+        license: String(p.practitionerNo || "").trim(),
+        phone: String(p.workPhone || p.phone || "").trim(),
+        street: String(a.address || "").trim(),
+        city: [a.city, [a.province, a.postal].filter(Boolean).join(" ")].filter(Boolean).join(", "),
+      };
+    },
     async patient(id) {
       const d = await call(`demographics/${id}`);
       if (!d) throw new OscarError("missing", "Oscar did not return this patient.");
       const dob = d.dobYear && d.dobMonth && d.dobDay ? `${d.dobYear}-${String(d.dobMonth).padStart(2, "0")}-${String(d.dobDay).padStart(2, "0")}` : "";
-      return { id: String(d.demographicNo || id), name: [d.firstName, d.lastName].filter(Boolean).join(" "), dob: /^\d{4}-\d{2}-\d{2}$/.test(dob) ? dob : "" };
+      // Oscar sends the address as an object in newer versions and as fields
+      // on the patient in older ones.
+      const a = typeof d.address === "object" && d.address ? d.address : { address: d.address, city: d.city, province: d.province, postal: d.postal };
+      const address = [a.address, a.city, [a.province, a.postal].filter(Boolean).join(" ")].map((x) => String(x || "").trim()).filter(Boolean).join(", ");
+      return {
+        id: String(d.demographicNo || id),
+        name: [d.firstName, d.lastName].filter(Boolean).join(" "),
+        dob: /^\d{4}-\d{2}-\d{2}$/.test(dob) ? dob : "",
+        hcn: [d.hin, d.ver].map((x) => String(x || "").trim()).filter(Boolean).join(" "),
+        address,
+      };
     },
     async search(query) {
       const r = await call(`demographics/quickSearch?query=${encodeURIComponent(query)}`);

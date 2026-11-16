@@ -96,7 +96,7 @@ async function rest(req, res, path, url) {
   }
   if (broken.has("notes") && /^notes\/\d+\/all$/.test(path)) return send(res, 500, "");
   if (broken.has("rx") && /^rx\//.test(path)) return send(res, 500, "");
-  if (path === "providerService/provider/me") return send(res, 200, { id: provider, firstName: "doctor", lastName: "oscardoc" });
+  if (path === "providerService/provider/me") return send(res, 200, { id: provider, providerNo: provider, firstName: "Doctor", lastName: "Oscardoc", practitionerNo: "99999", workPhone: "905-555-0100", address: "100 Demo Street" });
   if ((m = path.match(/^notes\/(\d+)\/all$/)) && req.method === "POST") {
     const p = patient(m[1]);
     if (!p) return send(res, 200, { moreNotes: "false" });

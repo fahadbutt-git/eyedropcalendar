@@ -27,12 +27,12 @@ The clinic, as health information custodian, adopts or adapts this assessment an
 
 | Data element | Source | Where held | Retention | Identifiability |
 | --- | --- | --- | --- | --- |
-| Patient name, date of birth | Typed, or read from Oscar | Browser tab session storage | Cleared on New patient, tab close, or 30 minutes idle | Direct |
+| Patient name, date of birth, health card number, address | Typed, or read from Oscar | Browser tab session storage | Cleared on New patient, tab close, or 30 minutes idle | Direct |
 | Health card number, address | Typed, for the prescription | Browser tab session storage | As above | Direct |
 | Drops, eyes, frequency, taper, dates | Typed or read from chart | Browser tab, plan link | Tab as above. Link as long as kept | Indirect only in the link |
 | Random patient code | Generated | Plan link, patient phone | As long as kept | Not identifying alone |
 | Chart notes, medication list (read only) | Clinic's Oscar | Extension panel in the Oscar tab | Not stored. Gone when the panel closes | Direct |
-| Hand-off of drops, source sentences (200 characters each), name, date of birth | Extension | Chrome session storage | Deleted on hand-off. Tab and patient number until tab close or 2 hours | Direct |
+| Hand-off of drops, source sentences (200 characters each), name, date of birth, health card number, address, signed-in clinician's provider details | Extension | Chrome session storage | Deleted on hand-off. Tab and patient number until tab close or 2 hours | Direct |
 | Chart note written back | Extension | Clinic's Oscar | Clinic's retention rules | Direct |
 | Doses ticked, reminder setting | Patient | Patient's phone | Until the patient removes them | Not linked to identity off the phone |
 | Prescriber name, licence number, clinic address | Typed | Browser local storage | Until cleared | Clinician identity |
@@ -40,7 +40,7 @@ The clinic, as health information custodian, adopts or adapts this assessment an
 ## 4. Data flows
 
 1. The clinician opens a patient's encounter in Oscar and opens the extension. The extension reads that patient's notes and medication list through Oscar's own interface with the clinician's login.
-2. The clinician selects the drops and opens Eye Drop Tracker. Drops, the sentence each was read from, and the name and date of birth pass inside the same browser to the Eye Drop Tracker tab.
+2. The clinician selects the drops and opens Eye Drop Tracker. Drops, the sentence each was read from, the patient's name, date of birth, health card number and address, and the signed-in clinician's name, CPSO number, phone and practice address pass inside the same browser to the Eye Drop Tracker tab.
 3. The clinician ticks each drop as checked against its source sentence. The calendar, prescription and plan link are made in the browser.
 4. The clinician prints, hands the calendar to the patient, and the patient scans the QR code. The plan opens on the patient's phone from the link. No server receives it.
 5. The clinician clicks Add to Oscar chart. The extension adds the plan to the note open in the same patient's encounter, or saves it as an unsigned note when none is open, and the clinician signs it in Oscar.

@@ -115,7 +115,16 @@ function checkPayload(p) {
   return plain({
     patientId: String(p.patientId),
     provider: String(p.provider ?? "").slice(0, 20),
-    patient: { name: String(p.patient?.name ?? "").slice(0, 160), dob: String(p.patient?.dob ?? "").slice(0, 10) },
+    patient: {
+      name: String(p.patient?.name ?? "").slice(0, 160),
+      dob: String(p.patient?.dob ?? "").slice(0, 10),
+      hcn: String(p.patient?.hcn ?? "").slice(0, 20),
+      address: String(p.patient?.address ?? "").slice(0, 200),
+    },
+    // The clinician signed in to Oscar, offered for the prescription.
+    clinician: p.clinician && typeof p.clinician === "object"
+      ? Object.fromEntries(["name", "license", "phone", "street", "city"].map((k) => [k, String(p.clinician[k] ?? "").slice(0, k === "license" ? 20 : 160)]))
+      : null,
     drops: Array.isArray(p.drops) ? p.drops.slice(0, 12) : [],
     skipped: Array.isArray(p.skipped) ? p.skipped.slice(0, 20) : [],
     code: typeof p.code === "string" ? p.code.slice(0, 4000) : "",
@@ -151,8 +160,8 @@ async function pending(sender) {
   const { payload, ...rest } = stored;
   await chrome.storage.session.set({ [key(handoff)]: rest });
   if (Date.now() - stored.at > PLAN_TTL) return null;
-  const { patient, drops, skipped, code } = payload;
-  return { handoff, patient, drops, skipped, code };
+  const { patient, clinician, drops, skipped, code } = payload;
+  return { handoff, patient, clinician, drops, skipped, code };
 }
 
 const digest = async (text) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)))].map((b) => b.toString(16).padStart(2, "0")).join("");

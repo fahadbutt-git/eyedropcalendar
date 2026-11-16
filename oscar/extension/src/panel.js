@@ -187,7 +187,8 @@ function start() {
         payload: {
           patientId: state.patient.id,
           provider: state.provider,
-          patient: { name: state.patient.name, dob: state.patient.dob },
+          clinician: state.clinician,
+          patient: { name: state.patient.name, dob: state.patient.dob, hcn: state.patient.hcn || "", address: state.patient.address || "" },
           // The note stays here. Each drop takes only the sentence it was read
           // from, so the clinician can check it against the chart.
           drops: chosen.map((d) => ({ ...d, source: typeof d.source === "string" ? d.source.slice(0, 200) : "" })),
@@ -225,9 +226,9 @@ function start() {
         // Some Oscars do not offer the Rx list to other screens. The notes
         // still hold the plan, so this is only mentioned, quietly.
         client.currentDrugs(id).catch((e) => ((state.rxNote = `Oscar's medication list was not available (${e.detail || e.message}). The notes were read as usual.`), [])),
-        client.me().catch(() => ""),
+        client.clinician().catch(() => null),
       ]);
-      Object.assign(state, { patient, notes, rx, provider });
+      Object.assign(state, { patient, notes, rx, provider: provider?.id || "", clinician: provider });
       // The Eye Form saves Impression, Plan and Current Hx as separate notes at
       // the same moment, so a plan link from the newest visit day wins over
       // another note of that day that only names a drop.

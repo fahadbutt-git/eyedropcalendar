@@ -214,7 +214,7 @@ await fuzz.waitForTimeout(500);
 await fuzz.evaluate(() => {
   const many = Array.from({ length: 200 }, () => ({ brand: "Xalatan", eye: "OS", freq: 1, mode: "ongoing", drops: 1, durationDays: 7, startDay: 1, steps: [], flags: ["x".repeat(5000)] }));
   const evil = JSON.parse('{"__proto__": {"polluted": true}, "brand": "Xalatan", "eye": "OS", "freq": 1, "mode": "ongoing"}');
-  window.postMessage({ source: "edt-extension", type: "import", handoff: "h".repeat(500), patient: { name: "A‮B\u0000C".repeat(50), dob: "not a date" }, drops: [evil, { brand: "NotADrug" }, ...many], skipped: "nope" }, location.origin);
+  window.postMessage({ source: "edt-extension", type: "import", handoff: "h".repeat(500), patient: { name: "A‮B\u0000C".repeat(50), dob: "not a date", hcn: "9".repeat(500), address: ["x"] }, clinician: { name: "Z\u0000".repeat(400), license: { evil: 1 }, signature: "data:image/png;base64,AAAA" }, drops: [evil, { brand: "NotADrug" }, ...many], skipped: "nope" }, location.origin);
 });
 await fuzz.locator(".import-review").waitFor();
 assert.equal(await fuzz.evaluate(() => ({}).polluted), undefined, "prototype polluted");
@@ -223,9 +223,13 @@ assert.ok(shown <= 12, `${shown} drops shown`);
 const name = await fuzz.getByLabel("Patient name").inputValue();
 assert.ok(name.length <= 160 && !/[\u0000‮]/.test(name), "name not cleaned");
 assert.equal(await fuzz.getByLabel("Date of birth").inputValue(), "");
+assert.ok((await fuzz.getByLabel("Health card number").inputValue()).length <= 20, "health card not cut down");
+assert.equal(await fuzz.getByLabel("Address").inputValue(), "", "an address that is not text is dropped");
+const rxer = JSON.parse(await fuzz.evaluate(() => localStorage.getItem("edt.prescriber.v1")));
+assert.ok(rxer.name.length <= 160 && !/\u0000/.test(rxer.name) && rxer.license === "" && !("signature" in rxer), "prescriber not cleaned");
 const longest = await fuzz.evaluate(() => Math.max(...[...document.querySelectorAll(".import-list li li")].map((li) => li.textContent.length)));
 assert.ok(longest <= 300);
-ok("malformed imports are cut down: at most 12 drops, clean short text, no prototype pollution");
+ok("malformed imports are cut down: at most 12 drops, clean short text, no prototype pollution, no signature");
 await fuzz.close();
 
 // 8. New patient wipes the patient and the import from the browser tab.
@@ -255,7 +259,7 @@ await other.close();
 // patient details in any address.
 const hosts = [...new Set(requests.map((u) => new URL(u).host))].filter((h) => h);
 assert.deepEqual(hosts.filter((h) => !["localhost:8080", "localhost:4173"].includes(h)), []);
-const leaky = requests.filter((u) => /HOSTILE|SAMPLE|EXAMPLE|1960-01-01|1951-04-12|Xalatan|Pred%20Forte/i.test(decodeURIComponent(u)));
+const leaky = requests.filter((u) => /HOSTILE|SAMPLE|EXAMPLE|0000000001|1960-01-01|1951-04-12|Xalatan|Pred%20Forte/i.test(decodeURIComponent(u)));
 assert.deepEqual(leaky, []);
 ok(`${requests.length} requests, all to Oscar or Eye Drop Tracker, none with patient details in the address`);
 
