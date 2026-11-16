@@ -16,7 +16,7 @@ Since 0.6.4, at a clinic's request on 16 November 2026:
 
 - The patient's health card number (with version code) and address come from Oscar's patient record, with the name and date of birth.
 - The prescriber's name, CPSO number (Oscar's practitioner number), phone and practice address come from the clinician signed in to Oscar. The clinic name and fax stay as typed. When a different person was saved before, the details are replaced, and the clinician still confirms the prescriber before a prescription prints.
-- The signature is never taken from Oscar. The Ontario College of Pharmacists does not accept a pasted image of a signature as a prescriber's unique authorization. The clinician signs each prescription by hand, on screen or on paper, and the on-screen signature is never saved.
+- The signature is never taken from Oscar. Since 0.6.4 the prescriber can choose to keep their drawn signature in the browser and place it on later prescriptions with one click. It is kept with the prescriber's name and CPSO number, offered only once that prescriber is confirmed, and removed with Forget saved signature. The Ontario College of Pharmacists does not accept a pasted image of a signature as a unique authorization, so a pharmacy may call to verify. The prescription shows the prescriber's phone for that.
 - None of these details go into the plan link, the QR code or the chart note.
 
 ## Privacy

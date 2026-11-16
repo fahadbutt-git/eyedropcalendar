@@ -127,6 +127,33 @@ await tracker.locator("text=Added to today's note in Oscar").waitFor();
 assert.equal(await enc.locator("#edt-oscar-panel .note-changed").count(), 0, "panel reacted to its own write");
 await shot(tracker, "3-added");
 
+// A kept signature: opt-in, offered only to the confirmed prescriber, and
+// placed with a click on each prescription.
+await tracker.locator("button.step", { hasText: "Prescription" }).click();
+await tracker.locator(".prescriber-check button").first().click();
+const pad = tracker.locator(".sig-pad canvas");
+const box = await pad.boundingBox();
+await tracker.mouse.move(box.x + 20, box.y + 40);
+await tracker.mouse.down();
+await tracker.mouse.move(box.x + 160, box.y + 70, { steps: 8 });
+await tracker.mouse.up();
+await tracker.getByLabel(/Keep this signature on this computer/).check();
+await tracker.getByRole("button", { name: "Sign prescription" }).click();
+await tracker.locator(".sig-saved img").waitFor();
+const kept = JSON.parse(await tracker.evaluate(() => localStorage.getItem("edt.signature.saved.v2")));
+assert.equal(kept.key, "Doctor Oscardoc|99999");
+await tracker.getByRole("button", { name: "Remove" }).click();
+await tracker.getByRole("button", { name: "Use my saved signature" }).click();
+await tracker.locator(".sig-saved img").waitFor();
+await tracker.getByRole("button", { name: "Remove" }).click();
+// Another prescriber is never offered it.
+await tracker.getByLabel("Prescriber name and credentials, after Dr.").fill("Someone Else");
+assert.equal(await tracker.getByRole("button", { name: "Use my saved signature" }).count(), 0, "kept signature offered to another prescriber");
+await tracker.getByLabel("Prescriber name and credentials, after Dr.").fill("Doctor Oscardoc");
+await tracker.getByRole("button", { name: "Forget saved signature" }).click();
+assert.equal(await tracker.evaluate(() => localStorage.getItem("edt.signature.saved.v2")), "null");
+await tracker.locator("button.step", { hasText: "Calendar" }).click();
+
 // The plan goes into today's open note, below what was written, and nothing
 // is saved behind it, so Oscar never drops the clinician's draft.
 assert.equal((await (await fetch(`${OSCAR}/__standin/saved`)).json()).length, 0, "no separate note saved");

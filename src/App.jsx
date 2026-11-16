@@ -32,6 +32,8 @@ const blankRx = () => ({ date: toISO(new Date()), notes: "", items: {} });
 const BLANK_PATIENT = { name: "", dob: "", hcn: "", address: "" };
 const BLANK_OWNER = { name: "", dob: "" };
 const todayISO = () => toISO(new Date());
+const isSigImage = (v) => typeof v === "string" && /^data:image\/png;base64,[\w+/=]+$/.test(v) && v.length < 300000;
+const checkSavedSig = (v) => (v && typeof v.key === "string" && isSigImage(v.image) ? { key: v.key.slice(0, 200), image: v.image } : null);
 const BLANK_PRESCRIBER = { name: "", license: "", clinic: "", street: "", city: "", phone: "", fax: "" };
 const defaultSettings = () => ({
   start: toISO(new Date()),
@@ -324,6 +326,10 @@ function ClinicianApp() {
   // prescription has not been reviewed in its new form, so it comes off.
   const [signature, setSignature] = useState("");
   useEffect(() => setSignature(""), [drops, patient]);
+  // A prescriber may choose to keep a signature on this computer. It is kept
+  // with the prescriber's name and licence, so it is offered only to them, and
+  // it is placed on a prescription only with a click each time.
+  const [savedSig, setSavedSig] = usePersistentState("edt.signature.saved.v2", null, { check: checkSavedSig });
   // Signatures saved by earlier versions are removed.
   useEffect(() => {
     try {
@@ -619,6 +625,8 @@ function ClinicianApp() {
             setRx={setRx}
             signature={signature}
             setSignature={setSignature}
+            savedSignature={savedSig?.key === prescriberKey(prescriber) ? savedSig.image : ""}
+            saveSignature={(image) => setSavedSig(image ? { key: prescriberKey(prescriber), image } : null)}
             start={settings.start}
             warnings={warnings}
             go={go}

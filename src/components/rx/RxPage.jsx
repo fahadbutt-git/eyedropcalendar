@@ -137,11 +137,12 @@ function PrescriberCheck({ prescriber, confirm }) {
   );
 }
 
-export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, prescriberConfirmed, confirmPrescriber, today, setToday, rx, setRx, signature: drawn, setSignature, start, warnings, go }) {
-  // A signature is drawn for each prescription and never saved, as the
-  // Ontario College of Pharmacists does not accept a stored signature image
-  // pasted onto prescriptions. It is held in memory by the clinician app.
+export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, prescriberConfirmed, confirmPrescriber, today, setToday, rx, setRx, signature: drawn, setSignature, savedSignature, saveSignature, start, warnings, go }) {
+  // A signature belongs to one prescription and comes off when the drops or
+  // patient change. A prescriber may keep one on this computer, which is
+  // placed on each prescription only when they click to use it.
   const signature = isSignature(drawn);
+  const keptSig = prescriberConfirmed ? isSignature(savedSignature) : "";
   // `today` changes when the tab comes back into use, so this renders again.
   const date = rx.dateEdited ? rx.date : today && toISO(new Date());
   if (!entries.length)
@@ -212,10 +213,11 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
               <span className="field-label">
                 Sign this prescription <em>(optional)</em>
               </span>
-              <SignaturePad signature={signature} setSignature={setSignature} />
+              <SignaturePad signature={signature} setSignature={setSignature} saved={keptSig} saveSignature={saveSignature} />
               <span className="field-hint">
-                Signing confirms you have reviewed this prescription. The signature is used for this prescription only, is not
-                saved, and comes off if the drops or patient change. You can also leave it blank and sign the printout by hand.
+                Signing confirms you have reviewed this prescription. The signature comes off if the drops or patient change.
+                You can keep your signature on this computer to sign later prescriptions with one click, or leave this blank and
+                sign the printout by hand.
               </span>
             </div>
             <Field label="Notes" optional>

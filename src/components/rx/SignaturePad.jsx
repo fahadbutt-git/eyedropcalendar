@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 
 // The prescriber signs each prescription here, with a finger, stylus or mouse.
-// The signature belongs to this one prescription: it is never saved or sent,
-// and the prescription page clears it when the drops or patient change.
+// The signature belongs to this one prescription, and the prescription page
+// clears it when the drops or patient change. The prescriber may keep it on
+// this computer (never sent anywhere) and use it again with one click.
 // Drawn at twice the display size so the printed signature stays sharp.
 const W = 960;
 const H = 300;
 
-export default function SignaturePad({ signature, setSignature }) {
+export default function SignaturePad({ signature, setSignature, saved = "", saveSignature }) {
   const canvas = useRef(null);
   const drawing = useRef(false);
   const [dirty, setDirty] = useState(false);
@@ -52,10 +53,18 @@ export default function SignaturePad({ signature, setSignature }) {
     canvas.current.getContext("2d").clearRect(0, 0, W, H);
     setDirty(false);
   };
+  const [keep, setKeep] = useState(false);
   const save = () => {
-    setSignature(canvas.current.toDataURL("image/png"));
+    const image = canvas.current.toDataURL("image/png");
+    setSignature(image);
+    if (keep && saveSignature) saveSignature(image);
     setEditing(false);
   };
+  const forget = saved && saveSignature && (
+    <button className="btn sm ghost" onClick={() => saveSignature("")}>
+      Forget saved signature
+    </button>
+  );
 
   if (!editing)
     return (
@@ -68,12 +77,21 @@ export default function SignaturePad({ signature, setSignature }) {
           <button className="btn sm danger" onClick={() => (setSignature(""), setEditing(true))}>
             Remove
           </button>
+          {forget}
         </div>
       </div>
     );
 
   return (
     <div className="sig-pad">
+      {saved && (
+        <div className="row sig-use">
+          <button className="btn sm primary" onClick={() => (setSignature(saved), setEditing(false))}>
+            Use my saved signature
+          </button>
+          {forget}
+        </div>
+      )}
       <canvas
         ref={canvas}
         width={W}
@@ -98,6 +116,12 @@ export default function SignaturePad({ signature, setSignature }) {
           </button>
         )}
       </div>
+      {saveSignature && (
+        <label className="check sig-keep">
+          <input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} />
+          Keep this signature on this computer for my next prescriptions
+        </label>
+      )}
     </div>
   );
 }
