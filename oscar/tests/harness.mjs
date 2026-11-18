@@ -1,6 +1,6 @@
 // Shared setup for the browser suites: Chrome with the built extension, the
 // stand-in Oscar on port 8080 and the built site on port 4173.
-// `npm run test:oscar` starts both servers and runs every suite.
+// `npm run test:browser` starts both servers and runs every suite.
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";

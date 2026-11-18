@@ -91,7 +91,7 @@ store/                      app store and Chrome Web Store assets
 | `npm run dev` | Site with hot reload on port 5173 |
 | `npm run build` | Production build in `dist/`, with the open source licence list |
 | `npm test` | Unit tests (Node test runner) |
-| `npm run test:oscar` | Builds the site and extension, starts the stand-in Oscar, runs every browser suite. Name suites to run only those: `npm run test:oscar -- edge eyeform` |
+| `npm run test:browser` | Builds the site and extension, starts the stand-in Oscar and the site, and runs the website walkthrough and every extension suite. Name suites to run only those: `npm run test:browser -- site edge` |
 | `npm run check` | Lint, formatting, unit tests and browser suites, as CI runs them |
 | `npm run lint`, `npm run format` | ESLint, and Prettier to format |
 | `npm run ext:build -- --oscar=<origin>` | Builds the extension for one clinic's Oscar address. `--dev` adds localhost |
@@ -103,8 +103,9 @@ The browser suites need Chromium once: `npx playwright install chromium`.
 ## Testing
 
 - **Unit tests** (`tests/`) cover dosing, tapers, wording, dose times, alarms, links, validation, safety checks and the note reader.
-- **Browser suites** (`oscar/tests/`) run the built extension in Chrome against the stand-in Oscar: the full visit end to end, 18 security and privacy checks, 21 clinic edge cases, the ophthalmology Eye Form and window types, a differing Oscar build, and the address lock.
-- **CI** (`.github/workflows/ci.yml`) runs lint, formatting, unit tests and the build on every push to `main` and every pull request. It also runs the browser suites without blocking, since Chrome on GitHub's runners loses track of new tabs. Run `npm run test:oscar` locally before each release.
+- **Website walkthrough** (`tests/site.e2e.mjs`) uses every function in Chrome: terms, drops, tapers, warnings, the three printed layouts, the prescription and signature, the formulary, reopening a plan, idle clearing, and the patient phone view with ticks, alarms, own cap colour and offline use.
+- **Extension suites** (`oscar/tests/`) run the built extension in Chrome against the stand-in Oscar: the full visit end to end, 18 security and privacy checks, 21 clinic edge cases, the ophthalmology Eye Form and window types, a differing Oscar build, and the address lock.
+- **CI** (`.github/workflows/ci.yml`) runs lint, formatting, unit tests and the build on every push to `main` and every pull request. It also runs the browser suites without blocking, since Chrome on GitHub's runners loses track of new tabs. Run `npm run test:browser` locally before each release.
 
 Only made-up patients are used in tests and development. Never develop against a live chart.
 

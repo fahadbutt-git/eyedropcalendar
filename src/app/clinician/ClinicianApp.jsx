@@ -118,9 +118,11 @@ export default function ClinicianApp() {
     setCleared(true);
   });
   // The idle notice is for whoever comes back to the desk. It goes once a
-  // new patient is started.
+  // new patient is started, not when a restored tab still holds the old one.
+  const hadPatient = useRef(hasPatient);
   useEffect(() => {
-    if (hasPatient) setCleared(false);
+    if (hasPatient && !hadPatient.current) setCleared(false);
+    hadPatient.current = hasPatient;
   }, [hasPatient]);
 
   // A name or date of birth changed while drops are on screen: same person,

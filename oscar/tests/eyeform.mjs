@@ -3,7 +3,7 @@
 // a tab, Ctrl+click). Added after the first clinic install on 10 November
 // 2026, where the clinic charts in a customised Eye Form.
 //
-// Run with `npm run test:oscar`, which starts the stand-in Oscar and the site.
+// Run with `npm run test:browser`, which starts the stand-in Oscar and the site.
 import assert from "node:assert/strict";
 import { OSCAR, launch, ok, panelOf, panelText, scenarios, signIn, standin } from "./harness.mjs";
 

@@ -54,7 +54,7 @@ The panel ignores clicks made by scripts on the Oscar page, shows which site it 
 | `oscar/extension/src/bridge.js` | Runs on Eye Drop Tracker and talks to the page |
 | `src/hooks/useOscarBridge.js`, `src/app/clinician/state.js`, `src/components/drops/ImportReview.jsx`, `src/components/schedule/AddToChart.jsx` | The website side |
 | `oscar/standin/` | A stand-in Oscar with made-up patients, for development |
-| `oscar/tests/` | Browser suites against the stand-in, sharing `harness.mjs`. `npm run test:oscar` runs them all |
+| `oscar/tests/` | Browser suites against the stand-in, sharing `harness.mjs`. `npm run test:browser` runs them all |
 
 Build with `npm run ext:build` (writes `oscar/extension/dist` and a zip for the Chrome Web Store). Add `-- --dev` to also run on `localhost:4173` and `localhost:5173`.
 
@@ -95,7 +95,7 @@ The stand-in Oscar answers the same addresses with made-up patients:
 
 ```
 npm run oscar:standin          # http://localhost:8080/oscar, same demo login
-npm run test:oscar             # builds, starts what is missing, runs every suite
+npm run test:browser             # builds, starts what is missing, runs every suite
 ```
 
 ## Tested

@@ -1,6 +1,6 @@
 // End-to-end check of the Oscar extension against the stand-in Oscar.
 //
-// Run with `npm run test:oscar`, which starts the stand-in Oscar and the site.
+// Run with `npm run test:browser`, which starts the stand-in Oscar and the site.
 //
 // Opens a made-up patient's encounter in a pop-up window, as Oscar does,
 // reads the drops, opens them in Eye Drop Tracker, checks the review gate,

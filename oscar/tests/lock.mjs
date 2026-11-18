@@ -1,5 +1,5 @@
 // A copy of the extension locked to another clinic's Oscar must never offer,
-// ask for or show the Eye drops button on this Oscar. `npm run test:oscar`
+// ask for or show the Eye drops button on this Oscar. `npm run test:browser`
 // builds that copy for this suite.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

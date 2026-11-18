@@ -6,7 +6,7 @@
 // patient, never lose the clinician's typing, never show a blank or
 // misleading state.
 //
-// Run with `npm run test:oscar`, which starts the stand-in Oscar and the site.
+// Run with `npm run test:browser`, which starts the stand-in Oscar and the site.
 //
 // Each scenario runs on its own, so one failure does not stop the others. A
 // summary is printed at the end, and the run exits non-zero if any failed.

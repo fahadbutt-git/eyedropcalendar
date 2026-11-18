@@ -1,7 +1,7 @@
 // Privacy and abuse tests for the Oscar extension and Eye Drop Tracker, run
 // in Chrome with the built extension against the stand-in Oscar.
 //
-// Run with `npm run test:oscar`, which starts the stand-in Oscar and the site.
+// Run with `npm run test:browser`, which starts the stand-in Oscar and the site.
 //
 // Each check prints a line. Any failure stops the run with an error.
 import assert from "node:assert/strict";

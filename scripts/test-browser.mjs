@@ -1,14 +1,17 @@
-// Runs every browser suite of the Oscar extension against the stand-in Oscar
-// and the built site, then stops what it started.
+// Runs every browser suite (the website walkthrough and the Oscar extension
+// suites) against the stand-in Oscar and the built site, then stops what it
+// started.
 //
-//   npm run test:oscar                 build, then all suites
-//   npm run test:oscar -- edge eyeform only these suites
+//   npm run test:browser                 build, then all suites
+//   npm run test:browser -- edge eyeform only these suites
 //
 // A stand-in or site already running on its port is used as it is.
 import { spawn, execFileSync } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
 
-const SUITES = ["e2e", "security", "resilience", "edge", "eyeform", "lock"];
+// The website walkthrough first, then the Oscar extension suites.
+const SUITES = ["site", "e2e", "security", "resilience", "edge", "eyeform", "lock"];
+const fileOf = (suite) => (suite === "site" ? "tests/site.e2e.mjs" : `oscar/tests/${suite}.mjs`);
 const chosen = process.argv.slice(2).filter((a) => SUITES.includes(a));
 const run = chosen.length ? chosen : SUITES;
 const node = (args, env = {}) => execFileSync(process.execPath, args, { stdio: "inherit", env: { ...process.env, ...env } });
@@ -37,7 +40,7 @@ try {
     try {
       // The lock suite needs a copy of the extension locked to another clinic.
       if (suite === "lock") node(["scripts/extension.mjs", "--dev", "--oscar=https://other-clinic.example.com"], { EDT_LOCK_TEST: "1" });
-      node([`oscar/tests/${suite}.mjs`]);
+      node([fileOf(suite)]);
     } catch {
       failed.push(suite);
     } finally {

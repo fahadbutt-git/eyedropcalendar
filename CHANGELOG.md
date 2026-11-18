@@ -8,11 +8,16 @@ Notable changes, newest first. The format follows [Keep a Changelog](https://kee
 
 - The app shell is split into `src/app` (root, clinician and patient sides, layout) and `src/hooks`, with clinician state, the formulary and the prescriber in their own modules.
 - Dates are formatted with `Intl.DateTimeFormat`, and ids and patient codes come from `crypto`.
-- The Oscar browser suites share one harness and run with `npm run test:oscar`.
+- The Oscar browser suites share one harness.
 - Prettier formats the code, and CI runs lint, formatting, unit tests and the browser suites.
+
+### Fixed
+
+- When a tab left idle for 30 minutes is reopened, the patient is cleared and the notice saying so now shows.
 
 ### Added
 
+- A website walkthrough suite (`tests/site.e2e.mjs`) that uses every function of the site in Chrome, run with the extension suites by `npm run test:browser`.
 - A prescriber can choose to keep a drawn signature in the browser and place it on later prescriptions with one click.
 
 ## Extension 0.6.4, 16 November 2026

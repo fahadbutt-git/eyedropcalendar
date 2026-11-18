@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-24.04
     # On GitHub's runners Chrome stops reporting new tabs and windows to
     # Playwright once a test closes one, so most suites time out there. They
-    # pass in full locally, which is the release gate (npm run test:oscar).
+    # pass in full locally, which is the release gate (npm run test:browser).
     # This job runs for the record and does not block merging.
     continue-on-error: true
     steps:
@@ -37,6 +37,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:oscar
+      - run: npm run test:browser
         env:
           EDT_TEST_DEBUG: "1"
