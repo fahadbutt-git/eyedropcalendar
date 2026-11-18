@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eye Drop Tracker demos</title>
+    <meta name="description" content="Screen recordings of Eye Drop Tracker and its Oscar EMR extension, with made-up patients." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #111111;
+        --ink-2: #4a4f57;
+        --line: #d9d5cb;
+        --paper: #f3f1ea;
+        --bg: #ffffff;
+        --navy: #1f3a5f;
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #ecebe6;
+          --ink-2: #b7b4ab;
+          --line: #3a3d42;
+          --paper: #1d2024;
+          --bg: #141619;
+          --navy: #9cb8de;
+          color-scheme: dark;
+        }
+      }
+      * { box-sizing: border-box; margin: 0; }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font: 1rem/1.55 "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+        padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+      }
+      a { color: var(--navy); text-underline-offset: 3px; }
+      header, main, footer { max-width: 60rem; margin: 0 auto; }
+      header { padding: 3rem 0 2rem; border-bottom: 2px solid var(--ink); }
+      .kicker { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+      h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.15; margin: 0.4rem 0 0.8rem; text-wrap: balance; }
+      .lede { max-width: 42rem; color: var(--ink-2); }
+      .links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin-top: 1.2rem; font-weight: 600; }
+      main { display: grid; gap: 3rem; padding: 2.5rem 0 3rem; }
+      article { display: grid; gap: 1rem; }
+      h2 { font-size: 1.35rem; text-wrap: balance; }
+      .meta { font-size: 0.9rem; color: var(--ink-2); }
+      video { width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--paper); border: 1px solid var(--line); display: block; }
+      .shows { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0.4rem 2rem; padding-left: 1.2rem; }
+      .note { background: var(--paper); border-left: 3px solid var(--navy); padding: 1rem 1.2rem; font-size: 0.95rem; }
+      footer { border-top: 1px solid var(--line); padding: 1.5rem 0 3rem; font-size: 0.9rem; color: var(--ink-2); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p class="kicker">Demos</p>
+      <h1>Eye Drop Tracker and its Oscar extension</h1>
+      <p class="lede">
+        Screen recordings of a real browser, clicking through the extension's setup and a visit. Eye Drop Tracker turns an eye drop
+        regimen into a printed calendar, a prescription and phone reminders. The Oscar extension reads the drops from the chart and
+        writes the finished plan back.
+      </p>
+      <p class="links">
+        <a href="https://eyedroptracker.com">Try the website</a>
+        <a href="https://github.com/fahadbutt-git/eyedropcalendar">Source code</a>
+        <a href="https://github.com/fahadbutt-git/eyedropcalendar/blob/main/docs/OSCAR.md">Extension guide</a>
+      </p>
+    </header>
+
+    <main>
+      <article aria-labelledby="v1">
+        <h2 id="v1">Setup and a first visit</h2>
+        <p class="meta">3 minutes 57 seconds · extension 0.6.1 · Oscar's standard encounter</p>
+        <video controls preload="metadata" playsinline poster="media/oscar-setup-and-first-visit.jpg">
+          <source src="media/oscar-setup-and-first-visit.mp4" type="video/mp4" />
+          <a href="media/oscar-setup-and-first-visit.mp4">Download the video</a>
+        </video>
+        <ul class="shows">
+          <li>Loading the extension in Chrome</li>
+          <li>Adding the Eye drops button to Oscar</li>
+          <li>Reading the drops from today's note</li>
+          <li>Checking each drop against the chart</li>
+          <li>Printing the calendar and the prescription</li>
+          <li>Adding the plan to the chart, then the next visit</li>
+        </ul>
+      </article>
+
+      <article aria-labelledby="v2">
+        <h2 id="v2">The Eye Form, windows and complex charts</h2>
+        <p class="meta">4 minutes 27 seconds · extension 0.6.3 · Oscar's ophthalmology Eye Form</p>
+        <video controls preload="metadata" playsinline poster="media/eye-form-windows-and-complex-charts.jpg">
+          <source src="media/eye-form-windows-and-complex-charts.mp4" type="video/mp4" />
+          <a href="media/eye-form-windows-and-complex-charts.mp4">Download the video</a>
+        </video>
+        <ul class="shows">
+          <li>A patient with five eye conditions in Oscar's pop-up</li>
+          <li>Two tapers of one drop, one in each eye</li>
+          <li>Years of notes, opened with Ctrl+click in a tab</li>
+          <li>Choosing the source: today's form, a saved note or the Eye Meds list</li>
+          <li>The plan added to the Plan box</li>
+          <li>Reopening the plan at the next visit</li>
+        </ul>
+      </article>
+
+      <p class="note">
+        Every patient in these recordings is made up, and the Oscar shown is a stand-in that runs on a laptop. Clinicians check every drop
+        against the chart before anything prints.
+      </p>
+    </main>
+
+    <footer>© 2026 Fahad Butt and Yusuf Ahmed · Apache 2.0 · eyedroptracker@gmail.com</footer>
+  </body>
+</html>
