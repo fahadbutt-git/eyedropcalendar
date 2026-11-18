@@ -52,10 +52,9 @@ The panel ignores clicks made by scripts on the Oscar page, shows which site it 
 | `oscar/extension/src/panel.js` | The panel on the Oscar page |
 | `oscar/extension/src/background.js` | Hands the plan between tabs |
 | `oscar/extension/src/bridge.js` | Runs on Eye Drop Tracker and talks to the page |
-| `src/lib/oscarBridge.js`, `src/components/drops/ImportReview.jsx`, `src/components/schedule/AddToChart.jsx` | The website side |
+| `src/hooks/useOscarBridge.js`, `src/app/clinician/state.js`, `src/components/drops/ImportReview.jsx`, `src/components/schedule/AddToChart.jsx` | The website side |
 | `oscar/standin/` | A stand-in Oscar with made-up patients, for development |
-| `oscar/e2e.mjs` | Runs the whole loop in Chrome against the stand-in |
-| `oscar/security.mjs` | Tries to leak, forge and misuse data, and checks every attempt fails |
+| `oscar/tests/` | Browser suites against the stand-in, sharing `harness.mjs`. `npm run test:oscar` runs them all |
 
 Build with `npm run ext:build` (writes `oscar/extension/dist` and a zip for the Chrome Web Store). Add `-- --dev` to also run on `localhost:4173` and `localhost:5173`.
 
@@ -96,17 +95,14 @@ The stand-in Oscar answers the same addresses with made-up patients:
 
 ```
 npm run oscar:standin          # http://localhost:8080/oscar, same demo login
-npm run build && npm run preview
-npm run ext:build -- --dev
-node oscar/e2e.mjs
-node oscar/security.mjs
+npm run test:oscar             # builds, starts what is missing, runs every suite
 ```
 
 ## Tested
 
 - Unit tests for the note reader and the Oscar client (`tests/noteParser.test.mjs`, `tests/oscarApi.test.mjs`).
-- `oscar/e2e.mjs` runs the built extension in Chrome against the stand-in. The stand-in copies Open-O 25: encounters in pop-up windows at casemgmt/forward.jsp, dates as milliseconds, the note being written in a textarea named caseNote_note, and Prototype.js on every page. Prototype.js corrupts lists in JSON written from the page itself. The extension's code runs in Chrome's separate extension context and is not affected, which the test also checks.
-- `oscar/security.mjs` runs 18 checks: markup in every chart field never runs, pages cannot message the extension, scripted clicks and forged requests reach nothing, free text cannot reach a chart, a different patient or clinician is refused, repeats are refused, malformed imports are cut down, storage is cleared, and all 135 requests stay on Oscar or Eye Drop Tracker with no patient details in any address.
+- `oscar/tests/e2e.mjs` runs the built extension in Chrome against the stand-in. The stand-in copies Open-O 25: encounters in pop-up windows at casemgmt/forward.jsp, dates as milliseconds, the note being written in a textarea named caseNote_note, and Prototype.js on every page. Prototype.js corrupts lists in JSON written from the page itself. The extension's code runs in Chrome's separate extension context and is not affected, which the test also checks.
+- `oscar/tests/security.mjs` runs 18 checks: markup in every chart field never runs, pages cannot message the extension, scripted clicks and forged requests reach nothing, free text cannot reach a chart, a different patient or clinician is refused, repeats are refused, malformed imports are cut down, storage is cleared, and all 135 requests stay on Oscar or Eye Drop Tracker with no patient details in any address.
 - On a demo Open-O 25 (5 November 2026): the REST calls work with the browser login and need no CSRF token, the panel read a real note correctly, and Add to Oscar chart saved an unsigned note. Patients created through the REST interface are not admitted to a program and Oscar hides their notes, so demo patients must be added through Oscar's Add Patient screen.
 
 ## Before a real clinic
@@ -138,7 +134,7 @@ Run in Chrome on a local Open-O 25 in Docker, with made-up patients only, on ext
 ## Physician populations and launch-day review, 9 November 2026
 
 - 240 made-up notes in eight styles (glaucoma, cornea, cataract and retina, resident, dictation, optometry co-management, uveitis and paediatrics, scribe templates) are in tests/fixtures/populations. The reader read 208 of them exactly, up from 177. No drop in these sets is put in the wrong eye without a flag.
-- oscar/edge.mjs checks 21 clinic mistakes and failures, all passing: two charts open, Oscar signing the clinician out, Oscar errors and hangs, a locked note, a double click, edits on the site, long and accented names, markup in notes, a reopened or expired hand-off, and typing around the added plan.
+- `oscar/tests/edge.mjs` checks 21 clinic mistakes and failures, all passing: two charts open, Oscar signing the clinician out, Oscar errors and hangs, a locked note, a double click, edits on the site, long and accented names, markup in notes, a reopened or expired hand-off, and typing around the added plan.
 - A launch-day walk through twelve personas led to these changes on the site: asking "Is this a new patient?" when the name changes with a plan on screen, clearing patient details when a plan is reopened by hand, blocking a prescription with missing prescriber details, confirming the prescriber once per session, choosing the usual product first in drug search, working offline after one visit, a clear message when the QR code cannot load, keeping the start date current, warning when a reopened taper is moved, and hiding the app link until the app is published.
 
 ## First clinic install, 10 November 2026
@@ -152,4 +148,4 @@ The clinic installed 0.6.1 from the setup video without help. Their photo of the
 - When the plan is signed, the open-source Eye Form also sends the Plan box text to the clinic's receptionists as a tickler. The plan added by Eye Drop Tracker is part of that text, as anything else written in the Plan box would be.
 - The encounter opening in its own window is not a limit. The button, the right-click menu and the shortcut work in Oscar's pop-up, in a tab and in a Ctrl+click tab. The panel covers the right edge of the page, so close it before pressing buttons there, such as the Eye Form's Sign, Save & Exit.
 
-oscar/eyeform.mjs checks this with made-up patients in the stand-in: an Eye Form in Oscar's layout and in a customised layout with titles only, a patient with five eye conditions and two tapers of the same drop in different eyes, six years of Eye Form notes with nothing written today, six years of standard encounter notes, the same chart open in a pop-up, a tab and a Ctrl+click tab, and a selection of part of the plan. tests/complexPatients.test.mjs checks the reader on the same patients.
+`oscar/tests/eyeform.mjs` checks this with made-up patients in the stand-in: an Eye Form in Oscar's layout and in a customised layout with titles only, a patient with five eye conditions and two tapers of the same drop in different eyes, six years of Eye Form notes with nothing written today, six years of standard encounter notes, the same chart open in a pop-up, a tab and a Ctrl+click tab, and a selection of part of the plan. tests/complexPatients.test.mjs checks the reader on the same patients.
