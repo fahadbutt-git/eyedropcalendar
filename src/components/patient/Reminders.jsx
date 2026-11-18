@@ -11,7 +11,8 @@ import { NATIVE_APP_LIVE } from "../../config.js";
 const platform = () => (/iphone|ipad|ipod/i.test(navigator.userAgent) ? "ios" : /android/i.test(navigator.userAgent) ? "android" : "other");
 const HOW = {
   ios: "Open the file from the banner or your Downloads, then tap Add All.",
-  android: "Open the file from your notifications or the Files app and choose your calendar. If nothing opens it, open Google Calendar on a computer and use Import.",
+  android:
+    "Open the file from your notifications or the Files app and choose your calendar. If nothing opens it, open Google Calendar on a computer and use Import.",
   other: "Open the file to add the alarms to your calendar app.",
 };
 
@@ -29,7 +30,8 @@ const REMOVE = {
     "To remove every alarm later: in Settings, choose the Eye drops calendar, then Remove calendar and Delete.",
   ],
 };
-const REMOVE_ONE = "Without a separate calendar, open each alarm (they start with \"Time for\" or \"Eye drop reminder\") and delete it. For a repeating alarm, choose Delete all future events.";
+const REMOVE_ONE =
+  'Without a separate calendar, open each alarm (they start with "Time for" or "Eye drop reminder") and delete it. For a repeating alarm, choose Delete all future events.';
 
 // In the phone app: real notifications. In a browser: calendar alarms.
 export default function Reminders({ plan: shared, id, code }) {
@@ -73,7 +75,11 @@ export default function Reminders({ plan: shared, id, code }) {
     setOn(result.ok);
     setLate(!!result.late);
     setMessage(
-      result.ok ? "" : result.denied ? "Notifications are off for this app. Turn them on in your phone's Settings, then try again." : "Reminders could not be set. Try again."
+      result.ok
+        ? ""
+        : result.denied
+          ? "Notifications are off for this app. Turn them on in your phone's Settings, then try again."
+          : "Reminders could not be set. Try again.",
     );
   };
   const turnOff = async () => {
@@ -121,7 +127,8 @@ export default function Reminders({ plan: shared, id, code }) {
         <>
           {changed && (
             <p className="notice warn" role="status">
-              Your plan has changed since you last added alarms. Add the new file below. Some calendars then remove the old alarms by themselves. If old alarms still go off, remove them as shown under How to remove old alarms.
+              Your plan has changed since you last added alarms. Add the new file below. Some calendars then remove the old alarms by
+              themselves. If old alarms still go off, remove them as shown under How to remove old alarms.
             </p>
           )}
           <p>Add an alarm to your phone&apos;s calendar for every dose in this plan.</p>

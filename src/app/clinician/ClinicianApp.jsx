@@ -71,7 +71,10 @@ export default function ClinicianApp() {
   useEffect(() => setSignature(""), [drops, patient]);
 
   const entries = useMemo(() => toEntries(drops), [drops]);
-  const warnings = useMemo(() => dropWarnings(drops, formulary.list, DRUG_CLASSES, { dob: patient.dob }), [drops, formulary.list, patient.dob]);
+  const warnings = useMemo(
+    () => dropWarnings(drops, formulary.list, DRUG_CLASSES, { dob: patient.dob }),
+    [drops, formulary.list, patient.dob],
+  );
   const needsReview = !!imported && !imported.reviewed;
   const hasPatient = Object.values(patient).some(Boolean) || drops.length > 0;
   const accepted = terms === TERMS_VERSION;
@@ -183,7 +186,14 @@ export default function ClinicianApp() {
   const openPlan = (plan) => {
     dropCount.current = plan.entries.length;
     setDrops(plan.entries.map((e) => ({ ...e, id: newId() })));
-    setSettings({ ...defaultSettings(), start: plan.start, wake: plan.wake, bed: plan.bed, nonce: plan.nonce || newNonce(), opened: plan.start });
+    setSettings({
+      ...defaultSettings(),
+      start: plan.start,
+      wake: plan.wake,
+      bed: plan.bed,
+      nonce: plan.nonce || newNonce(),
+      opened: plan.start,
+    });
   };
 
   // A plan opened by hand (Change a plan from an earlier visit) is no longer

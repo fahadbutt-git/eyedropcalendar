@@ -21,7 +21,11 @@ export default function StepNav({ tab, go, locked }) {
           <span className="short">{short}</span>
         </button>
       ))}
-      <button className={`step plain ${tab === "formulary" ? "active" : ""}`} aria-current={tab === "formulary" ? "page" : undefined} onClick={() => go("formulary")}>
+      <button
+        className={`step plain ${tab === "formulary" ? "active" : ""}`}
+        aria-current={tab === "formulary" ? "page" : undefined}
+        onClick={() => go("formulary")}
+      >
         Formulary
       </button>
     </nav>

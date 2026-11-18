@@ -30,8 +30,7 @@ export default function DropRow({ index, drop, formulary, startDate, update, rem
   const n = index + 1;
   const name = drop.brand;
 
-  const setMode = (mode) =>
-    update(mode === "taper" && !drop.steps.length ? { mode, steps: TAPER_PRESETS[0].build(drop.freq) } : { mode });
+  const setMode = (mode) => update(mode === "taper" && !drop.steps.length ? { mode, steps: TAPER_PRESETS[0].build(drop.freq) } : { mode });
   const delay = drop.startDay - 1;
 
   return (
@@ -110,13 +109,15 @@ export default function DropRow({ index, drop, formulary, startDate, update, rem
           </label>
           {delay > 0 && (
             <span className="inline">
-              <NumberInput label={`Days to wait before starting ${name}`} value={delay} min={1} max={364} onChange={(v) => update({ startDay: v + 1 })} />
+              <NumberInput
+                label={`Days to wait before starting ${name}`}
+                value={delay}
+                min={1}
+                max={364}
+                onChange={(v) => update({ startDay: v + 1 })}
+              />
               days after the calendar starts
-              {startDate && (
-                <b className="mono">
-                  First dose {fmtMedium(addDays(startDate, delay))}
-                </b>
-              )}
+              {startDate && <b className="mono">First dose {fmtMedium(addDays(startDate, delay))}</b>}
             </span>
           )}
         </div>

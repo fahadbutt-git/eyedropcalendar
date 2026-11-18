@@ -9,15 +9,35 @@ const VISITS = [
   ["2020-05-04", "Using drops nightly.", "POAG OU. IOP 18 OD, 18 OS on Xalatan.", "Continue Xalatan qhs OU. RTC 4 months with fields."],
   ["2020-09-14", "No concerns.", "POAG OU, stable.", "Continue same. RTC 4 months."],
   ["2021-01-18", "No concerns.", "POAG OU, stable.", "Continue same. RTC 4 months."],
-  ["2021-05-10", "Fields worse OS.", "POAG OU, IOP above target. IOP 21 OD, 22 OS.", "Add Alphagan P TID OU. Continue Xalatan qhs OU. RTC 6 weeks."],
-  ["2021-08-02", "Red itchy eyes since starting new drop.", "Allergic follicular conjunctivitis to Alphagan.", "Stop Alphagan. Start Cosopt BID OU. Continue Xalatan qhs OU. RTC 6 weeks."],
+  [
+    "2021-05-10",
+    "Fields worse OS.",
+    "POAG OU, IOP above target. IOP 21 OD, 22 OS.",
+    "Add Alphagan P TID OU. Continue Xalatan qhs OU. RTC 6 weeks.",
+  ],
+  [
+    "2021-08-02",
+    "Red itchy eyes since starting new drop.",
+    "Allergic follicular conjunctivitis to Alphagan.",
+    "Stop Alphagan. Start Cosopt BID OU. Continue Xalatan qhs OU. RTC 6 weeks.",
+  ],
   ["2021-12-06", "Eyes comfortable.", "POAG OU, stable on 2 drops.", "Continue same. RTC 4 months."],
   ["2022-04-11", "No concerns.", "POAG OU, stable.", "Continue current drops. RTC 4 months."],
   ["2022-08-15", "No concerns.", "POAG OU, stable.", "Continue current drops. RTC 5 months."],
-  ["2023-01-16", "Eyes always look red.", "POAG OU. Hyperemia on latanoprost.", "Switch Xalatan to Lumigan 0.01% qhs OU. Continue Cosopt BID OU. RTC 6 weeks."],
+  [
+    "2023-01-16",
+    "Eyes always look red.",
+    "POAG OU. Hyperemia on latanoprost.",
+    "Switch Xalatan to Lumigan 0.01% qhs OU. Continue Cosopt BID OU. RTC 6 weeks.",
+  ],
   ["2023-05-08", "Less redness.", "POAG OU, stable.", "Continue same. RTC 5 months."],
   ["2023-10-02", "No concerns.", "POAG OU, stable.", "Continue same. RTC 5 months."],
-  ["2024-03-04", "IOP creeping up OD.", "POAG OU. IOP 20 OD, 16 OS.", "SLT OD today. Continue Lumigan qhs OU and Cosopt BID OU. RTC 6 weeks."],
+  [
+    "2024-03-04",
+    "IOP creeping up OD.",
+    "POAG OU. IOP 20 OD, 16 OS.",
+    "SLT OD today. Continue Lumigan qhs OU and Cosopt BID OU. RTC 6 weeks.",
+  ],
   ["2024-09-09", "No concerns.", "POAG OU, stable after SLT.", "Continue same. RTC 6 months."],
   ["2025-03-10", "No concerns.", "POAG OU, stable.", "Continue same. RTC 6 months."],
   ["2025-09-08", "No concerns.", "POAG OU, stable.", "Continue current drops. RTC 6 months."],
@@ -31,7 +51,7 @@ const visitNotes = (visits, eyeForm) =>
           { date: `${d}T09:10:00-04:00`, text: imp },
           { date: `${d}T09:11:00-04:00`, text: plan },
         ]
-      : [{ date: `${d}T09:10:00-04:00`, text: `${hx}\n${imp}\nPlan: ${plan}` }]
+      : [{ date: `${d}T09:10:00-04:00`, text: `${hx}\n${imp}\nPlan: ${plan}` }],
   );
 
 export const COMPLEX = [
@@ -51,7 +71,12 @@ export const COMPLEX = [
       current: "Here for 6 month glaucoma check. Using drops as directed.",
       impression: "",
       plan: "",
-      meds: ["Lumigan 0.01% 1 gtt OU qhs", "Cosopt 1 gtt OU BID", "Xalatan - discontinued 2023 (hyperemia)", "Alphagan P - stopped 2021, allergy"],
+      meds: [
+        "Lumigan 0.01% 1 gtt OU qhs",
+        "Cosopt 1 gtt OU BID",
+        "Xalatan - discontinued 2023 (hyperemia)",
+        "Alphagan P - stopped 2021, allergy",
+      ],
       pastEye: ["SLT OD 2024"],
       previousPlans: ["2026-04-13 Continue Lumigan qhs OU and Cosopt BID OU."],
     },
@@ -71,13 +96,16 @@ export const COMPLEX = [
     screen: "eyeform-oscar",
     notes: [
       { date: "2026-10-27T10:00:00-04:00", text: "CE/IOL OD today, uncomplicated. Start Vigamox QID OD and Pred Forte QID OD." },
-      { date: "2026-09-14T10:00:00-04:00", text: "Anterior uveitis OS, 2+ cells. Pred Forte q2h OS. Continue Lumigan qhs OU. Cyclogyl BID OS." },
+      {
+        date: "2026-09-14T10:00:00-04:00",
+        text: "Anterior uveitis OS, 2+ cells. Pred Forte q2h OS. Continue Lumigan qhs OU. Cyclogyl BID OS.",
+      },
     ],
     eyeform: {
       current: "POW1 right cataract surgery. Left eye less sore. Itchy eyes in spring.",
-      impression: "1. POAG OU, IOP at target on Lumigan.\n2. Anterior uveitis OS, improving, trace cells.\n3. Pseudophakia OD, POW1 CE/IOL.\n4. Dry eye OU.\n5. Seasonal allergic conjunctivitis OU.",
-      plan:
-        "1. POAG OU: continue Lumigan qhs OU.\n2. Uveitis OS: taper Pred Forte OS QID x1wk, TID x1wk, BID x1wk, daily x1wk then stop. Stop Cyclogyl.\n3. POW1 OD: Vigamox QID OD x1 week then stop. Pred Forte QID OD x1wk then BID x2wks then stop.\n4. Dry eye OU: Systane PRN OU.\n5. Allergic conjunctivitis: Pataday daily OU in allergy season.\nRTC 1 week.",
+      impression:
+        "1. POAG OU, IOP at target on Lumigan.\n2. Anterior uveitis OS, improving, trace cells.\n3. Pseudophakia OD, POW1 CE/IOL.\n4. Dry eye OU.\n5. Seasonal allergic conjunctivitis OU.",
+      plan: "1. POAG OU: continue Lumigan qhs OU.\n2. Uveitis OS: taper Pred Forte OS QID x1wk, TID x1wk, BID x1wk, daily x1wk then stop. Stop Cyclogyl.\n3. POW1 OD: Vigamox QID OD x1 week then stop. Pred Forte QID OD x1wk then BID x2wks then stop.\n4. Dry eye OU: Systane PRN OU.\n5. Allergic conjunctivitis: Pataday daily OU in allergy season.\nRTC 1 week.",
       meds: ["Lumigan 0.01% 1 gtt OU qhs", "Pred Forte OD and OS", "Vigamox OD", "Cyclogyl OS"],
       pastEye: ["CE/IOL OD Oct 2026", "Anterior uveitis OS 2026"],
       previousPlans: ["2026-10-27 Vigamox QID OD, Pred Forte QID OD."],

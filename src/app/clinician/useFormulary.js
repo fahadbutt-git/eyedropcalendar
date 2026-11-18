@@ -8,7 +8,7 @@ export function useFormulary() {
   const [store, setStore] = usePersistentState(
     "edt.formulary.v3",
     { version: FORMULARY_VERSION, edited: false, list: SEED_FORMULARY },
-    { check: (s) => (s?.edited ? { ...s, list: cleanFormulary(s.list) || SEED_FORMULARY } : s) }
+    { check: (s) => (s?.edited ? { ...s, list: cleanFormulary(s.list) || SEED_FORMULARY } : s) },
   );
   const list = store.edited ? store.list : SEED_FORMULARY;
   const save = (next) => setStore({ version: store.version, edited: true, list: next });

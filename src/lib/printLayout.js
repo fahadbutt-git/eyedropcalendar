@@ -7,9 +7,39 @@ const PAGE = 745;
 // weeks a page holds, and how many tick boxes fit on a line in a day cell.
 // Heights below are in units of that scale, matching the sheet styles.
 export const PRINT_SIZES = {
-  standard: { s: 0.17 * 96, maxWeeks: 2, perLine: 4, cols: 3, dose: 1.95, months: false, marks: "roomy", label: "Two weeks a page", hint: "Clear and roomy. The default" },
-  large: { s: 0.22 * 96, maxWeeks: 1, perLine: 3, cols: 2, dose: 1.95, months: false, marks: "roomy", label: "Large print, one week a page", hint: "For low vision" },
-  compact: { s: 0.15 * 96, maxWeeks: 5, perLine: 6, cols: 3, dose: 1.46, months: true, marks: "small", label: "A month a page", hint: "Fewest pages, smallest print" },
+  standard: {
+    s: 0.17 * 96,
+    maxWeeks: 2,
+    perLine: 4,
+    cols: 3,
+    dose: 1.95,
+    months: false,
+    marks: "roomy",
+    label: "Two weeks a page",
+    hint: "Clear and roomy. The default",
+  },
+  large: {
+    s: 0.22 * 96,
+    maxWeeks: 1,
+    perLine: 3,
+    cols: 2,
+    dose: 1.95,
+    months: false,
+    marks: "roomy",
+    label: "Large print, one week a page",
+    hint: "For low vision",
+  },
+  compact: {
+    s: 0.15 * 96,
+    maxWeeks: 5,
+    perLine: 6,
+    cols: 3,
+    dose: 1.46,
+    months: true,
+    marks: "small",
+    label: "A month a page",
+    hint: "Fewest pages, smallest print",
+  },
 };
 const UNITS = { header: 7.8, qr: 2.8, thead: 2.2, compactRow: 1.9, fullRow: 4.9, dayLabel: 1.95 };
 const sizeOf = (size) => {
@@ -27,8 +57,7 @@ function monthWeeks(year, month) {
 
 function weeksFrom(start, end) {
   const weeks = [];
-  for (let d = addDays(start, -start.getDay()); d <= end; d = addDays(d, 7))
-    weeks.push(Array.from({ length: 7 }, (_, i) => addDays(d, i)));
+  for (let d = addDays(start, -start.getDay()); d <= end; d = addDays(d, 7)) weeks.push(Array.from({ length: 7 }, (_, i) => addDays(d, i)));
   return weeks;
 }
 
@@ -61,7 +90,11 @@ export function buildPages({ size, start, span, peaks, changes = [], qr = false,
 
   let pages = null;
   if (z.months && start.getDate() <= 7 && (span.months.length === 1 || span.end.getDate() >= 21)) {
-    const months = span.months.map(({ year, month }) => ({ title: fmtMonth(new Date(year, month, 1)), weeks: monthWeeks(year, month), month }));
+    const months = span.months.map(({ year, month }) => ({
+      title: fmtMonth(new Date(year, month, 1)),
+      weeks: monthWeeks(year, month),
+      month,
+    }));
     if (months.every((m) => m.weeks.length <= fitWeeks)) pages = months;
   }
   if (!pages) {

@@ -1,0 +1,13 @@
+dist
+android
+ios
+node_modules
+.video
+brag-output
+oscar/extension/dist
+public/licenses.txt
+package-lock.json
+tests/fixtures
+*.md
+public/*.html
+*.css

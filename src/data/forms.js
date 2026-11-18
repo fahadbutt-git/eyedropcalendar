@@ -9,7 +9,13 @@ export const FORM_INFO = {
   suspension: { label: "Suspension (shake well)", order: 1, tag: "Shake well", advice: "Shake first.", wait: 5 },
   emulsion: { label: "Emulsion", order: 1, tag: "Emulsion", advice: "", wait: 5 },
   gel: { label: "Gel-forming (use last)", order: 2, tag: "Gel, use last", advice: "Use it last, 10 minutes after other drops.", wait: 10 },
-  ointment: { label: "Ointment (use last)", order: 3, tag: "Ointment, use last", advice: "Use it last, 10 minutes after other drops. Vision blurs for a while.", wait: 10 },
+  ointment: {
+    label: "Ointment (use last)",
+    order: 3,
+    tag: "Ointment, use last",
+    advice: "Use it last, 10 minutes after other drops. Vision blurs for a while.",
+    wait: 10,
+  },
 };
 export const FORMS = Object.keys(FORM_INFO);
 export const formInfo = (form) => FORM_INFO[form] || FORM_INFO.solution;

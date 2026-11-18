@@ -54,7 +54,13 @@ export const TAPER_PRESETS = [
       { freq: 1, days: 3 },
     ],
   },
-  { label: "Durezol: QID x14d, then BID x14d (adjust to response)", build: () => [{ freq: 4, days: 14 }, { freq: 2, days: 14 }] },
+  {
+    label: "Durezol: QID x14d, then BID x14d (adjust to response)",
+    build: () => [
+      { freq: 4, days: 14 },
+      { freq: 2, days: 14 },
+    ],
+  },
 ];
 
 // A taper with no steps yet behaves as ongoing.

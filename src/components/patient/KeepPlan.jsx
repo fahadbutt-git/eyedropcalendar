@@ -21,7 +21,10 @@ export default function KeepPlan({ code }) {
   return (
     <section className="pt-card" aria-labelledby="keep-h">
       <h2 id="keep-h">Keep a copy of your plan</h2>
-      <p>If you lose your calendar or get a new phone, this link opens your plan again. Send it to yourself by text or email, or to someone who helps you with your drops.</p>
+      <p>
+        If you lose your calendar or get a new phone, this link opens your plan again. Send it to yourself by text or email, or to someone
+        who helps you with your drops.
+      </p>
       <div className="row">
         {canShare && (
           <button type="button" className="btn" onClick={share}>
@@ -37,7 +40,10 @@ export default function KeepPlan({ code }) {
           {note}
         </p>
       )}
-      <p className="pt-note small">Anyone with this link can see your drops and dates, but not your name. Send it only to people you trust. Your eye clinic can also print your calendar again from your chart.</p>
+      <p className="pt-note small">
+        Anyone with this link can see your drops and dates, but not your name. Send it only to people you trust. Your eye clinic can also
+        print your calendar again from your chart.
+      </p>
     </section>
   );
 }

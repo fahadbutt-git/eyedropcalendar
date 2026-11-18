@@ -14,7 +14,9 @@ function confirmReplace(code) {
   if (!saved || saved === code) return true;
   let names = "";
   try {
-    names = decodeRegimen(code).entries.map((e) => e.brand).join(", ");
+    names = decodeRegimen(code)
+      .entries.map((e) => e.brand)
+      .join(", ");
   } catch {
     // A damaged link is refused on the plan page itself.
   }

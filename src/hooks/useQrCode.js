@@ -19,7 +19,7 @@ export function useQrCode(text, enabled) {
       .then((QR) =>
         QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "M" })
           .catch(() => QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "L" }))
-          .catch(() => Promise.reject(new Error("long")))
+          .catch(() => Promise.reject(new Error("long"))),
       )
       .then((url) => live && (setSrc(url), setFailed("")))
       .catch((e) => live && (setSrc(""), setFailed(e?.message === "load" ? "load" : "long")));

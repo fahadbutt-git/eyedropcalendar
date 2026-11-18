@@ -34,7 +34,13 @@ rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 
 await build({
-  entryPoints: { background: join(ext, "src/background.js"), panel: join(ext, "src/panel.js"), bridge: join(ext, "src/bridge.js"), launcher: join(ext, "src/launcher.js"), setup: join(ext, "src/setup.js") },
+  entryPoints: {
+    background: join(ext, "src/background.js"),
+    panel: join(ext, "src/panel.js"),
+    bridge: join(ext, "src/bridge.js"),
+    launcher: join(ext, "src/launcher.js"),
+    setup: join(ext, "src/setup.js"),
+  },
   outdir: out,
   bundle: true,
   format: "iife",
@@ -43,7 +49,10 @@ await build({
   legalComments: "none",
   minify: !dev,
   // Where Eye Drop Tracker lives. Fixed in the build, never a setting.
-  define: { __EDT_SITE__: JSON.stringify(dev ? "http://localhost:4173/" : "https://eyedroptracker.com/"), __EDT_OSCARS__: JSON.stringify(oscars) },
+  define: {
+    __EDT_SITE__: JSON.stringify(dev ? "http://localhost:4173/" : "https://eyedroptracker.com/"),
+    __EDT_OSCARS__: JSON.stringify(oscars),
+  },
 });
 
 const manifest = JSON.parse(readFileSync(join(ext, "manifest.json"), "utf8"));
@@ -67,7 +76,9 @@ if (!dev) {
   rmSync(zip, { force: true });
   execSync(`cd "${out}" && zip -qrX "${zip}" .`);
   // Fingerprints, so a clinic can check the package is the one we published.
-  const sums = execSync(`cd "${out}" && find . -type f | sort | xargs shasum -a 256 && cd "${ext}" && shasum -a 256 "$(basename "${zip}")"`).toString();
+  const sums = execSync(
+    `cd "${out}" && find . -type f | sort | xargs shasum -a 256 && cd "${ext}" && shasum -a 256 "$(basename "${zip}")"`,
+  ).toString();
   writeFileSync(`${zip}.sha256.txt`, sums);
   console.log(`Built ${out} and ${zip}${oscars.length ? ` for ${oscars.join(", ")}` : " (no Eye drops button)"}`);
 } else console.log(`Built ${out} (development)`);

@@ -49,7 +49,6 @@ export function upcomingReminders(plan, from, limit) {
   return out;
 }
 
-
 // Notification text. `generic` hides drug names on the lock screen.
 export const reminderText = (items, eyes, generic = false) => {
   if (generic) return { title: "Eye drop reminder", body: "Open Eye Drop Tracker to see which drops are due." };
@@ -58,7 +57,7 @@ export const reminderText = (items, eyes, generic = false) => {
     body:
       items
         .map(({ entry: e, med }) =>
-          [`${e.brand}: ${plural(e.drops, "drop")}, ${eyes[e.eye].long}.`, formInfo(med?.form).advice].filter(Boolean).join(" ")
+          [`${e.brand}: ${plural(e.drops, "drop")}, ${eyes[e.eye].long}.`, formInfo(med?.form).advice].filter(Boolean).join(" "),
         )
         .join("\n") + (items.length > 1 ? "\nWait 5 minutes between drops, in this order." : ""),
   };
@@ -69,7 +68,9 @@ export const reminderText = (items, eyes, generic = false) => {
 // still belongs to the day it was planned on.
 const LEAD = 6 * 60;
 const wakeMinutes = (wake) => {
-  const [h, m] = String(wake || "08:00").split(":").map(Number);
+  const [h, m] = String(wake || "08:00")
+    .split(":")
+    .map(Number);
   return (h || 0) * 60 + (m || 0);
 };
 export function doseDayIndex(start, now, wake) {

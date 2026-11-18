@@ -109,7 +109,11 @@ await tracker.locator(".sig-saved img").waitFor();
 await tracker.getByRole("button", { name: "Remove" }).click();
 // Another prescriber is never offered it.
 await tracker.getByLabel("Prescriber name and credentials, after Dr.").fill("Someone Else");
-assert.equal(await tracker.getByRole("button", { name: "Use my saved signature" }).count(), 0, "kept signature offered to another prescriber");
+assert.equal(
+  await tracker.getByRole("button", { name: "Use my saved signature" }).count(),
+  0,
+  "kept signature offered to another prescriber",
+);
 await tracker.getByLabel("Prescriber name and credentials, after Dr.").fill("Doctor Oscardoc");
 await tracker.getByRole("button", { name: "Forget saved signature" }).click();
 assert.equal(await tracker.evaluate(() => localStorage.getItem("edt.signature.saved.v2")), "null");
@@ -129,7 +133,8 @@ assert.equal(saved.length, 1);
 // The chart note's plan link carries drops only.
 const linkCode = codeFromUrl(saved[0].note);
 const decoded = Buffer.from(linkCode, "base64url").toString();
-for (const secret of ["0000000001", "Example Street", "Alex", "SAMPLE", "1951"]) assert.ok(!decoded.includes(secret) && !saved[0].note.includes(secret), `plan link or note leaks ${secret}`);
+for (const secret of ["0000000001", "Example Street", "Alex", "SAMPLE", "1951"])
+  assert.ok(!decoded.includes(secret) && !saved[0].note.includes(secret), `plan link or note leaks ${secret}`);
 assert.equal(saved[0].demographicNo, 1);
 
 // A different patient on the Oscar tab: nothing is added.
@@ -207,7 +212,11 @@ await fresh.locator("#edt-oscar-panel").locator("text=no notes or medications to
 // Writing the plan while the panel is open: only the offer to read again shows.
 await fresh.locator('textarea[name="caseNote_note"]').pressSequentially(" Xalatan 1 gtt qhs OU.");
 await fresh.locator("#edt-oscar-panel .note-changed").waitFor();
-assert.equal(await fresh.locator("#edt-oscar-panel").locator("text=no notes or medications to read yet").count(), 0, "no contradictory empty message");
+assert.equal(
+  await fresh.locator("#edt-oscar-panel").locator("text=no notes or medications to read yet").count(),
+  0,
+  "no contradictory empty message",
+);
 
 // Oscar refused the encounter: the panel reads nothing and says why.
 await fresh.goto(`${OSCAR}/casemgmt/forward.jsp?action=view&demographicNo=6&denied=1`);

@@ -43,7 +43,13 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
   return (
     <aside className="sched-aside no-print" aria-label="Calendar settings">
       <Field label="Start date">
-        <input className="input mono" type="date" value={startText} aria-invalid={startText !== s.start} onChange={(e) => setStart(e.target.value)} />
+        <input
+          className="input mono"
+          type="date"
+          value={startText}
+          aria-invalid={startText !== s.start}
+          onChange={(e) => setStart(e.target.value)}
+        />
         {startText !== s.start && <span className="num-error">Incomplete date. Still using {fmtMedium(parseISO(s.start))}.</span>}
       </Field>
       {restarts && (
@@ -104,22 +110,42 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
         <input type="checkbox" checked={s.capColours} onChange={(e) => set({ capColours: e.target.checked })} />
         <span>
           <b>Usual cap colours</b>
-          <span className="hint">Colours the markers by drug class. Turn off if the pharmacy&apos;s generic has a different cap. The patient can write their bottle&apos;s cap on the sheet either way.</span>
+          <span className="hint">
+            Colours the markers by drug class. Turn off if the pharmacy&apos;s generic has a different cap. The patient can write their
+            bottle&apos;s cap on the sheet either way.
+          </span>
         </span>
       </label>
       <details className="more">
         <summary>Dose times</summary>
         <div className="grid-2">
           <Field label="First dose">
-            <input className="input mono" type="time" value={times.wake} aria-invalid={!isClockTime(times.wake)} onChange={(e) => setTime("wake", e.target.value)} />
+            <input
+              className="input mono"
+              type="time"
+              value={times.wake}
+              aria-invalid={!isClockTime(times.wake)}
+              onChange={(e) => setTime("wake", e.target.value)}
+            />
           </Field>
           <Field label="Bedtime">
-            <input className="input mono" type="time" value={times.bed} aria-invalid={!isClockTime(times.bed)} onChange={(e) => setTime("bed", e.target.value)} />
+            <input
+              className="input mono"
+              type="time"
+              value={times.bed}
+              aria-invalid={!isClockTime(times.bed)}
+              onChange={(e) => setTime("bed", e.target.value)}
+            />
           </Field>
         </div>
         <p className="hint">Doses are spread through the day from the first dose. Bedtime drops go at bedtime.</p>
       </details>
-      <button className="btn primary lg" onClick={print} disabled={nothing || !named} aria-describedby={!named ? "cal-print-why" : undefined}>
+      <button
+        className="btn primary lg"
+        onClick={print}
+        disabled={nothing || !named}
+        aria-describedby={!named ? "cal-print-why" : undefined}
+      >
         {Icon.print} Print {sheetCount} page{sheetCount === 1 ? "" : "s"}
       </button>
       {!named && (
@@ -147,7 +173,10 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
         </div>
         <div className="chart-note">
           <CopyButton text={note}>Copy for chart note</CopyButton>
-          <p className="hint">The plan and its link, to paste into the clinic note. Open the link again to change the plan at the next visit, or to reprint it if the patient loses the calendar.</p>
+          <p className="hint">
+            The plan and its link, to paste into the clinic note. Open the link again to change the plan at the next visit, or to reprint it
+            if the patient loses the calendar.
+          </p>
           {addToChart && <AddToChart code={codeFromUrl(link)} patient={addToChart.patient} add={addToChart.add} />}
         </div>
       </div>
@@ -168,12 +197,24 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
     return { entry, index, med, chip: chipStyle(coloured), tint: capTint(coloured), capName: CAP_COLOURS[med?.cap]?.label || "" };
   });
   const link = useMemo(
-    () => (entries.length ? patientLink(encodeRegimen({ entries, formulary, start: s.start, wake: s.wake, bed: s.bed, nonce: s.nonce })) : ""),
-    [entries, formulary, s.start, s.wake, s.bed, s.nonce]
+    () =>
+      entries.length ? patientLink(encodeRegimen({ entries, formulary, start: s.start, wake: s.wake, bed: s.bed, nonce: s.nonce })) : "",
+    [entries, formulary, s.start, s.wake, s.bed, s.nonce],
   );
   const [qr, qrFailed] = useQrCode(link, s.qr);
   const sheetsRef = useRef(null);
-  const measured = useSheetMeasure(sheetsRef, size, [entries, formulary, size, s.start, s.wake, s.bed, s.qr, qr, patient.name, patient.dob]);
+  const measured = useSheetMeasure(sheetsRef, size, [
+    entries,
+    formulary,
+    size,
+    s.start,
+    s.wake,
+    s.bed,
+    s.qr,
+    qr,
+    patient.name,
+    patient.dob,
+  ]);
 
   if (!entries.length) return <NoDrops go={go} />;
 
@@ -203,9 +244,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
         <div className="sheet-h-right">
           <div className="who">
             {patient.name && <div className="who-name">{patient.name}</div>}
-            {dob && (
-              <div className="mono">Born {fmtMedium(dob)}</div>
-            )}
+            {dob && <div className="mono">Born {fmtMedium(dob)}</div>}
           </div>
           {withQr && (
             <div className="sheet-qr">
@@ -272,14 +311,23 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
             <section className="sheet" key={`cal-${p.title}`}>
               {header(cal.pages.length > 1 ? `Calendar, page ${i + 1} of ${cal.pages.length}` : "Eye drop calendar", p.title)}
               {cal.combined && i === 0 ? legend : compact}
-              <CalendarGrid weeks={p.weeks} items={items} start={start} lastIndex={span.days - 1} month={p.month} rowHeight={p.rowHeight} scale={p.scale} perLine={p.perLine} />
+              <CalendarGrid
+                weeks={p.weeks}
+                items={items}
+                start={start}
+                lastIndex={span.days - 1}
+                month={p.month}
+                rowHeight={p.rowHeight}
+                scale={p.scale}
+                perLine={p.perLine}
+              />
             </section>
           ))}
         {chart.map((p) => (
           <section className="sheet" key={`chart-${p.first}-${p.part}`}>
             {header(
               `Daily chart, week ${p.week} of ${Math.ceil(span.days / 7)}${p.part ? ", continued" : ""}`,
-              fmtRange(addDays(start, p.first), addDays(start, p.first + 6))
+              fmtRange(addDays(start, p.first), addDays(start, p.first + 6)),
             )}
             <DailyChart page={p} start={start} lastIndex={span.days - 1} />
             <p className="chart-foot">Tick each box when you use the drop. Wait 5 minutes between drops, in the order shown.</p>

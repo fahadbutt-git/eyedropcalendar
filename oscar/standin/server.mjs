@@ -56,18 +56,37 @@ const escapeHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "
 
 function demographicTo(p) {
   return {
-    demographicNo: str(p.id), firstName: p.firstName, lastName: p.lastName, sex: p.sex,
-    dobYear: p.dob.slice(0, 4), dobMonth: p.dob.slice(5, 7), dobDay: p.dob.slice(8, 10),
-    hin: p.hin, hcType: "ON", chartNo: str(1000 + p.id), patientStatus: "AC",
+    demographicNo: str(p.id),
+    firstName: p.firstName,
+    lastName: p.lastName,
+    sex: p.sex,
+    dobYear: p.dob.slice(0, 4),
+    dobMonth: p.dob.slice(5, 7),
+    dobDay: p.dob.slice(8, 10),
+    hin: p.hin,
+    hcType: "ON",
+    chartNo: str(1000 + p.id),
+    patientStatus: "AC",
     address: { address: p.address, city: "Toronto", province: "ON", postal: "M5V 0A1" },
   };
 }
 
 function noteTo(p, n, i) {
   return {
-    noteId: p.id * 100 + i, uuid: `standin-${p.id}-${i}`, note: n.text, observationDate: Date.parse(n.date), updateDate: Date.parse(n.date),
-    providerName: p.lastName === "HOSTILE" ? '<img src=x onerror="window.__pwned=6">' : "Demo, Doctor", providerNo: "999998", isSigned: "true", isEditable: "true", revision: "1",
-    encounterType: "face to face encounter with client", archived: "false", isCpp: "false", isDocument: "false",
+    noteId: p.id * 100 + i,
+    uuid: `standin-${p.id}-${i}`,
+    note: n.text,
+    observationDate: Date.parse(n.date),
+    updateDate: Date.parse(n.date),
+    providerName: p.lastName === "HOSTILE" ? '<img src=x onerror="window.__pwned=6">' : "Demo, Doctor",
+    providerNo: "999998",
+    isSigned: "true",
+    isEditable: "true",
+    revision: "1",
+    encounterType: "face to face encounter with client",
+    archived: "false",
+    isCpp: "false",
+    isDocument: "false",
   };
 }
 
@@ -77,16 +96,39 @@ async function rest(req, res, path, url) {
   let m;
   // Test-only (set through /oscar/__standin/break and /hang): a service that
   // fails or never answers.
-  const service = /^demographics\/\d+$/.test(path) ? "demographics" : /^notes\/\d+\/all$/.test(path) ? "notes" : /^notes\/\d+\/save$/.test(path) ? "save" : path === "providerService/provider/me" ? "me" : /^rx\//.test(path) ? "rx" : "";
+  const service = /^demographics\/\d+$/.test(path)
+    ? "demographics"
+    : /^notes\/\d+\/all$/.test(path)
+      ? "notes"
+      : /^notes\/\d+\/save$/.test(path)
+        ? "save"
+        : path === "providerService/provider/me"
+          ? "me"
+          : /^rx\//.test(path)
+            ? "rx"
+            : "";
   if (service && hanging.has(service)) return void held.push(res);
   if (service && service !== "notes" && service !== "rx" && broken.has(service)) return send(res, 500, "");
   if ((m = path.match(/^demographics\/quickSearch$/))) {
     const q = (url.searchParams.get("query") || "").toLowerCase();
-    const found = PATIENTS.filter((p) => `${p.lastName}, ${p.firstName}`.toLowerCase().includes(q.replace(/\s*,\s*/, ", ")) || p.lastName.toLowerCase().startsWith(q));
+    const found = PATIENTS.filter(
+      (p) => `${p.lastName}, ${p.firstName}`.toLowerCase().includes(q.replace(/\s*,\s*/, ", ")) || p.lastName.toLowerCase().startsWith(q),
+    );
     if (!found.length) return send(res, 200, { limit: "0", offset: "0", total: "0" });
     return send(res, 200, {
-      content: found.map((p) => ({ demographicNo: str(p.id), lastName: p.lastName, firstName: p.firstName, dob: p.dob, sex: p.sex, hin: p.hin, status: "AC" })),
-      limit: "0", offset: "0", query: q, total: str(found.length),
+      content: found.map((p) => ({
+        demographicNo: str(p.id),
+        lastName: p.lastName,
+        firstName: p.firstName,
+        dob: p.dob,
+        sex: p.sex,
+        hin: p.hin,
+        status: "AC",
+      })),
+      limit: "0",
+      offset: "0",
+      query: q,
+      total: str(found.length),
     });
   }
   const patient = (id) => PATIENTS.find((p) => p.id === Number(id));
@@ -96,12 +138,22 @@ async function rest(req, res, path, url) {
   }
   if (broken.has("notes") && /^notes\/\d+\/all$/.test(path)) return send(res, 500, "");
   if (broken.has("rx") && /^rx\//.test(path)) return send(res, 500, "");
-  if (path === "providerService/provider/me") return send(res, 200, { id: provider, providerNo: provider, firstName: "Doctor", lastName: "Oscardoc", practitionerNo: "99999", workPhone: "905-555-0100", address: "100 Demo Street" });
+  if (path === "providerService/provider/me")
+    return send(res, 200, {
+      id: provider,
+      providerNo: provider,
+      firstName: "Doctor",
+      lastName: "Oscardoc",
+      practitionerNo: "99999",
+      workPhone: "905-555-0100",
+      address: "100 Demo Street",
+    });
   if ((m = path.match(/^notes\/(\d+)\/all$/)) && req.method === "POST") {
     const p = patient(m[1]);
     if (!p) return send(res, 200, { moreNotes: "false" });
-    const notes = [...p.notes, ...saved.filter((s) => s.demographicNo === p.id).map((s) => ({ date: s.date, text: s.note }))]
-      .sort((a, b) => b.date.localeCompare(a.date));
+    const notes = [...p.notes, ...saved.filter((s) => s.demographicNo === p.id).map((s) => ({ date: s.date, text: s.note }))].sort((a, b) =>
+      b.date.localeCompare(a.date),
+    );
     return send(res, 200, { moreNotes: "false", notelist: cxfList(notes.map((n, i) => noteTo(p, n, i))) });
   }
   if ((m = path.match(/^notes\/(\d+)\/save$/)) && req.method === "POST") {
@@ -124,7 +176,13 @@ async function rest(req, res, path, url) {
     const p = patient(m[1]);
     // Some clinics' Oscar answers this with a server error (seen 10 November 2026).
     if (p?.rxError) return send(res, 500, "");
-    const drugs = (p?.rx || []).map((d, i) => ({ drugId: str(p.id * 10 + i), demographicNo: str(p.id), archived: "false", prn: "false", ...d }));
+    const drugs = (p?.rx || []).map((d, i) => ({
+      drugId: str(p.id * 10 + i),
+      demographicNo: str(p.id),
+      archived: "false",
+      prn: "false",
+      ...d,
+    }));
     return send(res, 200, drugs.length ? { content: cxfList(drugs) } : {});
   }
   return send(res, 404, "");
@@ -135,31 +193,59 @@ const server = createServer(async (req, res) => {
   const path = url.pathname;
   if (path === "/" || path === "/oscar" || path === "/oscar/") return res.writeHead(302, { Location: "/oscar/index.jsp" }).end();
   if (path === "/oscar/index.jsp")
-    return send(res, 200, page("OSCAR login", `<form method="post" action="/oscar/login.do">
+    return send(
+      res,
+      200,
+      page(
+        "OSCAR login",
+        `<form method="post" action="/oscar/login.do">
       <p><label>Username <input name="username" autocomplete="off"></label></p>
       <p><label>Password <input name="password" type="password"></label></p>
       <p><label>2nd level passcode <input name="pin" type="password"></label></p>
-      <button>Sign in</button></form>`), "text/html");
+      <button>Sign in</button></form>`,
+      ),
+      "text/html",
+    );
   if (path === "/oscar/login.do" && req.method === "POST") {
     const f = new URLSearchParams(await readBody(req));
-    if (f.get("username") !== "oscardoc" || f.get("password") !== "mac2002" || f.get("pin") !== "1117") return res.writeHead(302, { Location: "/oscar/index.jsp" }).end();
+    if (f.get("username") !== "oscardoc" || f.get("password") !== "mac2002" || f.get("pin") !== "1117")
+      return res.writeHead(302, { Location: "/oscar/index.jsp" }).end();
     const id = randomBytes(12).toString("hex");
     sessions.add(id);
-    return res.writeHead(302, { "Set-Cookie": `JSESSIONID=${id}; Path=/oscar; HttpOnly; SameSite=Lax`, Location: "/oscar/provider/providercontrol.jsp" }).end();
+    return res
+      .writeHead(302, {
+        "Set-Cookie": `JSESSIONID=${id}; Path=/oscar; HttpOnly; SameSite=Lax`,
+        Location: "/oscar/provider/providercontrol.jsp",
+      })
+      .end();
   }
   if (path.startsWith("/oscar/ws/rs/")) return rest(req, res, path.slice("/oscar/ws/rs/".length), url);
   if (path === "/oscar/__standin/saved") return send(res, 200, saved);
   // What the encounter's Sign & Save does with today's note, for tests.
   if (path === "/oscar/__standin/sign" && req.method === "POST") {
     const body = JSON.parse((await readBody(req)) || "{}");
-    saved.push({ demographicNo: Number(body.demographicNo), note: String(body.note || ""), isSigned: true, date: new Date().toISOString(), byEncounter: true });
+    saved.push({
+      demographicNo: Number(body.demographicNo),
+      note: String(body.note || ""),
+      isSigned: true,
+      date: new Date().toISOString(),
+      byEncounter: true,
+    });
     return send(res, 200, { ok: true });
   }
   // What the Eye Form's Sign, Save & Exit does: each box becomes its own note.
   if (path === "/oscar/__standin/eyeformsign" && req.method === "POST") {
     const body = JSON.parse((await readBody(req)) || "{}");
     for (const part of ["current", "impression", "plan"])
-      if (String(body[part] || "").trim()) saved.push({ demographicNo: Number(body.demographicNo), note: String(body[part]), isSigned: true, date: new Date().toISOString(), byEncounter: true, part });
+      if (String(body[part] || "").trim())
+        saved.push({
+          demographicNo: Number(body.demographicNo),
+          note: String(body[part]),
+          isSigned: true,
+          date: new Date().toISOString(),
+          byEncounter: true,
+          part,
+        });
     return send(res, 200, { ok: true });
   }
   // Each test run starts from no saved notes and the usual clinician.
@@ -191,13 +277,24 @@ const server = createServer(async (req, res) => {
   }
   if (!authed(req)) return res.writeHead(302, { Location: "/oscar/index.jsp" }).end();
   if (path === "/oscar/provider/providercontrol.jsp")
-    return send(res, 200, page("Schedule", `<h2>Today</h2><table><tr><th>Patient</th><th>Reason</th></tr>${PATIENTS.map(
-      (p) => `<tr><td><a href="${p.screen?.startsWith("eyeform") ? `/oscar/eyeform/eyeform.jsp?reason=Progress+Note&appointment_no=&demographic_no=${p.id}${p.screen === "eyeform-kai" ? "&variant=kai" : ""}` : `/oscar/casemgmt/forward.jsp?action=view&demographicNo=${p.id}&providerNo=999998`}" onclick="window.open(this.href, 'encounter${p.id}', 'height=710,width=1024,location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes'); return false;">${escapeHtml(p.lastName)}, ${escapeHtml(p.firstName)}</a></td><td>${escapeHtml(p.reason)}</td></tr>`
-    ).join("")}</table>`), "text/html");
+    return send(
+      res,
+      200,
+      page(
+        "Schedule",
+        `<h2>Today</h2><table><tr><th>Patient</th><th>Reason</th></tr>${PATIENTS.map(
+          (p) =>
+            `<tr><td><a href="${p.screen?.startsWith("eyeform") ? `/oscar/eyeform/eyeform.jsp?reason=Progress+Note&appointment_no=&demographic_no=${p.id}${p.screen === "eyeform-kai" ? "&variant=kai" : ""}` : `/oscar/casemgmt/forward.jsp?action=view&demographicNo=${p.id}&providerNo=999998`}" onclick="window.open(this.href, 'encounter${p.id}', 'height=710,width=1024,location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes'); return false;">${escapeHtml(p.lastName)}, ${escapeHtml(p.firstName)}</a></td><td>${escapeHtml(p.reason)}</td></tr>`,
+        ).join("")}</table>`,
+      ),
+      "text/html",
+    );
   if (path === "/oscar/eyeform/eyeform.jsp") {
     const p = PATIENTS.find((x) => x.id === Number(url.searchParams.get("demographic_no")));
     if (!p) return send(res, 404, page("Not found", "No such patient"), "text/html");
-    const signed = [...p.notes, ...saved.filter((s) => s.demographicNo === p.id).map((s) => ({ date: s.date, text: s.note }))].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
+    const signed = [...p.notes, ...saved.filter((s) => s.demographicNo === p.id).map((s) => ({ date: s.date, text: s.note }))]
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 6);
     return send(res, 200, eyeformPage(p, url.searchParams.get("variant"), signed), "text/html");
   }
   if (path === "/oscar/CaseManagementEntry.do" || path === "/oscar/casemgmt/forward.jsp") {
@@ -205,13 +302,26 @@ const server = createServer(async (req, res) => {
     if (!p) return send(res, 404, page("Not found", "No such patient"), "text/html");
     // Oscar refuses an encounter outside the clinician's program with this page.
     if (url.searchParams.get("denied") === "1")
-      return send(res, 200, `<html><head><title></title></head><body><input type="hidden" name="demographicNo" value="${p.id}"><h3 style="color:red">Access Denied</h3><p>You cannot access this client's Encounter because he/she is not in your program domain.</p></body></html>`, "text/html");
+      return send(
+        res,
+        200,
+        `<html><head><title></title></head><body><input type="hidden" name="demographicNo" value="${p.id}"><h3 style="color:red">Access Denied</h3><p>You cannot access this client's Encounter because he/she is not in your program domain.</p></body></html>`,
+        "text/html",
+      );
     const latest = [...p.notes].sort((a, b) => b.date.localeCompare(a.date))[0] || { text: "" };
-    return send(res, 200, page(`Encounter - ${p.lastName}, ${p.firstName}`, `<input type="hidden" name="demographicNo" value="${p.id}">
+    return send(
+      res,
+      200,
+      page(
+        `Encounter - ${p.lastName}, ${p.firstName}`,
+        `<input type="hidden" name="demographicNo" value="${p.id}">
       <div class="bar">Encounter: ${escapeHtml(p.lastName)}, ${escapeHtml(p.firstName)} &middot; ${p.dob}</div>
       <div class="note">${escapeHtml(latest.text)}</div>
       <div class="bar">Today's note</div>
-      <textarea name="caseNote_note" id="caseNote_note${p.id}" class="note">[06-Nov-2026 .: ]\n${escapeHtml(p.draft || "")}</textarea>`), "text/html");
+      <textarea name="caseNote_note" id="caseNote_note${p.id}" class="note">[06-Nov-2026 .: ]\n${escapeHtml(p.draft || "")}</textarea>`,
+      ),
+      "text/html",
+    );
   }
   send(res, 404, page("Not found", "Not found"), "text/html");
 });

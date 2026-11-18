@@ -14,7 +14,6 @@ export const drName = (name) => {
   return !n ? "" : /^dr\.?\s/i.test(n) ? n.replace(/^dr\.?\s*/i, "Dr. ") : `Dr. ${n}`;
 };
 
-
 const REFILLS = [0, 1, 2, 3, 4, 5, 6, 11];
 // Dispense is a real quantity (such as "5 mL"), entered for each drug.
 const DEFAULTS = { include: true, disp: "", refills: 0, lu: "" };
@@ -35,7 +34,11 @@ function PrescriberForm({ prescriber, setPrescriber }) {
             <span className="prefix" aria-hidden="true">
               Dr.
             </span>
-            <input id="rx-prescriber-name" className="input" aria-label="Prescriber name and credentials, after Dr." placeholder="Jane Smith, MD FRCSC"
+            <input
+              id="rx-prescriber-name"
+              className="input"
+              aria-label="Prescriber name and credentials, after Dr."
+              placeholder="Jane Smith, MD FRCSC"
               value={prescriber.name}
               onChange={(e) => setPrescriber({ ...prescriber, name: e.target.value.replace(/^\s*dr\.?\s+/i, "") })}
             />
@@ -80,10 +83,22 @@ function ItemRow({ entry, med, opt, setOpt }) {
       </label>
       <div className="rx-item-fields">
         <Field label="Dispense">
-          <input className="input sm" disabled={!opt.include} value={opt.disp} maxLength={40} placeholder="e.g. 5 mL" onChange={(e) => setOpt({ disp: e.target.value })} />
+          <input
+            className="input sm"
+            disabled={!opt.include}
+            value={opt.disp}
+            maxLength={40}
+            placeholder="e.g. 5 mL"
+            onChange={(e) => setOpt({ disp: e.target.value })}
+          />
         </Field>
         <Field label="Refills">
-          <select className="select sm" disabled={!opt.include} value={opt.refills} onChange={(e) => setOpt({ refills: Number(e.target.value) })}>
+          <select
+            className="select sm"
+            disabled={!opt.include}
+            value={opt.refills}
+            onChange={(e) => setOpt({ refills: Number(e.target.value) })}
+          >
             {REFILLS.map((n) => (
               <option key={n} value={n}>
                 {n}
@@ -93,7 +108,12 @@ function ItemRow({ entry, med, opt, setOpt }) {
         </Field>
         {codes.length > 0 && (
           <Field label="ODB LU code">
-            <select className="select sm" disabled={!opt.include} value={codes.includes(opt.lu) || opt.lu === LU_NOT_MET ? opt.lu : ""} onChange={(e) => setOpt({ lu: e.target.value })}>
+            <select
+              className="select sm"
+              disabled={!opt.include}
+              value={codes.includes(opt.lu) || opt.lu === LU_NOT_MET ? opt.lu : ""}
+              onChange={(e) => setOpt({ lu: e.target.value })}
+            >
               <option value="">None (ODB does not apply)</option>
               {codes.map((c) => (
                 <option key={c} value={c}>
@@ -137,7 +157,26 @@ function PrescriberCheck({ prescriber, confirm }) {
   );
 }
 
-export default function RxPage({ entries, formulary, patient, prescriber, setPrescriber, prescriberConfirmed, confirmPrescriber, today, setToday, rx, setRx, signature: drawn, setSignature, savedSignature, saveSignature, start, warnings, go }) {
+export default function RxPage({
+  entries,
+  formulary,
+  patient,
+  prescriber,
+  setPrescriber,
+  prescriberConfirmed,
+  confirmPrescriber,
+  today,
+  setToday,
+  rx,
+  setRx,
+  signature: drawn,
+  setSignature,
+  savedSignature,
+  saveSignature,
+  start,
+  warnings,
+  go,
+}) {
   // A signature belongs to one prescription and comes off when the drops or
   // patient change. A prescriber may keep one on this computer, which is
   // placed on each prescription only when they click to use it.
@@ -191,7 +230,12 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
           </div>
           <div className="card-b stack" style={{ gap: 10 }}>
             <Field label="Date">
-              <input className="input" type="date" value={date} onChange={(e) => setRx({ ...rx, date: e.target.value, dateEdited: true })} />
+              <input
+                className="input"
+                type="date"
+                value={date}
+                onChange={(e) => setRx({ ...rx, date: e.target.value, dateEdited: true })}
+              />
             </Field>
             <div className="rx-items">
               {entries.map((e) => (
@@ -205,17 +249,25 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
               </span>
               <SignaturePad signature={signature} setSignature={setSignature} saved={keptSig} saveSignature={saveSignature} />
               <span className="field-hint">
-                Signing confirms you have reviewed this prescription. The signature comes off if the drops or patient change.
-                You can keep your signature on this computer to sign later prescriptions with one click, or leave this blank and
-                sign the printout by hand.
+                Signing confirms you have reviewed this prescription. The signature comes off if the drops or patient change. You can keep
+                your signature on this computer to sign later prescriptions with one click, or leave this blank and sign the printout by
+                hand.
               </span>
             </div>
             <Field label="Notes" optional>
-              <textarea className="textarea" rows={3} maxLength={500} value={rx.notes} onChange={(e) => setRx({ ...rx, notes: e.target.value })} />
+              <textarea
+                className="textarea"
+                rows={3}
+                maxLength={500}
+                value={rx.notes}
+                onChange={(e) => setRx({ ...rx, notes: e.target.value })}
+              />
             </Field>
           </div>
         </section>
-        {missing.length > 0 && <div className="notice warn small">Still needed: {missing.join(", ")}. Prescriber details are under the preview.</div>}
+        {missing.length > 0 && (
+          <div className="notice warn small">Still needed: {missing.join(", ")}. Prescriber details are under the preview.</div>
+        )}
         {saved && !prescriberConfirmed && <PrescriberCheck prescriber={prescriber} confirm={confirmPrescriber} />}
         <button className="btn primary lg" onClick={print} disabled={!!why} aria-describedby={why ? "rx-print-why" : undefined}>
           {Icon.print} Print prescription

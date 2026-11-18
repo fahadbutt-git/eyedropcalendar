@@ -15,14 +15,28 @@
 // Names the reader knows besides brands and generics, written the way its
 // note reader matches them.
 const EXTRA_NAMES = [
-  "prednisolone", "moxifloxacin", "ketorolac", "difluprednate", "cyclopentolate", "brimonidine", "dorzolamide",
-  "Lumigan", "Travatan", "DuoTrav", "Polytrim", "dorzolamide-timolol", "brimonidine-timolol", "Pred Forte",
+  "prednisolone",
+  "moxifloxacin",
+  "ketorolac",
+  "difluprednate",
+  "cyclopentolate",
+  "brimonidine",
+  "dorzolamide",
+  "Lumigan",
+  "Travatan",
+  "DuoTrav",
+  "Polytrim",
+  "dorzolamide-timolol",
+  "brimonidine-timolol",
+  "Pred Forte",
 ];
 
 // A dose, frequency, eye or "drop" after the word.
-export const DOSING = /\b(?:gtts?|drops?|q\.?d|od|os|ou|b\.?i\.?d|t\.?i\.?d|q\.?i\.?d|qhs|hs|q\.?\s?\d+\s?h(?:rs?|ours?)?|\d+x\/d(?:ay)?|daily|once|twice|times a day|nightly|bedtime|ung|oint(?:ment)?|right eye|left eye|both eyes|r eye|l eye|RE|LE|BE)\b/i;
+export const DOSING =
+  /\b(?:gtts?|drops?|q\.?d|od|os|ou|b\.?i\.?d|t\.?i\.?d|q\.?i\.?d|qhs|hs|q\.?\s?\d+\s?h(?:rs?|ours?)?|\d+x\/d(?:ay)?|daily|once|twice|times a day|nightly|bedtime|ung|oint(?:ment)?|right eye|left eye|both eyes|r eye|l eye|RE|LE|BE)\b/i;
 // A label or verb before the word that introduces a drug.
-const INTRO = /(?:\b(?:rx|gtts?|drops?|meds?|medications?|plan|start|started|continue|cont|use|add|restart|switch(?:ed)? to|change(?:d)? to|on)\b[\s:,-]*|[:•]\s*)$/i;
+const INTRO =
+  /(?:\b(?:rx|gtts?|drops?|meds?|medications?|plan|start|started|continue|cont|use|add|restart|switch(?:ed)? to|change(?:d)? to|on)\b[\s:,-]*|[:•]\s*)$/i;
 
 // Words that sit near dosing words in eye notes and are never drug names.
 const COMMON = new Set(
@@ -36,7 +50,7 @@ const COMMON = new Set(
   operated operative fellow other affected surgery post-op postop pre-op preop inflammation infection discharge redness pain itch
   itching itchy burning gtts lubricate lubricating lubricant ointment refresh systane optive genteal thera
   prednisone methylprednisolone acetazolamide methazolamide rest alpha beta gamma interferon
-  times time one two three four five six seven eight nine ten twice once drop drops gtt each every morning evening`.split(/\s+/)
+  times time one two three four five six seven eight nine ten twice once drop drops gtt each every morning evening`.split(/\s+/),
 );
 
 // Optimal string alignment distance: insertions, deletions, substitutions
@@ -106,7 +120,9 @@ export function recognise(word, names, doseAfter = true) {
   // word may only be one letter from a five-letter name ("Azot", "Zmar").
   if (w.length >= 4) {
     const scored = names
-      .filter((n) => n.key[0] === w[0] && Math.abs(n.key.length - w.length) <= allowedFor(n.key.length) && (w.length >= 5 || n.key.length === 5))
+      .filter(
+        (n) => n.key[0] === w[0] && Math.abs(n.key.length - w.length) <= allowedFor(n.key.length) && (w.length >= 5 || n.key.length === 5),
+      )
       .map((n) => ({ ...n, d: distance(w, n.key) }))
       .filter((n) => n.d <= allowedFor(n.key.length));
     if (scored.length) {
@@ -162,7 +178,12 @@ export function correctSpelling(note, formulary, pattern) {
           }
         }
         // "Ointmnt", "Oitment": the form word, so the ointment is chosen.
-        if (/^o/i.test(w.text) && w.text.length >= 5 && w.text.toLowerCase() !== "ointment" && distance(w.text.toLowerCase(), "ointment") <= 2) {
+        if (
+          /^o/i.test(w.text) &&
+          w.text.length >= 5 &&
+          w.text.toLowerCase() !== "ointment" &&
+          distance(w.text.toLowerCase(), "ointment") <= 2
+        ) {
           edits.push({ at: w.at, end: w.end, from: w.text, to: "ointment", form: true });
           continue;
         }
@@ -174,7 +195,11 @@ export function correctSpelling(note, formulary, pattern) {
         }
         // A word right before a frequency that is not a known word is likely
         // shorthand the reader cannot place.
-        if (/^\s+(?:\d\s*gtts?\s+|1 drop\s+)?(?:qd|bid|tid|qid|qhs|q\d+h|daily|once|twice)\b/i.test(line.slice(w.end)) && !COMMON.has(w.text.toLowerCase()) && !/^(?:od|os|ou|re|le|be|r|l|gtts?|drops?|eye|eyes|and|or|then|to|in|of)$/i.test(w.text))
+        if (
+          /^\s+(?:\d\s*gtts?\s+|1 drop\s+)?(?:qd|bid|tid|qid|qhs|q\d+h|daily|once|twice)\b/i.test(line.slice(w.end)) &&
+          !COMMON.has(w.text.toLowerCase()) &&
+          !/^(?:od|os|ou|re|le|be|r|l|gtts?|drops?|eye|eyes|and|or|then|to|in|of)$/i.test(w.text)
+        )
           unknown.push(w.text);
       }
       let out = line;

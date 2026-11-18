@@ -147,7 +147,8 @@ export default function PatientView({ plan: shared, code }) {
 
   // The dose to put in front of the patient (see nextDose for the rules).
   const minutes = minutesInto(start, day, now);
-  const pick = day === today && !finished ? nextDose(all, (it) => !!ticks[doseKey(it)], minutes) : { item: null, state: "none", missed: new Set() };
+  const pick =
+    day === today && !finished ? nextDose(all, (it) => !!ticks[doseKey(it)], minutes) : { item: null, state: "none", missed: new Set() };
   const next = pick.item;
   const isMissed = (it, time) => [...pick.missed].some((m) => m.time === time && doseKey(m) === doseKey(it));
   const waitLeft = waitFrom ? Math.max(0, waitFor(next) - (now - waitFrom)) : 0;
@@ -160,7 +161,11 @@ export default function PatientView({ plan: shared, code }) {
   };
 
   const upcoming = changeNotes(shared.entries, start, Math.max(1, today + 1), Math.max(1, today + 7), { thisWeek: false });
-  const { due, got, days: daysCounted } = recentDoses(shared, taken, {
+  const {
+    due,
+    got,
+    days: daysCounted,
+  } = recentDoses(shared, taken, {
     from: Math.max(0, daysBetween(start, parseISO(firstSeen))),
     today,
     lastDay,
@@ -187,11 +192,7 @@ export default function PatientView({ plan: shared, code }) {
         </button>
       </div>
 
-      {today < 0 && view == null && (
-        <p className="pt-note">
-          Your drops start on {fmtLong(start)}. There is nothing to take until then.
-        </p>
-      )}
+      {today < 0 && view == null && <p className="pt-note">Your drops start on {fmtLong(start)}. There is nothing to take until then.</p>}
       {finished && (
         <p className="pt-note">
           This course of drops ended on {dayName(addDays(start, lastDay))}. Follow your clinic&apos;s advice about what comes next.
@@ -212,7 +213,11 @@ export default function PatientView({ plan: shared, code }) {
             </p>
           ) : null}
           {pick.state !== "later" && (
-            <button className="btn next-btn" onClick={tapNext} aria-label={`I have put in ${next.entry.brand}, ${EYES[next.entry.eye].long}`}>
+            <button
+              className="btn next-btn"
+              onClick={tapNext}
+              aria-label={`I have put in ${next.entry.brand}, ${EYES[next.entry.eye].long}`}
+            >
               I have put it in
             </button>
           )}
@@ -247,7 +252,10 @@ export default function PatientView({ plan: shared, code }) {
               const missed = !isDone && isMissed(it, time);
               const label = `${it.entry.brand} at ${fmtTime(time)}, ${dayName(date)}, ${EYES[it.entry.eye].long}. ${isDone ? "Done" : missed ? "Missed" : "Not done yet"}`;
               return (
-                <div key={doseKey(it)} className={`dose-row ${isDone ? "is-done" : ""} ${next && next.time === time && doseKey(next) === doseKey(it) ? "is-next" : ""}`}>
+                <div
+                  key={doseKey(it)}
+                  className={`dose-row ${isDone ? "is-done" : ""} ${next && next.time === time && doseKey(next) === doseKey(it) ? "is-next" : ""}`}
+                >
                   <div className="dose-text">
                     <span className="n">{it.entry.brand}</span>
                     <span className="d">
@@ -255,7 +263,13 @@ export default function PatientView({ plan: shared, code }) {
                     </span>
                     {missed && <span className="missed">Missed. Do not double up: take the next dose at its time.</span>}
                   </div>
-                  <button className="tick" aria-pressed={isDone} aria-label={label} disabled={future} onClick={() => toggle({ ...it, time })}>
+                  <button
+                    className="tick"
+                    aria-pressed={isDone}
+                    aria-label={label}
+                    disabled={future}
+                    onClick={() => toggle({ ...it, time })}
+                  >
                     {isDone && Icon.check}
                   </button>
                 </div>
@@ -314,18 +328,22 @@ export default function PatientView({ plan: shared, code }) {
                 <b>{e.brand}</b> <span>{med?.generic}</span>
               </div>
               <div>{patientInstruction(e, med?.qhs, start)}</div>
-              <MyCap med={med} value={Object.hasOwn(myCaps, e.brand) ? myCaps[e.brand] : ""} onChange={(v) => setMyCaps((prev) => ({ ...prev, [e.brand]: v }))} />
+              <MyCap
+                med={med}
+                value={Object.hasOwn(myCaps, e.brand) ? myCaps[e.brand] : ""}
+                onChange={(v) => setMyCaps((prev) => ({ ...prev, [e.brand]: v }))}
+              />
             </div>
           );
         })}
         <p className="small">
-          Your pharmacy may give you a generic bottle with a different cap colour, and it can change between refills. Always check the
-          drug name on the label, and set the cap colour here when your bottle changes.
+          Your pharmacy may give you a generic bottle with a different cap colour, and it can change between refills. Always check the drug
+          name on the label, and set the cap colour here when your bottle changes.
         </p>
         <p className="small">Follow your eye doctor if their instructions differ from this plan. Your check marks stay on this phone.</p>
         <p className="small urgent">
-          If your eye becomes very painful or red, or your vision suddenly gets worse, contact your eye clinic right away or go to
-          the nearest emergency department.
+          If your eye becomes very painful or red, or your vision suddenly gets worse, contact your eye clinic right away or go to the
+          nearest emergency department.
         </p>
       </section>
     </div>

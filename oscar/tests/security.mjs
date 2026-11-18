@@ -28,7 +28,9 @@ await panel.locator("text=Drops found").waitFor();
 const panelMs = Date.now() - t0;
 await oscar.waitForTimeout(500);
 assert.equal(await oscar.evaluate(() => window.__pwned), undefined, "script in Oscar data ran in the page");
-const injected = await oscar.evaluate(() => document.getElementById("edt-oscar-panel").shadowRoot.querySelectorAll("img, script, svg").length);
+const injected = await oscar.evaluate(
+  () => document.getElementById("edt-oscar-panel").shadowRoot.querySelectorAll("img, script, svg").length,
+);
 assert.equal(injected, 0, "markup from Oscar became elements in the panel");
 assert.match(await panel.locator(".who").textContent(), /<img src=x/, "the name is shown as text");
 ok("markup in patient name, note, provider and Rx is shown as text, never run");
@@ -103,16 +105,21 @@ const forge = (page, msg, withClick) =>
         };
         document.body.append(b);
       }),
-    { msg, withClick }
+    { msg, withClick },
   );
 // A valid plan code, as the page would send it.
-const realCode = "eyJ2IjoyLCJuIjoidGVzdDAwMDEiLCJzIjoiMjAyNi0xMS0wNiIsInciOiIwODowMCIsImIiOiIyMjowMCIsImUiOltbIlhhbGF0YW4iLCJMYXRhbm9wcm9zdCAwLjAwNSUiLCJ0ZWFsIiwic29sdXRpb24iLDEsIk9TIiwxLCJvIiwxLDcsMSwwXV0sImMiOiIxeW1qMHhhMXc1YWhydyJ9";
+const realCode =
+  "eyJ2IjoyLCJuIjoidGVzdDAwMDEiLCJzIjoiMjAyNi0xMS0wNiIsInciOiIwODowMCIsImIiOiIyMjowMCIsImUiOltbIlhhbGF0YW4iLCJMYXRhbm9wcm9zdCAwLjAwNSUiLCJ0ZWFsIiwic29sdXRpb24iLDEsIk9TIiwxLCJvIiwxLDcsMSwwXV0sImMiOiIxeW1qMHhhMXc1YWhydyJ9";
 let r = await forge(tracker, { handoff, code: realCode }, false);
 assert.equal(r.ok, false);
 assert.match(r.message, /Click Add to Oscar chart/);
 ok("a script cannot write to the chart without a person's click");
 
-let pending = forge(tracker, { handoff, code: "Patient is non-compliant, discharge from clinic.", text: "Patient is non-compliant." }, true);
+let pending = forge(
+  tracker,
+  { handoff, code: "Patient is non-compliant, discharge from clinic.", text: "Patient is non-compliant." },
+  true,
+);
 await tracker.click("#forge");
 r = await pending;
 assert.equal(r.ok, false);
@@ -127,7 +134,11 @@ ok("a made-up hand-off is refused");
 
 let saved = await (await fetch(`${OSCAR}/__standin/saved`)).json();
 assert.equal(saved.length, 0, "a forged request reached Oscar");
-assert.doesNotMatch(await oscar.locator('textarea[name="caseNote_note"]').inputValue(), /Eye drop plan/, "a forged request reached today's note");
+assert.doesNotMatch(
+  await oscar.locator('textarea[name="caseNote_note"]').inputValue(),
+  /Eye drop plan/,
+  "a forged request reached today's note",
+);
 ok("nothing reached Oscar from the forged requests");
 
 // 5b. If another clinician signs in to Oscar in the meantime, nothing is written.
@@ -179,9 +190,30 @@ const fuzz = await context.newPage();
 await fuzz.goto(`${SITE}#/oscar`);
 await fuzz.waitForTimeout(500);
 await fuzz.evaluate(() => {
-  const many = Array.from({ length: 200 }, () => ({ brand: "Xalatan", eye: "OS", freq: 1, mode: "ongoing", drops: 1, durationDays: 7, startDay: 1, steps: [], flags: ["x".repeat(5000)] }));
+  const many = Array.from({ length: 200 }, () => ({
+    brand: "Xalatan",
+    eye: "OS",
+    freq: 1,
+    mode: "ongoing",
+    drops: 1,
+    durationDays: 7,
+    startDay: 1,
+    steps: [],
+    flags: ["x".repeat(5000)],
+  }));
   const evil = JSON.parse('{"__proto__": {"polluted": true}, "brand": "Xalatan", "eye": "OS", "freq": 1, "mode": "ongoing"}');
-  window.postMessage({ source: "edt-extension", type: "import", handoff: "h".repeat(500), patient: { name: "A‮B\u0000C".repeat(50), dob: "not a date", hcn: "9".repeat(500), address: ["x"] }, clinician: { name: "Z\u0000".repeat(400), license: { evil: 1 }, signature: "data:image/png;base64,AAAA" }, drops: [evil, { brand: "NotADrug" }, ...many], skipped: "nope" }, location.origin);
+  window.postMessage(
+    {
+      source: "edt-extension",
+      type: "import",
+      handoff: "h".repeat(500),
+      patient: { name: "A‮B\u0000C".repeat(50), dob: "not a date", hcn: "9".repeat(500), address: ["x"] },
+      clinician: { name: "Z\u0000".repeat(400), license: { evil: 1 }, signature: "data:image/png;base64,AAAA" },
+      drops: [evil, { brand: "NotADrug" }, ...many],
+      skipped: "nope",
+    },
+    location.origin,
+  );
 });
 await fuzz.locator(".import-review").waitFor();
 assert.equal(await fuzz.evaluate(() => ({}).polluted), undefined, "prototype polluted");
@@ -194,16 +226,23 @@ assert.ok((await fuzz.getByLabel("Health card number").inputValue()).length <= 2
 assert.equal(await fuzz.getByLabel("Address").inputValue(), "", "an address that is not text is dropped");
 const rxer = JSON.parse(await fuzz.evaluate(() => localStorage.getItem("edt.prescriber.v1")));
 assert.ok(rxer.name.length <= 160 && !/\p{Cc}/u.test(rxer.name) && rxer.license === "" && !("signature" in rxer), "prescriber not cleaned");
-const longest = await fuzz.evaluate(() => Math.max(...[...document.querySelectorAll(".import-list li li")].map((li) => li.textContent.length)));
+const longest = await fuzz.evaluate(() =>
+  Math.max(...[...document.querySelectorAll(".import-list li li")].map((li) => li.textContent.length)),
+);
 assert.ok(longest <= 300);
 ok("malformed imports are cut down: at most 12 drops, clean short text, no prototype pollution, no signature");
 await fuzz.close();
 
 // 8. New patient wipes the patient and the import from the browser tab.
-await tracker.getByRole("tab", { name: /Patient and drops/ }).click().catch(() => tracker.locator("text=Patient and drops").first().click());
+await tracker
+  .getByRole("tab", { name: /Patient and drops/ })
+  .click()
+  .catch(() => tracker.locator("text=Patient and drops").first().click());
 await tracker.evaluate(() => (window.confirm = () => true));
 await tracker.getByRole("button", { name: "New patient" }).click();
-const left = await tracker.evaluate(() => Object.keys(sessionStorage).filter((k) => /HOSTILE|Xalatan/.test(sessionStorage.getItem(k) || "")));
+const left = await tracker.evaluate(() =>
+  Object.keys(sessionStorage).filter((k) => /HOSTILE|Xalatan/.test(sessionStorage.getItem(k) || "")),
+);
 assert.deepEqual(left, []);
 ok("New patient leaves no patient or plan in the tab's storage");
 
@@ -211,7 +250,10 @@ ok("New patient leaves no patient or plan in the tab's storage");
 await tracker.close();
 await new Promise((res) => setTimeout(res, 500));
 stored = await session();
-assert.deepEqual(Object.keys(stored).filter((k) => k.includes(handoff)), []);
+assert.deepEqual(
+  Object.keys(stored).filter((k) => k.includes(handoff)),
+  [],
+);
 ok("closing the tab removes the hand-off from the extension");
 
 // 10. On a page that is not Oscar the panel reads nothing and says so.
@@ -225,8 +267,13 @@ await other.close();
 // 11. Where data went: only the clinic's Oscar and Eye Drop Tracker, and no
 // patient details in any address.
 const hosts = [...new Set(requests.map((u) => new URL(u).host))].filter((h) => h);
-assert.deepEqual(hosts.filter((h) => !["localhost:8080", "localhost:4173"].includes(h)), []);
-const leaky = requests.filter((u) => /HOSTILE|SAMPLE|EXAMPLE|0000000001|1960-01-01|1951-04-12|Xalatan|Pred%20Forte/i.test(decodeURIComponent(u)));
+assert.deepEqual(
+  hosts.filter((h) => !["localhost:8080", "localhost:4173"].includes(h)),
+  [],
+);
+const leaky = requests.filter((u) =>
+  /HOSTILE|SAMPLE|EXAMPLE|0000000001|1960-01-01|1951-04-12|Xalatan|Pred%20Forte/i.test(decodeURIComponent(u)),
+);
 assert.deepEqual(leaky, []);
 ok(`${requests.length} requests, all to Oscar or Eye Drop Tracker, none with patient details in the address`);
 

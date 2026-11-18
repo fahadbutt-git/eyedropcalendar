@@ -70,10 +70,14 @@ async function add(tracker, how = "click") {
     const b = await button.boundingBox();
     await tracker.mouse.dblclick(b.x + b.width / 2, b.y + b.height / 2);
   } else await button.click();
-  await tracker.waitForFunction((t) => {
-    const h = document.querySelector(".hint[role=status]");
-    return h && h.textContent !== t && !/Adding to Oscar/.test(document.body.innerText);
-  }, before, { timeout: 25000 });
+  await tracker.waitForFunction(
+    (t) => {
+      const h = document.querySelector(".hint[role=status]");
+      return h && h.textContent !== t && !/Adding to Oscar/.test(document.body.innerText);
+    },
+    before,
+    { timeout: 25000 },
+  );
   return hint(tracker).textContent();
 }
 
@@ -127,7 +131,12 @@ await scenario("3a. Oscar 500 on notes and Rx: plain message, add by hand offere
   const text = await panelText(enc);
   assert.match(text, /Oscar did not send the saved notes/);
   assert.match(text, /medication list was not available/);
-  assert.ok(await panelOf(enc).getByRole("button", { name: /add drops by hand/ }).isEnabled(), "add by hand not offered");
+  assert.ok(
+    await panelOf(enc)
+      .getByRole("button", { name: /add drops by hand/ })
+      .isEnabled(),
+    "add by hand not offered",
+  );
   ok("partial failure named, add by hand enabled");
   assert.doesNotMatch(text, /no notes or medications to read yet/, "panel says the chart has no notes, though they could not be read");
 });
@@ -144,8 +153,13 @@ await scenario("3b. Oscar 500 on demographics: plain message with a next step", 
   assert.doesNotMatch(text, /undefined|TypeError|\[object/, "raw error shown");
   const error = (await panelOf(enc).locator(".error").innerText()).replace(/\s+/g, " ");
   ok(`error shown: "${error}"`);
-  const byHand = await panelOf(enc).getByRole("button", { name: /add drops by hand/ }).isEnabled();
-  assert.ok(byHand || /try again|reload|by hand|sign in|copy/i.test(error), "no next step: the by-hand button is disabled and the message says only that Oscar answered with an error");
+  const byHand = await panelOf(enc)
+    .getByRole("button", { name: /add drops by hand/ })
+    .isEnabled();
+  assert.ok(
+    byHand || /try again|reload|by hand|sign in|copy/i.test(error),
+    "no next step: the by-hand button is disabled and the message says only that Oscar answered with an error",
+  );
 });
 
 // 3c. Oscar never answers.
@@ -158,7 +172,10 @@ await scenario("3c. Oscar hangs on demographics and notes: panel stops waiting a
   const gone = await panelOf(enc)
     .locator("text=Reading the chart")
     .waitFor({ state: "detached", timeout: 20000 })
-    .then(() => true, () => false);
+    .then(
+      () => true,
+      () => false,
+    );
   assert.ok(gone, "after 20 s the panel still says 'Reading the chart…' with no message and no way to add by hand");
   assert.ok(await panelOf(enc).locator(".error").count(), "no error after the wait");
 });
@@ -254,7 +271,11 @@ await scenario("7b. very long name (83 characters): kept whole, or shortened vis
   assert.equal((await panelOf(enc).locator(".who strong").textContent()).trim(), full, "panel name");
   const tracker = await readAndOpen(opened, enc);
   const name = await tracker.getByLabel("Patient name").inputValue();
-  assert.equal(name, full, `the tracker shows "${name}" (${name.length} characters), cut with no notice, and that name prints on the calendar`);
+  assert.equal(
+    name,
+    full,
+    `the tracker shows "${name}" (${name.length} characters), cut with no notice, and that name prints on the calendar`,
+  );
 });
 
 // 8. Markup-like text in today's note.
@@ -268,7 +289,10 @@ await scenario("8. markup-like text in the note: shown as text, never run, kept 
   assert.match(pre, /IOP <21 & >10 target/);
   assert.match(pre, /<\/textarea><script>window.__pwned=9<\/script>/);
   assert.match(pre, /&amp; done/);
-  assert.equal(await enc.evaluate(() => document.getElementById("edt-oscar-panel").shadowRoot.querySelectorAll("script, b, img").length), 0);
+  assert.equal(
+    await enc.evaluate(() => document.getElementById("edt-oscar-panel").shadowRoot.querySelectorAll("script, b, img").length),
+    0,
+  );
   const tracker = await readAndOpen(opened, enc);
   await toCalendar(tracker);
   const msg = await add(tracker);
@@ -331,7 +355,8 @@ await scenario("11. site tab closed and reopened from history: stale hand-off re
   const back = await context.newPage();
   opened.push(back);
   await back.addInitScript((s) => {
-    if (location.origin === "http://localhost:4173" && !sessionStorage.length) for (const [k, v] of Object.entries(s)) sessionStorage.setItem(k, v);
+    if (location.origin === "http://localhost:4173" && !sessionStorage.length)
+      for (const [k, v] of Object.entries(s)) sessionStorage.setItem(k, v);
   }, store);
   await back.goto(where);
   await back.waitForTimeout(800);
@@ -375,13 +400,25 @@ await scenario("12a. hand-off older than two hours when the tracker opens: plan 
       const id = crypto.randomUUID();
       await chrome.storage.session.set({
         [`handoff:${id}`]: {
-          oscarTab: encTab, oscarDoc: "", patientId: "1", provider: "999998", at: Date.now() - 2 * 60 * 60 * 1000 - 60000, written: [],
-          payload: { patientId: "1", provider: "999998", patient: { name: "Alex SAMPLE", dob: "1951-04-12" }, drops: [], skipped: [], code: "" },
+          oscarTab: encTab,
+          oscarDoc: "",
+          patientId: "1",
+          provider: "999998",
+          at: Date.now() - 2 * 60 * 60 * 1000 - 60000,
+          written: [],
+          payload: {
+            patientId: "1",
+            provider: "999998",
+            patient: { name: "Alex SAMPLE", dob: "1951-04-12" },
+            drops: [],
+            skipped: [],
+            code: "",
+          },
         },
         [`tab:${tabId}`]: id,
       });
     },
-    { tabId, encTab }
+    { tabId, encTab },
   );
   await page.reload();
   await page.waitForTimeout(2500);
@@ -399,7 +436,8 @@ await scenario("12b. hand-off older than two hours at Add: refused, nothing writ
   await toCalendar(tracker);
   await worker.evaluate(async () => {
     const all = await chrome.storage.session.get(null);
-    for (const [k, v] of Object.entries(all)) if (k.startsWith("handoff:")) await chrome.storage.session.set({ [k]: { ...v, at: Date.now() - 2 * 60 * 60 * 1000 - 60000 } });
+    for (const [k, v] of Object.entries(all))
+      if (k.startsWith("handoff:")) await chrome.storage.session.set({ [k]: { ...v, at: Date.now() - 2 * 60 * 60 * 1000 - 60000 } });
   });
   const before = await noteOf(enc);
   const msg = await add(tracker);
@@ -441,7 +479,10 @@ await scenario("13. zero drops: Add is not offered, and an empty plan is refused
     ({ handoff, code }) =>
       new Promise((resolve) => {
         const id = Math.random().toString(36).slice(2);
-        window.addEventListener("message", (e) => e.data?.source === "edt-extension" && e.data.type === "added" && e.data.id === id && resolve(e.data));
+        window.addEventListener(
+          "message",
+          (e) => e.data?.source === "edt-extension" && e.data.type === "added" && e.data.id === id && resolve(e.data),
+        );
         const b = document.createElement("button");
         b.id = "forge";
         b.textContent = "send";
@@ -449,7 +490,7 @@ await scenario("13. zero drops: Add is not offered, and an empty plan is refused
         b.onclick = () => (b.remove(), window.postMessage({ source: "edt-page", type: "addToChart", id, handoff, code }, location.origin));
         document.body.append(b);
       }),
-    { handoff, code: empty }
+    { handoff, code: empty },
   );
   await t2.click("#forge");
   const r = await pending;
@@ -472,7 +513,9 @@ await scenario("14. clinician types before and after Add: their text and the pla
   await box.press("Control+End");
   await box.pressSequentially("Discussed side effects. RTC 1 week.");
   const note = await noteOf(enc);
-  const i = note.indexOf("IOP 12 OD, 15 OS."), j = note.indexOf("Eye drop plan"), k = note.indexOf("Discussed side effects. RTC 1 week.");
+  const i = note.indexOf("IOP 12 OD, 15 OS."),
+    j = note.indexOf("Eye drop plan"),
+    k = note.indexOf("Discussed side effects. RTC 1 week.");
   assert.ok(i >= 0 && j > i && k > j, `typing lost or out of order (${i}, ${j}, ${k})`);
   assert.ok(note.startsWith("[06-Nov-2026 .: ]"), "Oscar's date line changed");
   assert.equal(plans(note), 1);

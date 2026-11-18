@@ -20,7 +20,9 @@ export default function PrescriptionSheet({ items, prescriber, patient, date, no
       <header className="rx-head">
         <div className="prescriber">
           <b>{prescriber.name || <Missing>Prescriber name</Missing>}</b>
-          <div>{prescriber.license ? `CPSO ${prescriber.license.replace(/^\s*cpso\s*(no\.?|#)?\s*/i, "")}` : <Missing>CPSO number</Missing>}</div>
+          <div>
+            {prescriber.license ? `CPSO ${prescriber.license.replace(/^\s*cpso\s*(no\.?|#)?\s*/i, "")}` : <Missing>CPSO number</Missing>}
+          </div>
         </div>
         <div className="clinic">
           {prescriber.clinic && <div className="clinic-name">{prescriber.clinic}</div>}

@@ -3,7 +3,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { asList, oscarClient, openPatientId, restBase } from "../oscar/extension/src/oscarApi.js";
 
-const reply = (status, body) => ({ ok: status >= 200 && status < 300, status, text: async () => (body == null ? "" : typeof body === "string" ? body : JSON.stringify(body)) });
+const reply = (status, body) => ({
+  ok: status >= 200 && status < 300,
+  status,
+  text: async () => (body == null ? "" : typeof body === "string" ? body : JSON.stringify(body)),
+});
 const fake = (routes) => {
   const calls = [];
   const fetcher = async (url, init) => {
@@ -16,7 +20,10 @@ const fake = (routes) => {
 };
 
 test("the REST address follows the clinic's own Oscar folder", () => {
-  assert.equal(restBase(new URL("https://emr.example.ca/oscar/casemgmt/forward.jsp?demographicNo=3")), "https://emr.example.ca/oscar/ws/rs");
+  assert.equal(
+    restBase(new URL("https://emr.example.ca/oscar/casemgmt/forward.jsp?demographicNo=3")),
+    "https://emr.example.ca/oscar/ws/rs",
+  );
   assert.equal(restBase(new URL("https://kai.example.com/kaioscar/CaseManagementEntry.do")), "https://kai.example.com/kaioscar/ws/rs");
 });
 
@@ -42,7 +49,10 @@ test("notes are read whether dates are text or milliseconds, newest first", asyn
       }),
   });
   const notes = await client.notes("3");
-  assert.deepEqual(notes.map((n) => n.text), ["Newer plan", "Older plan"]);
+  assert.deepEqual(
+    notes.map((n) => n.text),
+    ["Newer plan", "Older plan"],
+  );
   assert.equal(notes[0].date, "2026-11-05T20:00:00.000Z");
   assert.equal(calls[0].method, "POST");
   assert.equal(calls[0].credentials, "same-origin");
@@ -51,22 +61,70 @@ test("notes are read whether dates are text or milliseconds, newest first", asyn
 test("a list of one written as a bare object is still a list", async () => {
   assert.deepEqual(asList({ a: 1 }), [{ a: 1 }]);
   assert.deepEqual(asList(undefined), []);
-  const { client } = fake({ "notes/3/all": () => reply(200, { notelist: { noteId: "9", note: "Only note", observationDate: "2026-11-01T10:00:00Z" } }) });
+  const { client } = fake({
+    "notes/3/all": () => reply(200, { notelist: { noteId: "9", note: "Only note", observationDate: "2026-11-01T10:00:00Z" } }),
+  });
   assert.equal((await client.notes("3"))[0].text, "Only note");
 });
 
 test("the patient's name, date of birth, health card and address, and nothing else", async () => {
-  const d = { demographicNo: 3, firstName: "Alex", lastName: "SAMPLE", dobYear: "1951", dobMonth: "4", dobDay: "12", hin: "1234567890", ver: "AB", phone: "905-555-0199", email: "a@example.com", sin: "000000000" };
-  const nested = fake({ "demographics/3": () => reply(200, { ...d, address: { address: "1 Example St", city: "Milton", province: "ON", postal: "L9T 0A1" } }) }).client;
-  assert.deepEqual(await nested.patient("3"), { id: "3", name: "Alex SAMPLE", dob: "1951-04-12", hcn: "1234567890 AB", address: "1 Example St, Milton, ON L9T 0A1" });
+  const d = {
+    demographicNo: 3,
+    firstName: "Alex",
+    lastName: "SAMPLE",
+    dobYear: "1951",
+    dobMonth: "4",
+    dobDay: "12",
+    hin: "1234567890",
+    ver: "AB",
+    phone: "905-555-0199",
+    email: "a@example.com",
+    sin: "000000000",
+  };
+  const nested = fake({
+    "demographics/3": () => reply(200, { ...d, address: { address: "1 Example St", city: "Milton", province: "ON", postal: "L9T 0A1" } }),
+  }).client;
+  assert.deepEqual(await nested.patient("3"), {
+    id: "3",
+    name: "Alex SAMPLE",
+    dob: "1951-04-12",
+    hcn: "1234567890 AB",
+    address: "1 Example St, Milton, ON L9T 0A1",
+  });
   // Older Oscar versions send the address as fields on the patient.
-  const flat = fake({ "demographics/3": () => reply(200, { ...d, ver: "", address: "1 Example St", city: "Milton", province: "ON", postal: "" }) }).client;
-  assert.deepEqual(await flat.patient("3"), { id: "3", name: "Alex SAMPLE", dob: "1951-04-12", hcn: "1234567890", address: "1 Example St, Milton, ON" });
+  const flat = fake({
+    "demographics/3": () => reply(200, { ...d, ver: "", address: "1 Example St", city: "Milton", province: "ON", postal: "" }),
+  }).client;
+  assert.deepEqual(await flat.patient("3"), {
+    id: "3",
+    name: "Alex SAMPLE",
+    dob: "1951-04-12",
+    hcn: "1234567890",
+    address: "1 Example St, Milton, ON",
+  });
 });
 
 test("the clinician signed in to Oscar, with the CPSO number but no signature", async () => {
-  const { client } = fake({ "providerService/provider/me": () => reply(200, { providerNo: "101", firstName: "Jane", lastName: "Smith", practitionerNo: "12345", workPhone: "905-555-0100", address: "2 Clinic Rd", signature: "data:image/png;base64,AAAA" }) });
-  assert.deepEqual(await client.clinician(), { id: "101", name: "Jane Smith", license: "12345", phone: "905-555-0100", street: "2 Clinic Rd", city: "" });
+  const { client } = fake({
+    "providerService/provider/me": () =>
+      reply(200, {
+        providerNo: "101",
+        firstName: "Jane",
+        lastName: "Smith",
+        practitionerNo: "12345",
+        workPhone: "905-555-0100",
+        address: "2 Clinic Rd",
+        signature: "data:image/png;base64,AAAA",
+      }),
+  });
+  assert.deepEqual(await client.clinician(), {
+    id: "101",
+    name: "Jane Smith",
+    license: "12345",
+    phone: "905-555-0100",
+    street: "2 Clinic Rd",
+    city: "",
+  });
 });
 
 test("sign-in and server problems give plain messages", async () => {
@@ -101,7 +159,20 @@ test("the note the extension writes from the plan code matches the site's chart 
   const { SEED_FORMULARY } = await import("../src/data/formulary.js");
   const entries = [
     { brand: "Xalatan", eye: "OS", drops: 1, mode: "ongoing", freq: 1, durationDays: 7, startDay: 1, steps: [] },
-    { brand: "Pred Forte", eye: "OD", drops: 1, mode: "taper", freq: 8, durationDays: 7, startDay: 1, steps: [{ freq: 8, days: 7 }, { freq: 4, days: 7 }, { freq: 2, days: 7 }] },
+    {
+      brand: "Pred Forte",
+      eye: "OD",
+      drops: 1,
+      mode: "taper",
+      freq: 8,
+      durationDays: 7,
+      startDay: 1,
+      steps: [
+        { freq: 8, days: 7 },
+        { freq: 4, days: 7 },
+        { freq: 2, days: 7 },
+      ],
+    },
     { brand: "Vigamox", eye: "OD", drops: 1, mode: "duration", freq: 3, durationDays: 7, startDay: 1, steps: [] },
   ];
   const settings = { start: "2026-11-06", wake: "07:30", bed: "22:30" };

@@ -13,9 +13,9 @@ export default function TermsGate({ onAccept }) {
     <div className="page terms-gate">
       <h1>Before you start</h1>
       <p>
-        Eye Drop Tracker is a clinical aid for licensed health professionals and the people working under their supervision. It
-        does not replace clinical judgement: check every calendar, phone plan and prescription before it reaches a patient. It is
-        not a licensed medical device.
+        Eye Drop Tracker is a clinical aid for licensed health professionals and the people working under their supervision. It does not
+        replace clinical judgement: check every calendar, phone plan and prescription before it reaches a patient. It is not a licensed
+        medical device.
       </p>
       <p>Patient details are not sent to us. They stay in this browser, the clinic's own records and the patient's phone.</p>
       <label className="check">

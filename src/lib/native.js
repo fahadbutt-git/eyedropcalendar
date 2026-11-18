@@ -38,9 +38,10 @@ export async function cancelReminders() {
 // Android shows only "Eye drop reminder" on the lock screen for this channel.
 let channelReady = null;
 const ensureChannel = () =>
-  (channelReady ??= Capacitor.getPlatform() === "android"
-    ? LocalNotifications.createChannel({ id: "doses", name: "Dose reminders", importance: 4, visibility: 0 }).catch(() => {})
-    : Promise.resolve());
+  (channelReady ??=
+    Capacitor.getPlatform() === "android"
+      ? LocalNotifications.createChannel({ id: "doses", name: "Dose reminders", importance: 4, visibility: 0 }).catch(() => {})
+      : Promise.resolve());
 
 // Returns { ok: true } once scheduled, or { ok: false, denied } when the
 // patient has not allowed notifications. `generic` keeps drug names out of

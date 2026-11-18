@@ -8,7 +8,21 @@ import { SEED_FORMULARY } from "../src/data/formulary.js";
 const SITE = "http://localhost:4173";
 const OUT = new URL("../store/", import.meta.url).pathname;
 const entries = [
-  { brand: "Pred Forte", eye: "OD", drops: 1, mode: "taper", freq: 4, durationDays: 7, startDay: 1, steps: [{ freq: 4, days: 7 }, { freq: 3, days: 7 }, { freq: 2, days: 7 }, { freq: 1, days: 7 }] },
+  {
+    brand: "Pred Forte",
+    eye: "OD",
+    drops: 1,
+    mode: "taper",
+    freq: 4,
+    durationDays: 7,
+    startDay: 1,
+    steps: [
+      { freq: 4, days: 7 },
+      { freq: 3, days: 7 },
+      { freq: 2, days: 7 },
+      { freq: 1, days: 7 },
+    ],
+  },
   { brand: "Vigamox", eye: "OD", drops: 1, mode: "duration", freq: 3, durationDays: 7, startDay: 1, steps: [] },
   { brand: "Xalatan", eye: "OU", drops: 1, mode: "ongoing", freq: 1, durationDays: 7, startDay: 1, steps: [] },
 ];
@@ -34,7 +48,9 @@ for (const [name, viewport] of Object.entries(devices)) {
   await p.getByRole("button", { name: /I have put in/ }).click();
   await p.waitForTimeout(400);
   await shot("3-done");
-  await p.locator("h2", { hasText: "Coming up" }).evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 12));
+  await p
+    .locator("h2", { hasText: "Coming up" })
+    .evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 12));
   await p.waitForTimeout(200);
   await shot("4-plan");
   await p.close();

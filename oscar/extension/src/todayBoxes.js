@@ -11,11 +11,15 @@ const KNOWN = [
 
 // Boxes about the past, other people or other tasks. Drops written there are
 // not this visit's plan.
-const NOT_TODAY = /\b(?:past|previous|family|social|allerg|tickler|message|communication|research|log|reminder|specs?|measurement|billing|macro|search|consult|letter|referr)/i;
+const NOT_TODAY =
+  /\b(?:past|previous|family|social|allerg|tickler|message|communication|research|log|reminder|specs?|measurement|billing|macro|search|consult|letter|referr)/i;
 
 const usable = (t) => t && !t.disabled && !t.readOnly && t.offsetParent !== null && !t.closest("#edt-oscar-panel, #edt-oscar-launcher");
 
-const clean = (s) => String(s || "").replace(/\s+/g, " ").trim();
+const clean = (s) =>
+  String(s || "")
+    .replace(/\s+/g, " ")
+    .trim();
 
 // The title shown above a box: its label, or the first short text before it
 // inside its own box. The search never climbs into a container that holds
@@ -41,7 +45,14 @@ function titleOf(t) {
   return "";
 }
 
-const roleOf = (label) => (/\bplan\b/i.test(label) ? "plan" : /impression|assessment/i.test(label) ? "impression" : /\b(?:hx|history|concern|complaint)\b/i.test(label) ? "history" : "note");
+const roleOf = (label) =>
+  /\bplan\b/i.test(label)
+    ? "plan"
+    : /impression|assessment/i.test(label)
+      ? "impression"
+      : /\b(?:hx|history|concern|complaint)\b/i.test(label)
+        ? "history"
+        : "note";
 
 // Today's boxes, plan first. Each is { el, label, role }.
 export function todayBoxes(doc = document) {

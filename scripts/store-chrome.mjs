@@ -11,7 +11,8 @@ import { createRequire } from "node:module";
 const OUT = new URL("../store/chrome/", import.meta.url).pathname;
 const SRC = `${OUT}src/`;
 const require = createRequire(import.meta.url);
-const font = (w) => readFileSync(require.resolve(`@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-${w}-normal.woff2`)).toString("base64");
+const font = (w) =>
+  readFileSync(require.resolve(`@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-${w}-normal.woff2`)).toString("base64");
 const img = (f) => `data:image/${f.endsWith(".svg") ? "svg+xml" : "jpeg"};base64,${readFileSync(f).toString("base64")}`;
 const icon = img(new URL("../public/icon.svg", import.meta.url).pathname);
 
@@ -33,7 +34,8 @@ body { width: 1280px; height: 800px; overflow: hidden; background: #f7f5f0; colo
 h1 { font-size: 42px; line-height: 1.12; font-weight: 700; text-wrap: balance; }
 p { font-size: 21px; line-height: 1.5; color: #4a515b; }`;
 
-const browser = (src, h) => `<div class="browser"><div class="bar"><i style="background:#e66a5e"></i><i style="background:#e6b84f"></i><i style="background:#69b85a"></i></div><img src="${img(SRC + src)}" style="height:${h}px;display:block"></div>`;
+const browser = (src, h) =>
+  `<div class="browser"><div class="bar"><i style="background:#e66a5e"></i><i style="background:#e6b84f"></i><i style="background:#69b85a"></i></div><img src="${img(SRC + src)}" style="height:${h}px;display:block"></div>`;
 const SHOTS = [
   {
     file: "1-read",
@@ -75,7 +77,9 @@ const SHOTS = [
 const b = await chromium.launch();
 const page = await b.newPage({ viewport: { width: 1280, height: 800 } });
 for (const s of SHOTS) {
-  await page.setContent(`<style>${css}</style><div class="media">${s.media}</div><div class="text"><div class="k">${s.k}</div><h1>${s.title}</h1><p>${s.body}</p></div>`);
+  await page.setContent(
+    `<style>${css}</style><div class="media">${s.media}</div><div class="text"><div class="k">${s.k}</div><h1>${s.title}</h1><p>${s.body}</p></div>`,
+  );
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: `${OUT}${s.file}.png` });
 }

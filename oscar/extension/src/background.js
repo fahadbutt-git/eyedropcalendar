@@ -27,7 +27,11 @@ const read = async (k) => (await chrome.storage.session.get(k))[k];
 // or a keyboard shortcut (Alt+Shift+E, Control+Shift+E on a Mac).
 const MENU = "edt-read";
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({ id: MENU, title: "Read eye drops with Eye Drop Tracker", contexts: ["page", "selection", "editable", "frame"] });
+  chrome.contextMenus.create({
+    id: MENU,
+    title: "Read eye drops with Eye Drop Tracker",
+    contexts: ["page", "selection", "editable", "frame"],
+  });
 });
 
 async function openPanel(tab, selection = "", frameId) {
@@ -36,7 +40,11 @@ async function openPanel(tab, selection = "", frameId) {
   try {
     // Text selected inside Oscar's note box is not visible to the page's own
     // selection, so the menu hands it over.
-    await chrome.scripting.executeScript({ target, func: (text) => (window.__edtSelection = text), args: [String(selection).slice(0, 20000)] });
+    await chrome.scripting.executeScript({
+      target,
+      func: (text) => (window.__edtSelection = text),
+      args: [String(selection).slice(0, 20000)],
+    });
     await chrome.scripting.executeScript({ target, files: ["panel.js"] });
   } catch {
     // Chrome's own pages and the web store cannot be read. Nothing to do.
@@ -58,7 +66,10 @@ function syncLauncher() {
     const { origins = [] } = await chrome.permissions.getAll();
     const matches = origins.filter((o) => OSCARS.some((x) => o === `${x}/*`));
     await chrome.scripting.unregisterContentScripts({ ids: [LAUNCHER] }).catch(() => {});
-    if (matches.length) await chrome.scripting.registerContentScripts([{ id: LAUNCHER, matches, js: ["launcher.js"], runAt: "document_idle", persistAcrossSessions: true }]);
+    if (matches.length)
+      await chrome.scripting.registerContentScripts([
+        { id: LAUNCHER, matches, js: ["launcher.js"], runAt: "document_idle", persistAcrossSessions: true },
+      ]);
     return matches;
   });
   syncing = run.catch(() => {});
@@ -68,7 +79,8 @@ function syncLauncher() {
 async function showLauncherNow() {
   const matches = await syncLauncher();
   if (!matches.length) return;
-  for (const t of await chrome.tabs.query({ url: matches })) chrome.scripting.executeScript({ target: { tabId: t.id }, files: ["launcher.js"] }).catch(() => {});
+  for (const t of await chrome.tabs.query({ url: matches }))
+    chrome.scripting.executeScript({ target: { tabId: t.id }, files: ["launcher.js"] }).catch(() => {});
 }
 chrome.runtime.onInstalled.addListener(syncLauncher);
 chrome.runtime.onStartup.addListener(syncLauncher);
@@ -83,10 +95,18 @@ async function buttonStatus(sender) {
 async function setup(sender) {
   const origin = new URL(sender.tab.url).origin;
   if (!OSCARS.includes(origin)) return { ok: false };
-  await chrome.windows.create({ url: chrome.runtime.getURL(`setup.html?origin=${encodeURIComponent(origin)}`), type: "popup", width: 520, height: 380, focused: true });
+  await chrome.windows.create({
+    url: chrome.runtime.getURL(`setup.html?origin=${encodeURIComponent(origin)}`),
+    type: "popup",
+    width: 520,
+    height: 380,
+    focused: true,
+  });
   return { ok: true };
 }
-chrome.contextMenus.onClicked.addListener((info, tab) => info.menuItemId === MENU && openPanel(tab, info.selectionText || "", info.frameId));
+chrome.contextMenus.onClicked.addListener(
+  (info, tab) => info.menuItemId === MENU && openPanel(tab, info.selectionText || "", info.frameId),
+);
 
 // Eye Drop Tracker opens in an ordinary window, even when Oscar's encounter
 // is a pop-up.
@@ -120,9 +140,15 @@ function checkPayload(p) {
       address: String(p.patient?.address ?? "").slice(0, 200),
     },
     // The clinician signed in to Oscar, offered for the prescription.
-    clinician: p.clinician && typeof p.clinician === "object"
-      ? Object.fromEntries(["name", "license", "phone", "street", "city"].map((k) => [k, String(p.clinician[k] ?? "").slice(0, k === "license" ? 20 : 160)]))
-      : null,
+    clinician:
+      p.clinician && typeof p.clinician === "object"
+        ? Object.fromEntries(
+            ["name", "license", "phone", "street", "city"].map((k) => [
+              k,
+              String(p.clinician[k] ?? "").slice(0, k === "license" ? 20 : 160),
+            ]),
+          )
+        : null,
     drops: Array.isArray(p.drops) ? p.drops.slice(0, 12) : [],
     skipped: Array.isArray(p.skipped) ? p.skipped.slice(0, 20) : [],
     code: typeof p.code === "string" ? p.code.slice(0, 4000) : "",
@@ -138,7 +164,15 @@ async function openTracker(sender, raw) {
   // ID ties later writes to this exact Oscar page: if the tab has moved on,
   // nothing is written.
   await chrome.storage.session.set({
-    [key(handoff)]: { oscarTab: sender.tab.id, oscarDoc: sender.documentId || "", patientId, provider, at: Date.now(), written: [], payload },
+    [key(handoff)]: {
+      oscarTab: sender.tab.id,
+      oscarDoc: sender.documentId || "",
+      patientId,
+      provider,
+      at: Date.now(),
+      written: [],
+      payload,
+    },
   });
   try {
     const created = await trackerTab(`${SITE}#/oscar`, sender.tab);
@@ -162,7 +196,10 @@ async function pending(sender) {
   return { handoff, patient, clinician, drops, skipped, code };
 }
 
-const digest = async (text) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+const digest = async (text) =>
+  [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)))]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 const busy = new Set();
 
 // The note is written by the extension from the plan code, never taken as
@@ -177,11 +214,19 @@ async function addToChart(sender, { handoff, code }) {
   }
   const stored = typeof handoff === "string" && (await read(key(handoff)));
   if (!stored)
-    return { ok: false, message: "This plan can no longer go back to Oscar, because its chart was closed. Open the chart again and use the Eye drops button, or use Copy for chart note." };
+    return {
+      ok: false,
+      message:
+        "This plan can no longer go back to Oscar, because its chart was closed. Open the chart again and use the Eye drops button, or use Copy for chart note.",
+    };
   // A hand-off is good for two hours, for writing as well as reading.
   if (Date.now() - stored.at > PLAN_TTL) {
     await chrome.storage.session.remove(key(handoff));
-    return { ok: false, message: "This plan was read from Oscar more than two hours ago, so it was not added. Open the chart again and use the Eye drops button, or use Copy for chart note." };
+    return {
+      ok: false,
+      message:
+        "This plan was read from Oscar more than two hours ago, so it was not added. Open the chart again and use the Eye drops button, or use Copy for chart note.",
+    };
   }
   if ((await read(tabKey(sender.tab.id))) !== handoff) return { ok: false, message: "This tab did not open this plan." };
   const text = chartNote({ ...plan, link: `${SITE}#/p/${code}` });
@@ -191,11 +236,18 @@ async function addToChart(sender, { handoff, code }) {
   busy.add(handoff);
   try {
     const message = { type: "addNote", patientId: stored.patientId, provider: stored.provider, text };
-    const result = await chrome.tabs.sendMessage(stored.oscarTab, message, stored.oscarDoc ? { documentId: stored.oscarDoc } : { frameId: 0 });
+    const result = await chrome.tabs.sendMessage(
+      stored.oscarTab,
+      message,
+      stored.oscarDoc ? { documentId: stored.oscarDoc } : { frameId: 0 },
+    );
     if (result?.ok) await chrome.storage.session.set({ [key(handoff)]: { ...stored, written: [...stored.written, sum] } });
     return result || { ok: false, message: "The Oscar chart did not answer." };
   } catch {
-    return { ok: false, message: "The Oscar chart is closed or has moved on. Open it again and use the Eye Drop Tracker button, or use Copy for chart note." };
+    return {
+      ok: false,
+      message: "The Oscar chart is closed or has moved on. Open it again and use the Eye Drop Tracker button, or use Copy for chart note.",
+    };
   } finally {
     busy.delete(handoff);
   }
@@ -206,7 +258,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   if (msg?.type === "launcherAdded" && sender.id === chrome.runtime.id && sender.url?.startsWith(chrome.runtime.getURL("setup.html"))) {
     showLauncherNow().then(
       () => reply({ ok: true }),
-      () => reply({ ok: false })
+      () => reply({ ok: false }),
     );
     return true;
   }

@@ -38,9 +38,8 @@ export function Footer({ patientView = false }) {
         </p>
         {!patientView && (
           <p>
-            A clinical aid that does not replace clinical judgement. Check every calendar and prescription before it goes to a
-            patient. Defaults follow Canadian product monographs and the Ontario Drug Benefit formulary. Patient details are not
-            sent to us.
+            A clinical aid that does not replace clinical judgement. Check every calendar and prescription before it goes to a patient.
+            Defaults follow Canadian product monographs and the Ontario Drug Benefit formulary. Patient details are not sent to us.
           </p>
         )}
       </div>

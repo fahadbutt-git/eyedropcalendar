@@ -12,7 +12,9 @@ export const BLANK_OWNER = { name: "", dob: "" };
 export const BLANK_PRESCRIBER = { name: "", license: "", clinic: "", street: "", city: "", phone: "", fax: "" };
 // Every prescriber field is a string, whatever an older version stored.
 export const checkPrescriber = (p) =>
-  p && typeof p === "object" ? Object.fromEntries(Object.keys(BLANK_PRESCRIBER).map((k) => [k, typeof p[k] === "string" ? p[k] : ""])) : null;
+  p && typeof p === "object"
+    ? Object.fromEntries(Object.keys(BLANK_PRESCRIBER).map((k) => [k, typeof p[k] === "string" ? p[k] : ""]))
+    : null;
 export const blankRx = () => ({ date: todayISO(), notes: "", items: {} });
 // Signatures stored by older versions (sig, esign) are dropped.
 export const checkRx = (r) =>
@@ -72,7 +74,13 @@ export const checkDrops = (list) =>
       })
     : null;
 
-export const cleanFlags = (v) => (Array.isArray(v) ? v.map((f) => cleanText(f, 300)).filter(Boolean).slice(0, 10) : []);
+export const cleanFlags = (v) =>
+  Array.isArray(v)
+    ? v
+        .map((f) => cleanText(f, 300))
+        .filter(Boolean)
+        .slice(0, 10)
+    : [];
 export const cleanSkipped = (v) =>
   (Array.isArray(v) ? v : [])
     .map((s) => ({ name: cleanText(s?.name, 60), why: cleanText(s?.why, 120) }))
@@ -81,7 +89,11 @@ export const cleanSkipped = (v) =>
 
 // The record of drops read from Oscar, until the clinician has checked them.
 const cleanMap = (v, clean) =>
-  Object.fromEntries(Object.entries(v && typeof v === "object" ? v : {}).slice(0, 20).map(([k, x]) => [cleanText(k, 40), clean(x)]));
+  Object.fromEntries(
+    Object.entries(v && typeof v === "object" ? v : {})
+      .slice(0, 20)
+      .map(([k, x]) => [cleanText(k, 40), clean(x)]),
+  );
 export function checkImport(v) {
   if (!v || typeof v !== "object" || !v.flags || typeof v.flags !== "object") return null;
   return {
@@ -107,7 +119,9 @@ export const patientFromOscar = (p) => ({
 // Prescriber details from the clinician signed in to Oscar.
 export const PRESCRIBER_FROM_OSCAR = ["name", "license", "phone", "street", "city"];
 export const prescriberFromOscar = (c) =>
-  c && typeof c === "object" ? Object.fromEntries(PRESCRIBER_FROM_OSCAR.map((k) => [k, cleanText(c[k], k === "license" ? 20 : 160)])) : null;
+  c && typeof c === "object"
+    ? Object.fromEntries(PRESCRIBER_FROM_OSCAR.map((k) => [k, cleanText(c[k], k === "license" ? 20 : 160)]))
+    : null;
 
 export const checkSavedSignature = (v) =>
   v && typeof v.key === "string" && isSignatureImage(v.image) ? { key: v.key.slice(0, 200), image: v.image } : null;

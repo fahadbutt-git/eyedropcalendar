@@ -4,14 +4,21 @@ import assert from "node:assert/strict";
 import { parseNote, parseRxList } from "../src/lib/noteParser.js";
 import { SEED_FORMULARY as F } from "../src/data/formulary.js";
 
-const brief = (r) => r.drops.map((d) => [d.brand, d.eye, d.freq, d.mode, d.mode === "taper" ? d.steps.map((s) => `${s.freq}x${s.days}`).join(",") : d.mode === "duration" ? d.durationDays : d.startDay]);
+const brief = (r) =>
+  r.drops.map((d) => [
+    d.brand,
+    d.eye,
+    d.freq,
+    d.mode,
+    d.mode === "taper" ? d.steps.map((s) => `${s.freq}x${s.days}`).join(",") : d.mode === "duration" ? d.durationDays : d.startDay,
+  ]);
 const flagged = (r, brand) => r.drops.find((d) => d.brand === brand).flags.join(" ");
 
 test("a postoperative taper with a fixed course and a glaucoma drop", () => {
   const r = parseNote(
     `1. Right trab POW2. Pred Forte q2h x1wk then QID x1wk then TID x1wk then BID x1wk then stop. Moxi QID OD x1wk.
 2. Left POAG. Continue Xalatan qhs OS.`,
-    F
+    F,
   );
   assert.deepEqual(brief(r), [
     ["Pred Forte", "OD", 8, "taper", "8x7,4x7,3x7,2x7"],
@@ -36,7 +43,10 @@ test("a list shares the eye written after it", () => {
 });
 
 test("a taper that carries on becomes a second row, and PRN drops are left out", () => {
-  const r = parseNote("2. Left tube exposure, repaired. Restart Maxidex BID for 8 days then decrease to QD until further instructions. Use Prolensa PRN.", F);
+  const r = parseNote(
+    "2. Left tube exposure, repaired. Restart Maxidex BID for 8 days then decrease to QD until further instructions. Use Prolensa PRN.",
+    F,
+  );
   assert.deepEqual(brief(r), [
     ["Maxidex", "OS", 2, "taper", "2x8"],
     ["Maxidex", "OS", 1, "ongoing", 9],
@@ -57,7 +67,10 @@ test("past use, allergies, stopped drops and pills are listed but not added", ()
 
 test("combination names and strengths pick the right product", () => {
   const r = parseNote("Dorzolamide-timolol BID OU. Brimonidine 0.15% TID OS. Latanoprost qhs OU.", F);
-  assert.deepEqual(brief(r).map((x) => x[0]), ["Cosopt", "Alphagan-P", "Xalatan"]);
+  assert.deepEqual(
+    brief(r).map((x) => x[0]),
+    ["Cosopt", "Alphagan-P", "Xalatan"],
+  );
   assert.equal(flagged(r, "Alphagan-P"), "");
 });
 
@@ -85,17 +98,40 @@ test("Eye Drop Tracker's own chart note reads back as the same plan", async () =
   const { chartNote } = await import("../src/lib/chartNote.js");
   const entries = [
     { brand: "Xalatan", eye: "OS", drops: 1, mode: "ongoing", freq: 1, durationDays: 7, startDay: 1, steps: [] },
-    { brand: "Pred Forte", eye: "OD", drops: 1, mode: "taper", freq: 4, durationDays: 7, startDay: 1, steps: [{ freq: 8, days: 7 }, { freq: 4, days: 7 }, { freq: 2, days: 7 }] },
+    {
+      brand: "Pred Forte",
+      eye: "OD",
+      drops: 1,
+      mode: "taper",
+      freq: 4,
+      durationDays: 7,
+      startDay: 1,
+      steps: [
+        { freq: 8, days: 7 },
+        { freq: 4, days: 7 },
+        { freq: 2, days: 7 },
+      ],
+    },
     { brand: "Vigamox", eye: "OD", drops: 1, mode: "duration", freq: 3, durationDays: 7, startDay: 1, steps: [] },
   ];
-  const note = chartNote({ entries, formulary: F, start: "2026-11-05", wake: "08:00", bed: "22:00", link: "https://eyedroptracker.com/#/p/x" });
+  const note = chartNote({
+    entries,
+    formulary: F,
+    start: "2026-11-05",
+    wake: "08:00",
+    bed: "22:00",
+    link: "https://eyedroptracker.com/#/p/x",
+  });
   const r = parseNote(note, F);
   assert.deepEqual(brief(r), [
     ["Xalatan", "OS", 1, "ongoing", 1],
     ["Pred Forte", "OD", 8, "taper", "8x7,4x7,2x7"],
     ["Vigamox", "OD", 3, "duration", 7],
   ]);
-  assert.ok(r.drops.every((d) => !d.flags.some((f) => /eye|frequency|strength/.test(f))), JSON.stringify(r.drops.map((d) => d.flags)));
+  assert.ok(
+    r.drops.every((d) => !d.flags.some((f) => /eye|frequency|strength/.test(f))),
+    JSON.stringify(r.drops.map((d) => d.flags)),
+  );
 });
 
 test("a note with no drops gives nothing", () => {
@@ -112,7 +148,7 @@ test("Oscar Rx entries read the same way, skipping archived and PRN", () => {
       { brandName: "LUMIGAN", archived: "true", instructions: "OU qhs" },
       { brandName: "TIMOPTIC", archived: "false", prn: "false", instructions: "1 gtt OU BID" },
     ],
-    F
+    F,
   );
   assert.deepEqual(brief(r), [
     ["Xalatan", "OU", 1, "ongoing", 1],
@@ -139,16 +175,28 @@ test("OD with no frequency is flagged, since it can mean once daily", () => {
 });
 
 test("a current drop is kept when the sentence also mentions the past", () => {
-  assert.deepEqual(brief(parseNote("Allergic conjunctivitis: start Pataday daily OU.", F)).map((d) => d[0]), ["Pataday"]);
-  assert.deepEqual(brief(parseNote("s/p failed trab OS, continue Cosopt BID OS.", F)).map((d) => d[0]), ["Cosopt"]);
+  assert.deepEqual(
+    brief(parseNote("Allergic conjunctivitis: start Pataday daily OU.", F)).map((d) => d[0]),
+    ["Pataday"],
+  );
+  assert.deepEqual(
+    brief(parseNote("s/p failed trab OS, continue Cosopt BID OS.", F)).map((d) => d[0]),
+    ["Cosopt"],
+  );
   const r = parseNote("Allergic to Xalatan. Lumigan qhs OU.", F);
-  assert.deepEqual(r.drops.map((d) => d.brand), ["Lumigan RC"]);
+  assert.deepEqual(
+    r.drops.map((d) => d.brand),
+    ["Lumigan RC"],
+  );
   assert.ok(r.skipped.some((s) => s.name === "Xalatan"));
 });
 
 test("hourly drops are left off the calendar for the clinician to write by hand", () => {
   const r = parseNote("Vigamox q1h OS. Pred Forte QID OS.", F);
-  assert.deepEqual(r.drops.map((d) => d.brand), ["Pred Forte"]);
+  assert.deepEqual(
+    r.drops.map((d) => d.brand),
+    ["Pred Forte"],
+  );
   assert.match(r.skipped.find((s) => s.name === "Vigamox").why, /by hand/);
 });
 
@@ -162,9 +210,23 @@ test("ophthalmology note styles from the pre-pilot scenarios", () => {
   // "at bedtime" is not artificial tears.
   assert.deepEqual(parseNote("Lumigan once daily in both eyes at bedtime", F).skipped, []);
   // A taper written in words.
-  assert.deepEqual(brief(parseNote("Pred Forte four times a day in the right eye for one week then three times a day for a week then twice a day for a week then once a day for a week.", F)), [["Pred Forte", "OD", 4, "taper", "4x7,3x7,2x7,1x7"]]);
+  assert.deepEqual(
+    brief(
+      parseNote(
+        "Pred Forte four times a day in the right eye for one week then three times a day for a week then twice a day for a week then once a day for a week.",
+        F,
+      ),
+    ),
+    [["Pred Forte", "OD", 4, "taper", "4x7,3x7,2x7,1x7"]],
+  );
   // Eye headings above a list.
-  assert.deepEqual(brief(parseNote("OD:\n- Vigamox QID x 1 wk\nOS:\n- Xalatan qhs", F)).map((d) => [d[0], d[1]]), [["Vigamox", "OD"], ["Xalatan", "OS"]]);
+  assert.deepEqual(
+    brief(parseNote("OD:\n- Vigamox QID x 1 wk\nOS:\n- Xalatan qhs", F)).map((d) => [d[0], d[1]]),
+    [
+      ["Vigamox", "OD"],
+      ["Xalatan", "OS"],
+    ],
+  );
   // The strength written picks the product, with either spelling.
   assert.equal(parseNote("Alphagan 0.15% TID OU", F).drops[0].brand, "Alphagan-P");
   assert.equal(parseNote("Alphagan P TID OU", F).drops[0].brand, "Alphagan-P");
@@ -172,27 +234,55 @@ test("ophthalmology note styles from the pre-pilot scenarios", () => {
 
 test("misspelled drug names beside a dose are read and flagged", () => {
   const r = parseNote("Xalatn qhs OU. Combigen BID OS.", F);
-  assert.deepEqual(r.drops.map((d) => [d.brand, d.eye]), [["Xalatan", "OU"], ["Combigan", "OS"]]);
+  assert.deepEqual(
+    r.drops.map((d) => [d.brand, d.eye]),
+    [
+      ["Xalatan", "OU"],
+      ["Combigan", "OS"],
+    ],
+  );
   assert.match(r.drops[0].flags[0], /The note says "Xalatn", read as Xalatan/);
   assert.equal(parseNote("latanaprost 1 gtt qhs OU", F).drops[0].brand, "Xalatan");
 });
 
 test("ordinary words are never corrected into drugs", () => {
-  for (const note of ["Patient stable. Follow up in four months. Pressure stable OU.", "Return daily for drops check OD.", "Lumigan qhs OU, return in 3 months, pressure stable"])
-    assert.ok(parseNote(note, F).drops.every((d) => !d.flags.some((f) => /Check the spelling/.test(f))), note);
+  for (const note of [
+    "Patient stable. Follow up in four months. Pressure stable OU.",
+    "Return daily for drops check OD.",
+    "Lumigan qhs OU, return in 3 months, pressure stable",
+  ])
+    assert.ok(
+      parseNote(note, F).drops.every((d) => !d.flags.some((f) => /Check the spelling/.test(f))),
+      note,
+    );
 });
 
 test("unknown words in a drug's place are listed, not dropped silently", () => {
   const r = parseNote("Gtts: Vgmx 1 gtt QID OD x7d; Pred Forte QID OD", F);
-  assert.deepEqual(r.drops.map((d) => d.brand), ["Pred Forte"]);
+  assert.deepEqual(
+    r.drops.map((d) => d.brand),
+    ["Pred Forte"],
+  );
   assert.deepEqual(r.unknown, ["Vgmx"]);
 });
 
 test("notes from the independent review are read safely", () => {
   // A different plan for each eye keeps both.
-  assert.deepEqual(brief(parseNote("Bilateral post-op inflammation.\nPred Forte QID OD. Pred Forte TID OS.", F)).map((d) => [d[0], d[1], d[2]]), [["Pred Forte", "OD", 4], ["Pred Forte", "OS", 3]]);
+  assert.deepEqual(
+    brief(parseNote("Bilateral post-op inflammation.\nPred Forte QID OD. Pred Forte TID OS.", F)).map((d) => [d[0], d[1], d[2]]),
+    [
+      ["Pred Forte", "OD", 4],
+      ["Pred Forte", "OS", 3],
+    ],
+  );
   // The same plan in each eye is one plan for both.
-  assert.deepEqual(brief(parseNote("OD: Xalatan qhs, Azopt TID\nOS: Xalatan qhs", F)).map((d) => [d[0], d[1]]), [["Xalatan", "OU"], ["Azopt", "OD"]]);
+  assert.deepEqual(
+    brief(parseNote("OD: Xalatan qhs, Azopt TID\nOS: Xalatan qhs", F)).map((d) => [d[0], d[1]]),
+    [
+      ["Xalatan", "OU"],
+      ["Azopt", "OD"],
+    ],
+  );
   assert.equal(parseNote("Lumigan RC qhs OD, same in fellow eye.", F).drops[0].eye, "OU");
   // Mentioned but not ordered.
   for (const note of [
@@ -204,11 +294,26 @@ test("notes from the independent review are read safely", () => {
     "Pt reports Cosopt was stopped by outside ophthalmologist last year.",
   ])
     assert.deepEqual(parseNote(note, F).drops, [], note);
-  assert.deepEqual(parseNote("IOP above target OS on timolol.\nD/C timolol OS. Start Azopt TID OS.", F).drops.map((d) => d.brand), ["Azopt"]);
-  assert.deepEqual(parseNote("Change latanoprost to preservative-free Monoprost qhs OU.", F).drops.map((d) => d.brand), ["Monoprost"]);
+  assert.deepEqual(
+    parseNote("IOP above target OS on timolol.\nD/C timolol OS. Start Azopt TID OS.", F).drops.map((d) => d.brand),
+    ["Azopt"],
+  );
+  assert.deepEqual(
+    parseNote("Change latanoprost to preservative-free Monoprost qhs OU.", F).drops.map((d) => d.brand),
+    ["Monoprost"],
+  );
   // The post-op eye from the header, and a taper carried onto the next line.
-  assert.equal(parseNote("POD1 phaco/PCIOL OD.\nPred Forte QID x 1 wk, then TID x 1 wk, BID x 1 wk, daily x 1 wk, then stop.", F).drops[0].eye, "OD");
-  assert.equal(parseNote("Pred Forte left eye four times a day for one week, then three times a day for one week,\nthen twice a day for one week, then once a day for one week, then stop.", F).drops[0].steps.length, 4);
+  assert.equal(
+    parseNote("POD1 phaco/PCIOL OD.\nPred Forte QID x 1 wk, then TID x 1 wk, BID x 1 wk, daily x 1 wk, then stop.", F).drops[0].eye,
+    "OD",
+  );
+  assert.equal(
+    parseNote(
+      "Pred Forte left eye four times a day for one week, then three times a day for one week,\nthen twice a day for one week, then once a day for one week, then stop.",
+      F,
+    ).drops[0].steps.length,
+    4,
+  );
   // Shorthand and older notation.
   assert.equal(parseNote("Polytrim 1 gtt OU QID x 7 days.", F).drops[0].brand, "Polytrimethoprim");
   assert.equal(parseNote("TobraDex ung OS hs x 5/7", F).drops[0].durationDays, 5);
@@ -251,7 +356,10 @@ test("misspelled and shortened names are recognised, and only in dosing context"
 // (tests/fixtures/populations), checked on 9 November 2026.
 test("drugs that are not current are left out", () => {
   const brands = (t) => parseNote(t, F).drops.map((d) => d.brand);
-  assert.deepEqual(brands("DISCONTINUED MEDICATIONS:\n- Timoptic 0.5% OU BID (d/c 2025-06)\nACTIVE MEDICATIONS:\n- Dorzolamide 2% OU TID"), ["Dorzolamide"]);
+  assert.deepEqual(
+    brands("DISCONTINUED MEDICATIONS:\n- Timoptic 0.5% OU BID (d/c 2025-06)\nACTIVE MEDICATIONS:\n- Dorzolamide 2% OU TID"),
+    ["Dorzolamide"],
+  );
   assert.deepEqual(brands("Durezol switched to FML BID OD per cornea."), ["FML"]);
   assert.deepEqual(brands("Copied from prior: 'Continue Combigan BID OU.'\nToday: continue Xalatan qhs OU."), ["Xalatan"]);
   assert.deepEqual(brands("May need to start Xiidra or Restasis at follow up if not improving."), []);
@@ -292,11 +400,22 @@ test("shorthand clinicians write is read, and flagged where it was interpreted",
 
 test("eyes and changes written in different ways", () => {
   const r = (t) => parseNote(t, F).drops.map((d) => [d.brand, d.eye, d.freq]);
-  assert.deepEqual(r("one drop in the right I of cosopt twice daily and one drop in the left I of xalatan at night"), [["Cosopt", "OD", 2], ["Xalatan", "OS", 1]]);
-  assert.deepEqual(r("JIA uveitis OU. Pred Forte BID OD, QD OS."), [["Pred Forte", "OD", 2], ["Pred Forte", "OS", 1]]);
-  assert.deepEqual(r("Post-LASIK. Per protocol: Vigamox QID x 1wk, FML QID x 1wk. All OU."), [["Vigamox", "OU", 4], ["FML", "OU", 4]]);
+  assert.deepEqual(r("one drop in the right I of cosopt twice daily and one drop in the left I of xalatan at night"), [
+    ["Cosopt", "OD", 2],
+    ["Xalatan", "OS", 1],
+  ]);
+  assert.deepEqual(r("JIA uveitis OU. Pred Forte BID OD, QD OS."), [
+    ["Pred Forte", "OD", 2],
+    ["Pred Forte", "OS", 1],
+  ]);
+  assert.deepEqual(r("Post-LASIK. Per protocol: Vigamox QID x 1wk, FML QID x 1wk. All OU."), [
+    ["Vigamox", "OU", 4],
+    ["FML", "OU", 4],
+  ]);
   assert.deepEqual(r("stop the timoptic due to slow heart rate start azopt three times daily in each eye"), [["Azopt", "OU", 3]]);
-  assert.deepEqual(r("Current Medications: Pred Forte OD BID\nChanges: Decrease Pred Forte OD to daily x 2 wk then stop."), [["Pred Forte", "OD", 1]]);
+  assert.deepEqual(r("Current Medications: Pred Forte OD BID\nChanges: Decrease Pred Forte OD to daily x 2 wk then stop."), [
+    ["Pred Forte", "OD", 1],
+  ]);
   // A bare "continue" does not override the dose written above it.
   assert.deepEqual(r("Medications: FML 0.1% OS BID\nPlan: continue FML."), [["FML", "OS", 2]]);
 });

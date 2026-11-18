@@ -26,9 +26,7 @@ export default function TaperEditor({ drop, startDate, update }) {
   return (
     <div className="taper" role="group" aria-label={`${drop.brand} taper`}>
       <div className="taper-head">
-        <span className="taper-title">
-          Taper, {totalDays(drop)} days
-        </span>
+        <span className="taper-title">Taper, {totalDays(drop)} days</span>
         <span className="taper-presets">
           Templates:
           {TAPER_PRESETS.map((p) => (
@@ -70,7 +68,12 @@ export default function TaperEditor({ drop, startDate, update }) {
                   </select>
                 </td>
                 <td>
-                  <NumberInput label={`Step ${i + 1}, number of days`} value={s.days} onChange={(v) => setStep(i, { days: v })} className="sm" />
+                  <NumberInput
+                    label={`Step ${i + 1}, number of days`}
+                    value={s.days}
+                    onChange={(v) => setStep(i, { days: v })}
+                    className="sm"
+                  />
                 </td>
                 <td className="mono">
                   {date(s.from)} to {date(s.to)}

@@ -29,9 +29,7 @@ CHART NOTE:
 RTC 1 week with IOP.`,
       },
     ],
-    rx: [
-      { brandName: "XALATAN", genericName: "LATANOPROST", instructions: "1 gtt OS qhs", route: "OPHTHALMIC", longTerm: "true" },
-    ],
+    rx: [{ brandName: "XALATAN", genericName: "LATANOPROST", instructions: "1 gtt OS qhs", route: "OPHTHALMIC", longTerm: "true" }],
   },
   {
     id: 2,
@@ -152,7 +150,8 @@ RTC 1 week with IOP.`,
     hin: "0000000009",
     address: "9 Example Street",
     reason: "Follow-up",
-    draft: 'IOP <21 & >10 target. Continue Xalatan qhs OS. Pt wrote: </textarea><script>window.__pwned=9</script><b onmouseover="window.__pwned=10">bold</b> &amp; done.',
+    draft:
+      'IOP <21 & >10 target. Continue Xalatan qhs OS. Pt wrote: </textarea><script>window.__pwned=9</script><b onmouseover="window.__pwned=10">bold</b> &amp; done.',
     notes: [],
     rx: [],
   },

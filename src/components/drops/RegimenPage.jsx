@@ -53,7 +53,25 @@ function NewPatientCheck({ startNewPatient, keepSamePatient }) {
   );
 }
 
-export default function RegimenPage({ patient, setPatient, drops, setDrops, formulary, startDate, warnings, go, reset, openPlan, checkIdentity, askNew, startNewPatient, keepSamePatient, imported, setReviewed, setConfirmed }) {
+export default function RegimenPage({
+  patient,
+  setPatient,
+  drops,
+  setDrops,
+  formulary,
+  startDate,
+  warnings,
+  go,
+  reset,
+  openPlan,
+  checkIdentity,
+  askNew,
+  startNewPatient,
+  keepSamePatient,
+  imported,
+  setReviewed,
+  setConfirmed,
+}) {
   const list = drops.filter((d) => d.brand);
   const update = (i, patch) => setDrops(list.map((d, j) => (j === i ? { ...d, ...patch } : d)));
   const remove = (i) => setDrops(list.filter((_, j) => j !== i));
@@ -71,7 +89,9 @@ export default function RegimenPage({ patient, setPatient, drops, setDrops, form
           New patient
         </button>
       </div>
-      <p className="page-note">Patient details stay in this browser tab and are not sent to us. Press New patient before the next person.</p>
+      <p className="page-note">
+        Patient details stay in this browser tab and are not sent to us. Press New patient before the next person.
+      </p>
 
       {imported && <ImportReview imported={imported} drops={list} setReviewed={setReviewed} setConfirmed={setConfirmed} />}
 
@@ -130,7 +150,11 @@ export default function RegimenPage({ patient, setPatient, drops, setDrops, form
                 ? "Confirm the drops read from Oscar to continue"
                 : plural(list.length, "drop")}
         </span>
-        <button className="btn primary lg" disabled={!list.length || askNew || (imported && !imported.reviewed)} onClick={() => go("schedule")}>
+        <button
+          className="btn primary lg"
+          disabled={!list.length || askNew || (imported && !imported.reviewed)}
+          onClick={() => go("schedule")}
+        >
           Next: calendar
         </button>
       </div>

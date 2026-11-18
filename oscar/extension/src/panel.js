@@ -42,7 +42,9 @@ function start() {
   // handed over by the right-click menu.
   const fieldSelection = () => {
     const el = document.activeElement;
-    return el && /^(TEXTAREA|INPUT)$/.test(el.tagName) && el.selectionEnd > el.selectionStart ? el.value.slice(el.selectionStart, el.selectionEnd) : "";
+    return el && /^(TEXTAREA|INPUT)$/.test(el.tagName) && el.selectionEnd > el.selectionStart
+      ? el.value.slice(el.selectionStart, el.selectionEnd)
+      : "";
   };
   const selection = String(window.__edtSelection || window.getSelection?.() || fieldSelection() || "").trim();
   window.__edtSelection = "";
@@ -51,7 +53,18 @@ function start() {
   const draft = () => todayText(document);
   const eyeForm = () => todayBoxes(document).some((b) => b.role !== "note");
   const eyeMeds = eyeMedsList(document);
-  const state = { patient: null, notes: [], rx: [], source: null, result: null, chosen: new Set(), error: "", busy: true, opened: false, offerButton: false };
+  const state = {
+    patient: null,
+    notes: [],
+    rx: [],
+    source: null,
+    result: null,
+    chosen: new Set(),
+    error: "",
+    busy: true,
+    opened: false,
+    offerButton: false,
+  };
 
   const sourceText = () => {
     if (state.source === "selection") return selection;
@@ -82,7 +95,8 @@ function start() {
   function render() {
     // Redrawing keeps keyboard focus on the same control.
     const was = panel.getRootNode().activeElement;
-    const focusKey = was && (was.dataset.i != null ? `[data-i="${was.dataset.i}"]` : was.dataset.act ? `[data-act="${was.dataset.act}"]` : null);
+    const focusKey =
+      was && (was.dataset.i != null ? `[data-i="${was.dataset.i}"]` : was.dataset.act ? `[data-act="${was.dataset.act}"]` : null);
     draw();
     if (focusKey) panel.querySelector(focusKey)?.focus();
   }
@@ -93,7 +107,9 @@ function start() {
       selection.length > 10 && `<option value="selection">Text selected on this page</option>`,
       draft() && `<option value="draft">${eyeForm() ? "Today's Eye Form, not saved yet" : "Today's note, not saved yet"}</option>`,
       eyeMeds && `<option value="eyemeds">Eye medication list in the chart</option>`,
-      ...state.notes.map((n) => `<option value="${esc(n.id)}">Note, ${esc(fmtDate(n.date))}${n.provider ? `, ${esc(n.provider)}` : ""}</option>`),
+      ...state.notes.map(
+        (n) => `<option value="${esc(n.id)}">Note, ${esc(fmtDate(n.date))}${n.provider ? `, ${esc(n.provider)}` : ""}</option>`,
+      ),
       state.rx.length && `<option value="rx">Medication list (Rx)</option>`,
     ].filter(Boolean);
     panel.innerHTML = `
@@ -139,7 +155,9 @@ function start() {
     const skipped = r.skipped.length
       ? `<h2>Not added</h2><ul class="skipped">${r.skipped.map((s) => `<li><strong>${esc(s.name)}</strong>: ${esc(s.why)}</li>`).join("")}</ul>`
       : "";
-    const link = r.code ? `<p class="link-note">This note has an Eye Drop Tracker plan link. The plan opens exactly as it was saved, and the patient keeps their check marks.</p>` : "";
+    const link = r.code
+      ? `<p class="link-note">This note has an Eye Drop Tracker plan link. The plan opens exactly as it was saved, and the patient keeps their check marks.</p>`
+      : "";
     return `${r.drops.length ? `<h2>Drops found</h2>${link}<ul class="drops">${items}</ul>` : `<p class="muted">No eye drops recognised here. Open Eye Drop Tracker to add them by hand.</p>`}${skipped}${unknown}`;
   }
 
@@ -194,7 +212,10 @@ function start() {
           drops: chosen.map((d) => ({ ...d, source: typeof d.source === "string" ? d.source.slice(0, 200) : "" })),
           code: state.result?.code || "",
           // Unknown words go with the skipped ones, so the review lists them.
-          skipped: [...(state.result?.skipped || []), ...(state.result?.unknown || []).map((w) => ({ name: w, why: "not on the drug list, so add it by hand if it is a drop" }))],
+          skipped: [
+            ...(state.result?.skipped || []),
+            ...(state.result?.unknown || []).map((w) => ({ name: w, why: "not on the drug list, so add it by hand if it is a drop" })),
+          ],
         },
       });
       state.opened = !!reply?.ok;
@@ -222,10 +243,25 @@ function start() {
       // clinic whose Oscar differs can still read today's note or a selection.
       const [patient, notes, rx, provider] = await Promise.all([
         client.patient(id),
-        client.notes(id, 40).catch((e) => ((state.partial = state.partial || []).push(`Oscar did not send the saved notes (${e.detail || e.message}), so only today's writing can be read.`), [])),
+        client
+          .notes(id, 40)
+          .catch(
+            (e) => (
+              (state.partial = state.partial || []).push(
+                `Oscar did not send the saved notes (${e.detail || e.message}), so only today's writing can be read.`,
+              ),
+              []
+            ),
+          ),
         // Some Oscars do not offer the Rx list to other screens. The notes
         // still hold the plan, so this is only mentioned, quietly.
-        client.currentDrugs(id).catch((e) => ((state.rxNote = `Oscar's medication list was not available (${e.detail || e.message}). The notes were read as usual.`), [])),
+        client
+          .currentDrugs(id)
+          .catch(
+            (e) => (
+              (state.rxNote = `Oscar's medication list was not available (${e.detail || e.message}). The notes were read as usual.`), []
+            ),
+          ),
         client.clinician().catch(() => null),
       ]);
       Object.assign(state, { patient, notes, rx, provider: provider?.id || "", clinician: provider });
@@ -239,7 +275,16 @@ function start() {
       // then the newest saved note that does.
       const draftHasDrops = draft() && (fromLink(draft()) || parseNote(draft(), formulary).drops.length);
       const medsHaveDrops = eyeMeds && parseNote(eyeMeds, formulary).drops.length;
-      state.source = selection.length > 10 ? "selection" : draftHasDrops ? "draft" : withDrops?.id || (medsHaveDrops ? "eyemeds" : null) || (draft() ? "draft" : null) || notes[0]?.id || (rx.length ? "rx" : null);
+      state.source =
+        selection.length > 10
+          ? "selection"
+          : draftHasDrops
+            ? "draft"
+            : withDrops?.id ||
+              (medsHaveDrops ? "eyemeds" : null) ||
+              (draft() ? "draft" : null) ||
+              notes[0]?.id ||
+              (rx.length ? "rx" : null);
       if (state.source) read();
       else state.readDraft = draft();
     } catch (e) {
@@ -265,11 +310,15 @@ function start() {
     client
       .me()
       .catch((e) => {
-        if (e.kind === "signed-out") throw new Error("Oscar has signed you out, so nothing was added. Sign in to Oscar, open the chart again and use the Eye drops button, or use Copy for chart note.");
+        if (e.kind === "signed-out")
+          throw new Error(
+            "Oscar has signed you out, so nothing was added. Sign in to Oscar, open the chart again and use the Eye drops button, or use Copy for chart note.",
+          );
         return "";
       })
       .then((now) => {
-        if (msg.provider && now !== msg.provider) throw new Error("A different person is now signed in to Oscar, so nothing was added. Read the chart again.");
+        if (msg.provider && now !== msg.provider)
+          throw new Error("A different person is now signed in to Oscar, so nothing was added. Read the chart again.");
         // Today's note is open in this encounter: the plan goes into it, below
         // what the clinician has written, and is signed with it. A separate
         // note saved behind it would make Oscar drop the unsaved draft the
@@ -299,7 +348,7 @@ function start() {
                   ? "Added to the Plan box in Oscar, below what was already written. Review it and sign as usual."
                   : "Added to the Oscar chart as an unsigned note. Sign it in the chart.",
           }),
-        (e) => reply({ ok: false, message: e.message || "Oscar did not save the note." })
+        (e) => reply({ ok: false, message: e.message || "Oscar did not save the note." }),
       );
     return true;
   };
@@ -344,7 +393,9 @@ function start() {
 // never added twice.
 if (!window.__edtListening) {
   window.__edtListening = true;
-  chrome.runtime.onMessage.addListener((msg, _sender, reply) => (msg?.type === "addNote" && window.__edtAddNote ? window.__edtAddNote(msg, reply) : false));
+  chrome.runtime.onMessage.addListener((msg, _sender, reply) =>
+    msg?.type === "addNote" && window.__edtAddNote ? window.__edtAddNote(msg, reply) : false,
+  );
 }
 
 // Clicking the toolbar button again closes the panel.

@@ -17,8 +17,7 @@ export const atBedtime = (d, qhs) => !!qhs && modeOf(d) !== "taper" && d.freq ==
 
 function plan(d, qhs, perDay, bedtime) {
   const mode = modeOf(d);
-  if (mode === "taper")
-    return d.steps.map((s) => `${perDay(s.freq)} for ${plural(s.days, "day")}`).join(", then ") + ", then stop";
+  if (mode === "taper") return d.steps.map((s) => `${perDay(s.freq)} for ${plural(s.days, "day")}`).join(", then ") + ", then stop";
   const base = atBedtime(d, qhs) ? bedtime : perDay(d.freq);
   return mode === "duration" ? `${base} for ${plural(d.durationDays, "day")}, then stop` : base;
 }

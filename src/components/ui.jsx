@@ -31,7 +31,12 @@ export function CapDot({ cap, named = false, usual = true }) {
   if (!cap || !c) return named ? <span className="cap-name muted">{usual ? "No usual cap colour" : "Cap colour not set"}</span> : null;
   return (
     <span className="cap-wrap">
-      <span className={`cap ${cap === "white" ? "light" : ""}`} style={{ background: c.hex }} role="img" aria-label={capWords(cap, usual)} />
+      <span
+        className={`cap ${cap === "white" ? "light" : ""}`}
+        style={{ background: c.hex }}
+        role="img"
+        aria-label={capWords(cap, usual)}
+      />
       {named && <span className="cap-name">{capWords(cap, usual)}</span>}
     </span>
   );
@@ -137,7 +142,7 @@ export const Icon = {
     <>
       <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
       <path d="M6 14h12v8H6z" />
-    </>
+    </>,
   ),
   bell: svg(<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" />),
   check: svg(<path d="M20 6 9 17l-5-5" />, 26, 3.5),
@@ -145,7 +150,7 @@ export const Icon = {
     <>
       <path d="M11 5 6 9H2v6h4l5 4z" />
       <path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" />
-    </>
+    </>,
   ),
 };
 

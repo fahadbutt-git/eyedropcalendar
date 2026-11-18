@@ -39,7 +39,13 @@ function DayCell({ label, dayIndex, items }) {
 
 export default function CalendarGrid({ weeks, items, start, lastIndex, month, rowHeight, scale = 1, perLine = 6 }) {
   return (
-    <div className="cal-wrap" style={{ "--row-h": `${rowHeight}px`, "--k": scale, "--per": perLine }} tabIndex={0} role="region" aria-label="Calendar">
+    <div
+      className="cal-wrap"
+      style={{ "--row-h": `${rowHeight}px`, "--k": scale, "--per": perLine }}
+      tabIndex={0}
+      role="region"
+      aria-label="Calendar"
+    >
       <table className="cal">
         <thead>
           <tr>

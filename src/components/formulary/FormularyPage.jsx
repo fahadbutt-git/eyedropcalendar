@@ -104,14 +104,20 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
             {rows.length} of {formulary.length}
           </span>
           <span className="spacer" />
-          <button className="btn sm" onClick={() => downloadFile("formulary.json", JSON.stringify({ formulary }, null, 2), "application/json")}>
+          <button
+            className="btn sm"
+            onClick={() => downloadFile("formulary.json", JSON.stringify({ formulary }, null, 2), "application/json")}
+          >
             Export
           </button>
           <button className="btn sm" onClick={() => fileInput.current.click()}>
             Import
           </button>
           <input ref={fileInput} type="file" accept="application/json,.json" hidden onChange={importFile} />
-          <button className="btn sm danger" onClick={() => confirmRestore("Restore the default formulary? Your edits on this device will be lost.")}>
+          <button
+            className="btn sm danger"
+            onClick={() => confirmRestore("Restore the default formulary? Your edits on this device will be lost.")}
+          >
             Restore defaults
           </button>
         </div>
@@ -136,9 +142,7 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
                     <div>{m.generic}</div>
                   </td>
                   <td>{classNames(m)}</td>
-                  <td className="nowrap">
-                    {m.freq === 1 ? (m.qhs ? "Once a day at bedtime" : "Once a day") : `${m.freq} times a day`}
-                  </td>
+                  <td className="nowrap">{m.freq === 1 ? (m.qhs ? "Once a day at bedtime" : "Once a day") : `${m.freq} times a day`}</td>
                   <td className="nowrap">{m.lu.length ? m.lu.join(", ") : "None"}</td>
                   <td className="nowrap">
                     <CapDot cap={m.cap} named />
@@ -154,7 +158,7 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
                           window.confirm(
                             inUse.includes(m.brand)
                               ? `${m.brand} is in the current patient's plan. Removing it drops its bedtime timing, cap colour, formulation and cautions from that plan. Remove it anyway?`
-                              : `Remove ${m.brand} from the formulary?`
+                              : `Remove ${m.brand} from the formulary?`,
                           ) && setFormulary(formulary.filter((x) => x.id !== m.id))
                         }
                       >
@@ -169,8 +173,8 @@ export default function FormularyPage({ formulary, setFormulary, restore, outdat
         </div>
       </section>
       <p className="small muted">
-        Cap colours follow the American Academy of Ophthalmology class convention. Confirm against the dispensed product. LU codes
-        are the Ontario Drug Benefit Limited Use codes that can apply to each drug. The prescriber picks one on the prescription.
+        Cap colours follow the American Academy of Ophthalmology class convention. Confirm against the dispensed product. LU codes are the
+        Ontario Drug Benefit Limited Use codes that can apply to each drug. The prescriber picks one on the prescription.
       </p>
 
       {editing && <MedEditor initial={editing} existing={formulary} onSave={save} onClose={() => setEditing(null)} />}

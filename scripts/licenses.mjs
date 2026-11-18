@@ -17,7 +17,8 @@ for (const dir of dirs.sort()) {
   if (seen.has(id)) continue;
   seen.add(id);
   const file = readdirSync(dir).find((f) => /^(licen[cs]e|copying)(\.|$)/i.test(f));
-  const text = file && existsSync(join(dir, file)) ? readFileSync(join(dir, file), "utf8").trim() : `Licence: ${pkg.license || "see package"}`;
+  const text =
+    file && existsSync(join(dir, file)) ? readFileSync(join(dir, file), "utf8").trim() : `Licence: ${pkg.license || "see package"}`;
   parts.push(`${id} (${pkg.license || "unknown"})\n${pkg.homepage || ""}\n\n${text}`);
 }
 const head = `Eye Drop Tracker

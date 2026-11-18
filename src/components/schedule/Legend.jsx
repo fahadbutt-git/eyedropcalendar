@@ -5,7 +5,6 @@ import { Chip } from "../ui.jsx";
 import { CAP_COLOURS } from "../../data/formulary.js";
 import { formInfo } from "../../data/forms.js";
 
-
 // Full legend for page 1 or the cover page; compact one-line version on
 // calendar pages so they keep room for the grid.
 export default function Legend({ items, start, wake, bed, compact = false }) {
@@ -17,7 +16,9 @@ export default function Legend({ items, start, wake, bed, compact = false }) {
           <div>
             <div>
               <b>{e.brand}</b> <span className="legend-eye">{EYES[e.eye].long}</span>
-              {compact && med?.cap && CAP_COLOURS[med.cap] && <span className="legend-cap"> · usually {CAP_COLOURS[med.cap].label.toLowerCase()} cap</span>}
+              {compact && med?.cap && CAP_COLOURS[med.cap] && (
+                <span className="legend-cap"> · usually {CAP_COLOURS[med.cap].label.toLowerCase()} cap</span>
+              )}
             </div>
             {!compact && (
               <>

@@ -13,7 +13,12 @@ const MAX_DAYS = 365;
 // Text is trimmed, limited in length, and stripped of control and invisible
 // formatting characters (such as right-to-left overrides).
 export const cleanText = (v, max = 120) =>
-  typeof v === "string" ? v.replace(/[\p{Cc}\p{Cf}]/gu, "").trim().slice(0, max) : "";
+  typeof v === "string"
+    ? v
+        .replace(/[\p{Cc}\p{Cf}]/gu, "")
+        .trim()
+        .slice(0, max)
+    : "";
 const text = cleanText;
 
 // A drawn signature: a PNG data URL of a sensible size.

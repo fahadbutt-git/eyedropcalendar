@@ -18,7 +18,11 @@ test("another name or date of birth is a different person", () => {
   assert.equal(sameName("Sample, John", "Sample, Mary"), false);
   assert.ok(differentPerson({ name: "Sample, John", dob: "1950-01-01" }, { name: "Sample, John", dob: "1951-01-01" }));
   assert.ok(differentPerson({ name: "Sample, John", dob: "" }, { name: "Other, Kim", dob: "" }));
-  assert.equal(differentPerson({ name: "", dob: "" }, { name: "Other, Kim", dob: "1960-01-01" }), false, "blank details are filled in, not a new person");
+  assert.equal(
+    differentPerson({ name: "", dob: "" }, { name: "Other, Kim", dob: "1960-01-01" }),
+    false,
+    "blank details are filled in, not a new person",
+  );
   assert.equal(differentPerson({ name: "Sample, John", dob: "1950-01-01" }, { name: "", dob: "" }), false);
 });
 

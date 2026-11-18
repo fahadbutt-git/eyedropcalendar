@@ -49,7 +49,8 @@ const NOT_DROPS = [
   ["\\bATs?\\b", "lubricant, not in the drug list", ""],
 ];
 
-const PAST = /\b(allerg\w*(?!\s+(?:season|conjunctivitis|symptoms|eyes?|flare|rhinitis))|intoleran\w*|previously|prior(?:ly)?|failed|was on|were on|history of|hx of|switched from|reaction to|stopped (?:due|because)|in the past|avoid\w*|(?<!be )used|tried|ineffective|did not help|didn't help|no benefit)\b/i;
+const PAST =
+  /\b(allerg\w*(?!\s+(?:season|conjunctivitis|symptoms|eyes?|flare|rhinitis))|intoleran\w*|previously|prior(?:ly)?|failed|was on|were on|history of|hx of|switched from|reaction to|stopped (?:due|because)|in the past|avoid\w*|(?<!be )used|tried|ineffective|did not help|didn't help|no benefit)\b/i;
 const STOP = /\b(stop|stopped|d\/c|dc'?d|discontinue[ds]?|discontinued|hold|held|cease)\b/i;
 const PRN = /\b(prn|as needed|as required|when needed)\b/i;
 
@@ -62,7 +63,10 @@ const FREQS = [
   [/\bt\.?i\.?d\.?(?![a-z])|\bthree times\b/i, 3],
   [/\bb\.?i\.?d\.?(?![a-z])|\bbd\b|\btwice\b/i, 2],
   [/\bq\.?h\.?s\.?(?![a-z])|\bh\.?s\b|\bnightly\b|\bat bedtime\b|\bat night\b/i, 1],
-  [/\bq\.?d\.?(?![a-z])|\bq\s?am\b|\bq\s?pm\b|\bdaily\b|\bonce a day\b|\bonce\b|\bqday\b|\bevery day\b|\b(?:every|each|in the) (?:morning|evening)\b|\b1\s?x\s?\/\s?(?:day|d)\b/i, 1],
+  [
+    /\bq\.?d\.?(?![a-z])|\bq\s?am\b|\bq\s?pm\b|\bdaily\b|\bonce a day\b|\bonce\b|\bqday\b|\bevery day\b|\b(?:every|each|in the) (?:morning|evening)\b|\b1\s?x\s?\/\s?(?:day|d)\b/i,
+    1,
+  ],
 ];
 
 // Abbreviations count only in capitals, so "to be used", "re-check" and
@@ -83,9 +87,11 @@ const HOURLY = /\bq\.?\s?(?:1\s?h(?:r|rs|ours?)?|30\s?min)\b|\bhourly\b|\bevery 
 const CURRENT = /\b(start|started|begin|continue|cont|restart|resume|use|add|new)\b/i;
 // Mentioned but not ordered: something considered, given once in clinic,
 // replaced, or stopped after the fact.
-const HYPOTHETICAL = /\b(consider\w*|may add|could add|might add|may use|can use|could use|option of|discuss\w* adding|if (?:iop|pressure|needed|not)\b)/i;
+const HYPOTHETICAL =
+  /\b(consider\w*|may add|could add|might add|may use|can use|could use|option of|discuss\w* adding|if (?:iop|pressure|needed|not)\b)/i;
 // Earlier in the same sentence: the drug is only a possibility.
-const HEDGE = /\bconsider\w*\b|\b(?:will )?hold off\b|\b(?:may|might) be on\b|\bunclear\b|\bto confirm\b|\b(?:may|might|could) need\b|\bwill discuss\b|\bto discuss\b|\bdiscuss(?:ed)? (?:with|about)\b|\basked about\b|\brefer(?:red|ral)? (?:to [^.;]{0,30} )?for\b|\bif no (?:better|improvement|change)\b|\bif not improv\w*|\bunless\b/i;
+const HEDGE =
+  /\bconsider\w*\b|\b(?:will )?hold off\b|\b(?:may|might) be on\b|\bunclear\b|\bto confirm\b|\b(?:may|might|could) need\b|\bwill discuss\b|\bto discuss\b|\bdiscuss(?:ed)? (?:with|about)\b|\basked about\b|\brefer(?:red|ral)? (?:to [^.;]{0,30} )?for\b|\bif no (?:better|improvement|change)\b|\bif not improv\w*|\bunless\b/i;
 // A hedge counts until a new clause starts a drug ("consider stopping
 // Xalatan, continue Cosopt").
 const hedgedIn = (text) => {
@@ -93,7 +99,8 @@ const hedgedIn = (text) => {
   return !!last && !/[,;]\s*(?:and\s+)?(?:continue|cont|start|use|restart|resume)\b/i.test(text.slice(last.index));
 };
 // A course already finished.
-const FINISHED = /^[^.;]{0,40}(?:\(\s*(?:now |already )?(?:completed?|finished|done)\s*\)|\b(?:now|already|has|have|was|were) (?:been )?(?:completed?|finished|done)\b)/i;
+const FINISHED =
+  /^[^.;]{0,40}(?:\(\s*(?:now |already )?(?:completed?|finished|done)\s*\)|\b(?:now|already|has|have|was|were) (?:been )?(?:completed?|finished|done)\b)/i;
 // After the drug: the patient said no.
 const DECLINED = /^\W*(?:[-–]\s*)?(?:pt |patient )?(?:declined|refused)\b/i;
 // A procedure, not a drop to use at home.
@@ -109,31 +116,38 @@ const CONDITION = /\b(?:unless|if)\b/i;
 const SWITCHED_TO = /^\s*(?:was |is |being |to be )?(?:switched|changed|swapped|replaced)\s+(?:to|for|with|by)\b/i;
 // A change in the plan: the newer instruction wins over an older line.
 const CHANGE = /\b(?:decrease|increase|reduce|lower|raise|change|now|taper|switch)\b/i;
-const IN_CLINIC = /\b(?:given|instilled|administered|applied)\b[^.;]{0,40}\b(?:in clinic|in (?:the )?office|today)\b|\bin clinic\b|\bx\s?[12] (?:given|in clinic)\b/i;
+const IN_CLINIC =
+  /\b(?:given|instilled|administered|applied)\b[^.;]{0,40}\b(?:in clinic|in (?:the )?office|today)\b|\bin clinic\b|\bx\s?[12] (?:given|in clinic)\b/i;
 const REPLACED = /\b(?:replacing|instead of|in place of|change|switch(?:ed)?(?: from)?|swap)\s+$/i;
 const STOPPED_AFTER = /\b(?<!then )(?:has been |was |were |is )?(?:stopped|discontinued|d\/c'?d|dc'?d)\b/i;
 const ORAL = /\b\d+\s*mg\b|\bp\.?o\.?\b|\bby mouth\b|\btab(?:let)?s?\b/i;
 const LABEL_ALLERGY = /\b(?:allerg\w*|intoleran\w*|adverse reactions?)\s*:[^:]*$/i;
 // Drops for someone else, planned for later, or ruled out.
-const SOMEONE_ELSE = /\b(?:husband|wife|spouse|partner|son|daughter|mother|father|parent|sibling|brother|sister|family member)'?s?\b[^.;]{0,40}$/i;
+const SOMEONE_ELSE =
+  /\b(?:husband|wife|spouse|partner|son|daughter|mother|father|parent|sibling|brother|sister|family member)'?s?\b[^.;]{0,40}$/i;
 const LATER = /\b(?:post-?op drops|to start (?:on )?(?:the )?day of surgery|after (?:the )?surgery)\b/i;
 // "Per protocol" alone gives no plan. "Per protocol: Vigamox QID x 1wk" does.
 const PROTOCOL = /\bper protocol\b/i;
 // "All OU" after a list gives the eye for the drops in it that named none.
-const ALL_EYE = /^\W*(?:all|both|each)(?:\s+(?:drops?|of (?:these|them|the above)|meds?|medications?))?\s+(OU|OD|OS|both eyes|right eye|left eye)\W*$/i;
+const ALL_EYE =
+  /^\W*(?:all|both|each)(?:\s+(?:drops?|of (?:these|them|the above)|meds?|medications?))?\s+(OU|OD|OS|both eyes|right eye|left eye)\W*$/i;
 // "4/3/2/1 weekly" or "4→3→2→1 x 1 week each": a taper in shorthand.
-const TAPER_NUMBERS = /(?<![\d/.])([1-8])\s*(?:\/|→|->|-)\s*([1-8])\s*(?:\/|→|->|-)\s*([1-8])(?:\s*(?:\/|→|->|-)\s*([1-8]))?(?:\s*(?:\/|→|->|-)\s*([1-8]))?(?![\d/.%])/;
-const TAPER_PERIOD = /\b(?:weekly|each week|every week|per week|a week each|(?:x\s*)?1\s*(?:wk|week) each|q\.?\s?(?:1\s?)?wk|q\.?\s?week)\b|\bx\s*(\d)\s*(?:wks?|weeks?) each\b|\b(\d{1,2})\s*days? each\b/i;
+const TAPER_NUMBERS =
+  /(?<![\d/.])([1-8])\s*(?:\/|→|->|-)\s*([1-8])\s*(?:\/|→|->|-)\s*([1-8])(?:\s*(?:\/|→|->|-)\s*([1-8]))?(?:\s*(?:\/|→|->|-)\s*([1-8]))?(?![\d/.%])/;
+const TAPER_PERIOD =
+  /\b(?:weekly|each week|every week|per week|a week each|(?:x\s*)?1\s*(?:wk|week) each|q\.?\s?(?:1\s?)?wk|q\.?\s?week)\b|\bx\s*(\d)\s*(?:wks?|weeks?) each\b|\b(\d{1,2})\s*days? each\b/i;
 // "Taper by 1 drop weekly, starting QID".
 const TAPER_BY_ONE = /\btaper(?:ing)?(?: down)? by (?:1|one) (?:drop|gtt|dose)s? (?:a |per |each |every )?(week|weekly|day|daily)\b/i;
 // "BID OD, QD OS": a different plan for each eye on one line.
-const PER_EYE = /\b(q\.?i\.?d|t\.?i\.?d|b\.?i\.?d|q\.?d|qhs|daily|once daily|twice daily)\.?\s+(OD|OS)\s*[,;]\s*(?:and\s+)?(q\.?i\.?d|t\.?i\.?d|b\.?i\.?d|q\.?d|qhs|daily|once daily|twice daily)\.?\s+(OD|OS)\b/i;
+const PER_EYE =
+  /\b(q\.?i\.?d|t\.?i\.?d|b\.?i\.?d|q\.?d|qhs|daily|once daily|twice daily)\.?\s+(OD|OS)\s*[,;]\s*(?:and\s+)?(q\.?i\.?d|t\.?i\.?d|b\.?i\.?d|q\.?d|qhs|daily|once daily|twice daily)\.?\s+(OD|OS)\b/i;
 const RULED_OUT = /\bno\s*$/i;
 const GIVEN_NOW = /^\s*(?:\d[^a-z]*)?(?:(?:gtts?|drops?)\s+)?(?:was |were )?(?:given|instilled|administered)\b/i;
 const SAME_OTHER_EYE = /\bsame (?:in|for|to) (?:the )?(?:fellow|other) eye\b/i;
 
 const UNIT_DAYS = { d: 1, day: 1, days: 1, w: 7, wk: 7, wks: 7, week: 7, weeks: 7, mo: 30, month: 30, months: 30 };
-const DURATION = /(?:\bx|×|\bfor|\btimes(?=\s+(?:\d|one|two|three|four|five|six|seven|eight|ten|fourteen)\b))\s*(\d{1,3}|an?|one|two|three|four|five|six|seven|eight|ten|fourteen)\s*(?:more\s+|additional\s+|extra\s+)?(days?|d|wks?|w|weeks?|mo|months?)\b/i;
+const DURATION =
+  /(?:\bx|×|\bfor|\btimes(?=\s+(?:\d|one|two|three|four|five|six|seven|eight|ten|fourteen)\b))\s*(\d{1,3}|an?|one|two|three|four|five|six|seven|eight|ten|fourteen)\s*(?:more\s+|additional\s+|extra\s+)?(days?|d|wks?|w|weeks?|mo|months?)\b/i;
 // "x 5/7" is five days and "x 2/52" two weeks, as many notes write them.
 const SLASH_DURATION = /(?:\bx|×|\bfor)\s*(\d{1,2})\/(7|52|12)\b|(?<![\d/])\b([1-9]|1[0-2])\/(52|12)\b(?![\d/])/;
 const WORD_NUMBERS = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, ten: 10, fourteen: 14 };
@@ -181,12 +195,16 @@ function chooseBrand(found, clause, formulary) {
   // Ointments, gels and preservative free versions are only chosen by name.
   const plain = candidates.filter((m) => !/ointment|gel|preservative|single-use/i.test(m.generic));
   const pool = plain.length ? plain : candidates;
-  const byStrength = strength && (pool.find((m) => m.generic.includes(`${strength}%`)) || candidates.find((m) => m.generic.includes(`${strength}%`)));
+  const byStrength =
+    strength && (pool.find((m) => m.generic.includes(`${strength}%`)) || candidates.find((m) => m.generic.includes(`${strength}%`)));
   if (byStrength) return { brand: byStrength.brand, flag: null };
   const word = found[0].text.toLowerCase();
   const pick = pool.find((m) => m.aka.toLowerCase().startsWith(`generic ${word}`)) || pool[0];
   const strengths = new Set(pool.map((m) => m.generic.match(/[\d.]+%/)?.[0]));
-  const flag = strengths.size > 1 ? `Strength: "${found[0].text}" comes in more than one strength, so ${pick.brand} (${pick.generic}) was chosen. Check the strength.` : null;
+  const flag =
+    strengths.size > 1
+      ? `Strength: "${found[0].text}" comes in more than one strength, so ${pick.brand} (${pick.generic}) was chosen. Check the strength.`
+      : null;
   return { brand: pick.brand, flag };
 }
 
@@ -199,7 +217,11 @@ function findFreq(text) {
     if (!m || (best && best.at <= m.index)) continue;
     const n = freq ?? Number(m[1] || m[2]);
     const fit = FREQ_OPTIONS.includes(n) ? n : FREQ_OPTIONS.filter((f) => f <= n).pop();
-    best = { freq: fit, note: note || (fit !== n ? `The note says ${n} times a day. The calendar holds ${fit}, so ${fit} was used.` : null), at: m.index };
+    best = {
+      freq: fit,
+      note: note || (fit !== n ? `The note says ${n} times a day. The calendar holds ${fit}, so ${fit} was used.` : null),
+      at: m.index,
+    };
   }
   return best;
 }
@@ -289,7 +311,13 @@ const headingEye = (line) => {
 
 export function parseNote(input, formulary) {
   const names = nameIndex(formulary);
-  const pattern = new RegExp(`(?<![\\w-])(${names.map((n) => n.pattern).sort((a, b) => b.length - a.length).join("|")})(?![\\w])`, "gi");
+  const pattern = new RegExp(
+    `(?<![\\w-])(${names
+      .map((n) => n.pattern)
+      .sort((a, b) => b.length - a.length)
+      .join("|")})(?![\\w])`,
+    "gi",
+  );
   // Misspelled drug names beside a dose are corrected and flagged. Unknown
   // words in a drug's place are listed, so nothing is dropped silently.
   const { text: corrected, corrections, unknown } = correctSpelling(input, formulary, pattern);
@@ -318,12 +346,19 @@ export function parseNote(input, formulary) {
     // "OD:" alone heads the lines below it. "Right eye: new CRAO" with text
     // after it covers that line only.
     const lineOnly = headEye && raw.slice(eyeHeading[0].length).trim() !== "";
-    sectionEye = headEye && !lineOnly ? headEye : lineOnly ? null : /^\s*\d+[.)]/.test(raw) ? headingEye(raw) : raw.trim() ? sectionEye : null;
+    sectionEye =
+      headEye && !lineOnly ? headEye : lineOnly ? null : /^\s*\d+[.)]/.test(raw) ? headingEye(raw) : raw.trim() ? sectionEye : null;
     const lineEye = lineOnly ? headEye : null;
     const old = raw.match(OLD_SECTION);
     if (old) oldSection = !old[1].trim();
     else if (!raw.trim() || ANY_SECTION.test(raw) || /^\s*[A-Z][A-Za-z /&()-]{1,40}:/.test(raw)) oldSection = false;
-    const notCurrent = old ? "listed under discontinued or past medications" : oldSection ? "listed under discontinued or past medications" : COPIED.test(raw) ? "copied from an earlier note" : null;
+    const notCurrent = old
+      ? "listed under discontinued or past medications"
+      : oldSection
+        ? "listed under discontinued or past medications"
+        : COPIED.test(raw)
+          ? "copied from an earlier note"
+          : null;
     let previous = "";
     const lineStart = drops.length;
     for (const sentence of sentences(raw)) {
@@ -380,22 +415,44 @@ export function parseNote(input, formulary) {
         const stated = own.match(/^[\s(]*(\d*\.?\d+)\s*%/)?.[1];
         const hasStrength = (m) => new RegExp(`(^|[^\\d.])${stated.replace(".", "\\.")}%`).test(m.generic);
         // "Alphagan 0.15%" is Alphagan-P: the same drug in the strength the note names.
-        const sameDrug = stated && med && !hasStrength(med) && formulary.find((f) => f.generic.split(" ")[0] === med.generic.split(" ")[0] && hasStrength(f));
+        const sameDrug =
+          stated &&
+          med &&
+          !hasStrength(med) &&
+          formulary.find((f) => f.generic.split(" ")[0] === med.generic.split(" ")[0] && hasStrength(f));
         if (sameDrug) {
           flags.push(`The note says ${stated}%, so ${sameDrug.brand} (${sameDrug.generic}) was chosen.`);
           brand = sameDrug.brand;
           med = sameDrug;
         }
         if (stated && med && !hasStrength(med))
-          flags.push(`Strength: the note says ${stated}%, but ${brand} is ${med.generic}. Choose the right strength, or add it to the drug list.`);
+          flags.push(
+            `Strength: the note says ${stated}%, but ${brand} is ${med.generic}. Choose the right strength, or add it to the drug list.`,
+          );
         const context = item.before.split(/[,(]/).pop();
-        const entry = { brand, eye: null, drops: 1, mode: "ongoing", freq: null, durationDays: 7, startDay: 1, steps: [], source: sentence, flags };
+        const entry = {
+          brand,
+          eye: null,
+          drops: 1,
+          mode: "ongoing",
+          freq: null,
+          durationDays: 7,
+          startDay: 1,
+          steps: [],
+          source: sentence,
+          flags,
+        };
 
         // Past use is judged on the few words next to the drug, so "Allergic
         // conjunctivitis: start Pataday" and "s/p failed trab, continue
         // Cosopt" are kept.
         // Abbreviations such as "incl." do not end the phrase.
-        const near = item.before.split(/[:;,(]|\.(?=\s+[A-Z])/).pop().split(/\s+/).slice(-4).join(" ");
+        const near = item.before
+          .split(/[:;,(]|\.(?=\s+[A-Z])/)
+          .pop()
+          .split(/\s+/)
+          .slice(-4)
+          .join(" ");
         const ownStart = own.split(/[,;.]/)[0];
         // "FML BID (switched from Pred)": the past words after the drug are about the other one.
         const ownPast = ownStart.replace(/\(?\s*(?:switched|changed) from\b[^)]*\)?/i, "");
@@ -486,10 +543,17 @@ export function parseNote(input, formulary) {
         // The eye written just before this drug belongs to it, and the one
         // written just before the next drug belongs to that one.
         const eyeBefore = item.before.match(EYE_BEFORE_DRUG);
-        const ownEyes = own.replace(new RegExp(`(?:\\d|one|two)?\\s*(?:gtts?|drops?)?\\s*${EYE_BEFORE_DRUG.source.slice(0, -4)}\\s*$`, "i"), "");
+        const ownEyes = own.replace(
+          new RegExp(`(?:\\d|one|two)?\\s*(?:gtts?|drops?)?\\s*${EYE_BEFORE_DRUG.source.slice(0, -4)}\\s*$`, "i"),
+          "",
+        );
         const named = eyesIn(ownEyes);
         if (new Set(named).size > 1) flags.push("The note names more than one eye for this drop. Check which eye is meant.");
-        entry.eye = eyeBefore ? findEye(`${eyeBefore[1]} eye`) : SAME_OTHER_EYE.test(own) ? "OU" : findEye(ownEyes) || (shared && findEye(shared));
+        entry.eye = eyeBefore
+          ? findEye(`${eyeBefore[1]} eye`)
+          : SAME_OTHER_EYE.test(own)
+            ? "OU"
+            : findEye(ownEyes) || (shared && findEye(shared));
         const firstInSentence = item === items[0];
         const before = firstInSentence ? findEye(item.before) : null;
         if (!entry.eye && lineEye) {
@@ -499,7 +563,9 @@ export function parseNote(input, formulary) {
           flags.push("The eye was taken from earlier in the sentence. Check it.");
         } else if (!entry.eye && sectionEye) {
           entry.eye = sectionEye;
-          flags.push(`The note does not say which eye. ${sectionEye === "OS" ? "Left" : sectionEye === "OD" ? "Right" : "Both"} was taken from the heading it sits under.`);
+          flags.push(
+            `The note does not say which eye. ${sectionEye === "OS" ? "Left" : sectionEye === "OD" ? "Right" : "Both"} was taken from the heading it sits under.`,
+          );
         } else if (!entry.eye && onlyEye) {
           entry.eye = onlyEye;
           flags.push(`The drop does not say which eye. ${onlyEye === "OS" ? "Left" : "Right"} was used, the only eye this note names.`);
@@ -520,7 +586,9 @@ export function parseNote(input, formulary) {
           const days = /day|daily/i.test(byOne[1]) ? 1 : 7;
           sched.steps = Array.from({ length: startFreq }, (_, i) => ({ freq: startFreq - i, days }));
           sched.after = null;
-          flags.push(`The taper was read as one drop less each ${days === 1 ? "day" : "week"}, from ${startFreq} times a day. Check each step.`);
+          flags.push(
+            `The taper was read as one drop less each ${days === 1 ? "day" : "week"}, from ${startFreq} times a day. Check each step.`,
+          );
         }
         // A change, or a line under "Plan:", is newer than history above it.
         entry.changed = CHANGE.test(near) || /\bplan\s*:/i.test(lineSoFar) || /\bmore\b/i.test(ownStart);
@@ -540,17 +608,24 @@ export function parseNote(input, formulary) {
           if (sched.after.note) flags.push(sched.after.note);
           // A taper without its steps is never invented. The drop stays at
           // its current frequency until the clinician chooses the steps.
-          if (/\btaper\w*\b/i.test(own)) flags.push("The note says taper without the steps. Choose the taper steps before printing, or the drop stays at this frequency.");
+          if (/\btaper\w*\b/i.test(own))
+            flags.push(
+              "The note says taper without the steps. Choose the taper steps before printing, or the drop stays at this frequency.",
+            );
         } else {
           entry.freq = usual;
           flags.push(`The note gives no frequency, so the usual ${usual === 1 ? "once" : `${usual} times`} a day was used.`);
           // A taper without its steps is never invented. The drop stays at
           // its current frequency until the clinician chooses the steps.
-          if (/\btaper\w*\b/i.test(own)) flags.push("The note says taper without the steps. Choose the taper steps before printing, or the drop stays at this frequency.");
+          if (/\btaper\w*\b/i.test(own))
+            flags.push(
+              "The note says taper without the steps. Choose the taper steps before printing, or the drop stays at this frequency.",
+            );
         }
         if (entry.eye === "OD" && OD_ALONE.test(own) && !sched.steps.length && !sched.after)
           flags.push('"OD" can mean once daily as well as right eye. Check which eye is meant.');
-        if (med?.maxFreq && entry.freq > med.maxFreq) flags.push(`${brand} is usually not used more than ${med.maxFreq === 1 ? "once" : `${med.maxFreq} times`} a day.`);
+        if (med?.maxFreq && entry.freq > med.maxFreq)
+          flags.push(`${brand} is usually not used more than ${med.maxFreq === 1 ? "once" : `${med.maxFreq} times`} a day.`);
         // "Pred Forte BID OD, QD OS": a different plan for each eye.
         const perEye = !sched.steps.length && own.match(PER_EYE);
         if (perEye && [perEye[2], perEye[4]].every((e) => e === e.toUpperCase()) && perEye[2] !== perEye[4]) {
@@ -575,7 +650,9 @@ export function parseNote(input, formulary) {
             freq: sched.after.freq,
             steps: [],
             startDay,
-            flags: [`Carries on ${sched.after.freq === 1 ? "once" : `${sched.after.freq} times`} a day from day ${startDay} with no end date. Check that this is meant.`],
+            flags: [
+              `Carries on ${sched.after.freq === 1 ? "once" : `${sched.after.freq} times`} a day from day ${startDay} with no end date. Check that this is meant.`,
+            ],
           });
         }
       }
@@ -640,6 +717,13 @@ const yes = (v) => v === true || v === "true";
 export function parseRxList(drugs, formulary) {
   const lines = (drugs || [])
     .filter((d) => d && !yes(d.archived) && !yes(d.prn))
-    .map((d) => [d.brandName || d.customName || d.genericName, d.instructions || [d.takeMax && `${d.takeMax} gtt`, d.frequency].filter(Boolean).join(" ")].filter(Boolean).join(" "));
+    .map((d) =>
+      [
+        d.brandName || d.customName || d.genericName,
+        d.instructions || [d.takeMax && `${d.takeMax} gtt`, d.frequency].filter(Boolean).join(" "),
+      ]
+        .filter(Boolean)
+        .join(" "),
+    );
   return parseNote(lines.join("\n"), formulary);
 }

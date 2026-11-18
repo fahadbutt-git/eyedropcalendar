@@ -94,7 +94,13 @@ export default function MedEditor({ initial, existing, onSave, onClose }) {
             <legend>Drug class, used to flag duplicate therapy</legend>
             <div className="row" style={{ gap: 6 }}>
               {Object.entries(DRUG_CLASSES).map(([k, label]) => (
-                <button key={k} type="button" aria-pressed={m.cls.includes(k)} className={`btn sm ${m.cls.includes(k) ? "primary" : ""}`} onClick={() => toggleClass(k)}>
+                <button
+                  key={k}
+                  type="button"
+                  aria-pressed={m.cls.includes(k)}
+                  className={`btn sm ${m.cls.includes(k) ? "primary" : ""}`}
+                  onClick={() => toggleClass(k)}
+                >
                   {label}
                 </button>
               ))}

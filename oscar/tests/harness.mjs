@@ -59,7 +59,7 @@ export const openPanel = (worker, page, selection = "") =>
       await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: (t) => (window.__edtSelection = t), args: [selection] });
       await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["panel.js"] });
     },
-    { url: page.url(), selection }
+    { url: page.url(), selection },
   );
 
 export const panelOf = (page) => page.locator("#edt-oscar-panel");

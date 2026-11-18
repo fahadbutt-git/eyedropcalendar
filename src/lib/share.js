@@ -6,7 +6,10 @@ import { MAX_DROPS, cleanEntry, cleanMed, isClockTime } from "./validate.js";
 import { planId } from "./hash.js";
 
 const toBase64Url = (s) =>
-  btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  btoa(String.fromCharCode(...new TextEncoder().encode(s)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 const fromBase64Url = (s) =>
   new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)));
 
@@ -24,8 +27,17 @@ export function encodeRegimen({ entries, formulary, start, wake, bed, nonce = ""
   const e = entries.map((x) => {
     const m = formulary.find((f) => f.brand === x.brand) || {};
     return [
-      x.brand, m.generic || "", m.cap || "", m.form || "solution", m.qhs ? 1 : 0,
-      x.eye, x.drops, x.mode[0], x.freq, x.durationDays, x.startDay,
+      x.brand,
+      m.generic || "",
+      m.cap || "",
+      m.form || "solution",
+      m.qhs ? 1 : 0,
+      x.eye,
+      x.drops,
+      x.mode[0],
+      x.freq,
+      x.durationDays,
+      x.startDay,
       x.mode === "taper" ? x.steps.map((s) => [s.freq, s.days]) : 0,
     ];
   });
@@ -53,10 +65,16 @@ export function decodeRegimen(code) {
     if (!Array.isArray(a)) throw new Error("Invalid plan");
     const entry = cleanEntry(
       {
-        brand: a[0], eye: a[5], drops: a[6], mode: MODES[a[7]], freq: a[8], durationDays: a[9], startDay: a[10],
+        brand: a[0],
+        eye: a[5],
+        drops: a[6],
+        mode: MODES[a[7]],
+        freq: a[8],
+        durationDays: a[9],
+        startDay: a[10],
         steps: Array.isArray(a[11]) ? a[11].map((s) => ({ freq: s?.[0], days: s?.[1] })) : [],
       },
-      { strict: true }
+      { strict: true },
     );
     const med = cleanMed({ brand: a[0], generic: a[1], cap: a[2], form: a[3], qhs: a[4] === 1 }, i + 1);
     if (!entry || !med) throw new Error("Invalid plan");

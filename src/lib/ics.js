@@ -45,7 +45,7 @@ function event(lines, { uid, at, items, stamp, until, generic, text }) {
     fold(`DESCRIPTION:${esc(title)}`),
     "TRIGGER:PT0M",
     "END:VALARM",
-    "END:VEVENT"
+    "END:VEVENT",
   );
 }
 
@@ -103,7 +103,15 @@ export function buildICS({ entries, formulary, start, wake, bed, id = "plan", fr
   // Calendars that honour cancelled events remove them. The screen also
   // explains how to remove them by hand.
   for (const uid of cancel)
-    lines.push("BEGIN:VEVENT", `UID:${uid}@eyedroptracker.com`, `DTSTAMP:${stamp}`, `DTSTART:${local(from)}`, "STATUS:CANCELLED", "SUMMARY:Cancelled eye drop alarm", "END:VEVENT");
+    lines.push(
+      "BEGIN:VEVENT",
+      `UID:${uid}@eyedroptracker.com`,
+      `DTSTAMP:${stamp}`,
+      `DTSTART:${local(from)}`,
+      "STATUS:CANCELLED",
+      "SUMMARY:Cancelled eye drop alarm",
+      "END:VEVENT",
+    );
   lines.push("END:VCALENDAR");
   return lines.join("\r\n");
 }

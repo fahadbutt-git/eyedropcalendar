@@ -15,7 +15,10 @@ export default function ImportReview({ imported, drops, setReviewed, setConfirme
     const next = new Set(confirmed);
     if (on) next.add(id);
     else next.delete(id);
-    setConfirmed([...next], fromChart.every((d) => next.has(d.id)));
+    setConfirmed(
+      [...next],
+      fromChart.every((d) => next.has(d.id)),
+    );
   };
 
   if (!imported.fromLink && Object.keys(imported.flags).length === 0)
@@ -52,7 +55,9 @@ export default function ImportReview({ imported, drops, setReviewed, setConfirme
     return (
       <section className="notice caution import-review" aria-labelledby="import-h">
         <h2 id="import-h">Opened from the plan link in the Oscar chart</h2>
-        <p>This is the plan exactly as it was last saved, and the patient keeps their check marks. Make today's changes below, then confirm.</p>
+        <p>
+          This is the plan exactly as it was last saved, and the patient keeps their check marks. Make today's changes below, then confirm.
+        </p>
         <label className="check">
           <input type="checkbox" checked={false} onChange={() => setReviewed(true)} />
           <span>I have checked every drop, eye, frequency and date against the chart</span>
@@ -64,7 +69,10 @@ export default function ImportReview({ imported, drops, setReviewed, setConfirme
   return (
     <section className="notice caution import-review" aria-labelledby="import-h">
       <h2 id="import-h">Read from the Oscar chart: check each drop</h2>
-      <p>Each drop shows the sentence it was read from. Anything listed under a drop was assumed, not written in the note. Correct the drop below if needed, then tick it.</p>
+      <p>
+        Each drop shows the sentence it was read from. Anything listed under a drop was assumed, not written in the note. Correct the drop
+        below if needed, then tick it.
+      </p>
       <ol className="import-list">
         {fromChart.map((d) => {
           const flags = imported.flags[d.id] || [];

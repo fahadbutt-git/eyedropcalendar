@@ -62,11 +62,16 @@ export function oscarClient(base, fetcher = fetch) {
         ...(stop ? { signal: stop.signal } : {}),
       });
     } catch {
-      throw new OscarError("network", stop?.signal.aborted ? "Oscar did not answer in time." : "Oscar could not be reached.", `${where}: no answer`);
+      throw new OscarError(
+        "network",
+        stop?.signal.aborted ? "Oscar did not answer in time." : "Oscar could not be reached.",
+        `${where}: no answer`,
+      );
     } finally {
       if (timer) clearTimeout(timer);
     }
-    if (res.status === 401 || res.status === 403) throw new OscarError("signed-out", "Oscar says you are not signed in. Sign in to Oscar and try again.", `${where}: ${res.status}`);
+    if (res.status === 401 || res.status === 403)
+      throw new OscarError("signed-out", "Oscar says you are not signed in. Sign in to Oscar and try again.", `${where}: ${res.status}`);
     if (res.status === 404) throw new OscarError("missing", "This Oscar does not offer that service.", `${where}: 404`);
     if (!res.ok) throw new OscarError("server", `Oscar answered with an error (${res.status}).`, `${where}: ${res.status}`);
     const text = await res.text();
@@ -102,22 +107,38 @@ export function oscarClient(base, fetcher = fetch) {
     async patient(id) {
       const d = await call(`demographics/${id}`);
       if (!d) throw new OscarError("missing", "Oscar did not return this patient.");
-      const dob = d.dobYear && d.dobMonth && d.dobDay ? `${d.dobYear}-${String(d.dobMonth).padStart(2, "0")}-${String(d.dobDay).padStart(2, "0")}` : "";
+      const dob =
+        d.dobYear && d.dobMonth && d.dobDay
+          ? `${d.dobYear}-${String(d.dobMonth).padStart(2, "0")}-${String(d.dobDay).padStart(2, "0")}`
+          : "";
       // Oscar sends the address as an object in newer versions and as fields
       // on the patient in older ones.
-      const a = typeof d.address === "object" && d.address ? d.address : { address: d.address, city: d.city, province: d.province, postal: d.postal };
-      const address = [a.address, a.city, [a.province, a.postal].filter(Boolean).join(" ")].map((x) => String(x || "").trim()).filter(Boolean).join(", ");
+      const a =
+        typeof d.address === "object" && d.address
+          ? d.address
+          : { address: d.address, city: d.city, province: d.province, postal: d.postal };
+      const address = [a.address, a.city, [a.province, a.postal].filter(Boolean).join(" ")]
+        .map((x) => String(x || "").trim())
+        .filter(Boolean)
+        .join(", ");
       return {
         id: String(d.demographicNo || id),
         name: [d.firstName, d.lastName].filter(Boolean).join(" "),
         dob: /^\d{4}-\d{2}-\d{2}$/.test(dob) ? dob : "",
-        hcn: [d.hin, d.ver].map((x) => String(x || "").trim()).filter(Boolean).join(" "),
+        hcn: [d.hin, d.ver]
+          .map((x) => String(x || "").trim())
+          .filter(Boolean)
+          .join(" "),
         address,
       };
     },
     async search(query) {
       const r = await call(`demographics/quickSearch?query=${encodeURIComponent(query)}`);
-      return asList(r?.content).map((p) => ({ id: String(p.demographicNo), name: `${p.lastName}, ${p.firstName}`, dob: isoDate(p.dob).slice(0, 10) }));
+      return asList(r?.content).map((p) => ({
+        id: String(p.demographicNo),
+        name: `${p.lastName}, ${p.firstName}`,
+        dob: isoDate(p.dob).slice(0, 10),
+      }));
     },
     // Newest first. Oscar's own list is newest first already, but sorting
     // costs nothing and does not depend on it.
@@ -125,7 +146,12 @@ export function oscarClient(base, fetcher = fetch) {
       const r = await call(`notes/${id}/all?numToReturn=${count}&offset=0`, { method: "POST", body: {} });
       return asList(r?.notelist)
         .filter((n) => n && typeof n.note === "string" && n.note.trim() && !yes(n.archived) && !yes(n.isDocument) && !yes(n.isCpp))
-        .map((n) => ({ id: String(n.noteId), date: isoDate(n.observationDate || n.updateDate), provider: n.providerName || "", text: n.note }))
+        .map((n) => ({
+          id: String(n.noteId),
+          date: isoDate(n.observationDate || n.updateDate),
+          provider: n.providerName || "",
+          text: n.note,
+        }))
         .sort((a, b) => b.date.localeCompare(a.date));
     },
     async currentDrugs(id) {

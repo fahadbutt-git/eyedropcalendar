@@ -14,7 +14,7 @@ import { SEED_FORMULARY as F } from "../src/data/formulary.js";
 import { knownNames } from "../src/lib/spelling.js";
 
 let seed = 7;
-const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+const rand = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
 const VOWELS = "aeiou";
 
 function variants(name) {
@@ -41,7 +41,8 @@ function variants(name) {
   return [...out].filter((v) => v.replace(/[^A-Za-z]/g, "").length >= 4);
 }
 
-const NOT_DRUGS = `patient pressure vision stable return review refill repeat routine improved better worse discussed cataract glaucoma laser
+const NOT_DRUGS =
+  `patient pressure vision stable return review refill repeat routine improved better worse discussed cataract glaucoma laser
 phaco trabeculectomy cornea retina macula lids lashes scrubs compress tears artificial bottle shake minutes hours dilated exam clinic
 office surgery inflammation infection discharge redness burning itching blurry floaters flashes halos glare headache nausea vomiting
 appointment schedule booked tomorrow yesterday morning evening weekend weekday monday friday insurance pharmacy coverage cost generic
@@ -55,7 +56,10 @@ const names = knownNames(F);
 const tally = { variants: 0, right: 0, form: 0, wrong: 0, missed: 0, notDrugs: 0, falseDrugs: 0 };
 // The active ingredient, so a different form of the same medicine (drops or
 // gel, preserved or preservative free) is told apart from a different one.
-const active = (brand) => F.find((m) => m.brand === brand)?.generic.split(/[\s\d(]/)[0].toLowerCase();
+const active = (brand) =>
+  F.find((m) => m.brand === brand)
+    ?.generic.split(/[\s\d(]/)[0]
+    .toLowerCase();
 const misses = [];
 for (const { text } of names) {
   const truth = parseNote(`${text} 1 gtt BID OU`, F).drops[0]?.brand;

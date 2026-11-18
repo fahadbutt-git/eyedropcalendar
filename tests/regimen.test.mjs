@@ -15,7 +15,12 @@ import { planId } from "../src/lib/hash.js";
 import { changeNotes } from "../src/lib/changes.js";
 
 const s = (o) => ({ ...newSlot(), ...o });
-const taper = [{ freq: 4, days: 7 }, { freq: 3, days: 7 }, { freq: 2, days: 7 }, { freq: 1, days: 7 }];
+const taper = [
+  { freq: 4, days: 7 },
+  { freq: 3, days: 7 },
+  { freq: 2, days: 7 },
+  { freq: 1, days: 7 },
+];
 
 test("matching right and left drops combine into both eyes", () => {
   const e = toEntries([s({ brand: "Xalatan", eye: "OD", freq: 1 }), s({ brand: "Xalatan", eye: "OS", freq: 1 }), s({ brand: "" })]);
@@ -25,12 +30,18 @@ test("matching right and left drops combine into both eyes", () => {
 
 test("different plans in each eye stay separate", () => {
   const e = toEntries([s({ brand: "Timoptic", eye: "OD", freq: 2 }), s({ brand: "Timoptic", eye: "OS", freq: 1 })]);
-  assert.deepEqual(e.map((x) => x.eye), ["OD", "OS"]);
+  assert.deepEqual(
+    e.map((x) => x.eye),
+    ["OD", "OS"],
+  );
 });
 
 test("taper doses step down and stop", () => {
   const pf = s({ brand: "Pred Forte", eye: "OS", mode: "taper", steps: taper });
-  assert.deepEqual([0, 6, 7, 13, 14, 20, 21, 27, 28].map((d) => dosesOnDay(pf, d)), [4, 4, 3, 3, 2, 2, 1, 1, 0]);
+  assert.deepEqual(
+    [0, 6, 7, 13, 14, 20, 21, 27, 28].map((d) => dosesOnDay(pf, d)),
+    [4, 4, 3, 3, 2, 2, 1, 1, 0],
+  );
   assert.equal(lastDayIndex(pf), 27);
 });
 
@@ -42,7 +53,10 @@ test("a taper with no steps behaves as ongoing", () => {
 
 test("fixed course and delayed start", () => {
   const v = s({ brand: "Vigamox", freq: 4, mode: "duration", durationDays: 7, startDay: 3 });
-  assert.deepEqual([1, 2, 8, 9].map((d) => dosesOnDay(v, d)), [0, 4, 4, 0]);
+  assert.deepEqual(
+    [1, 2, 8, 9].map((d) => dosesOnDay(v, d)),
+    [0, 4, 4, 0],
+  );
 });
 
 test("sig and patient wording", () => {
@@ -83,7 +97,14 @@ test("ongoing drops print for whole calendar months from the start date", () => 
 
 test("calendar file has one alarm per dose time", () => {
   const e = toEntries([s({ brand: "Xalatan", freq: 1 }), s({ brand: "Cosopt", freq: 2 })]);
-  const ics = buildICS({ entries: e, formulary: SEED_FORMULARY, start: new Date(2026, 10, 2), wake: "08:00", bed: "22:00", from: new Date(2026, 10, 1) });
+  const ics = buildICS({
+    entries: e,
+    formulary: SEED_FORMULARY,
+    start: new Date(2026, 10, 2),
+    wake: "08:00",
+    bed: "22:00",
+    from: new Date(2026, 10, 1),
+  });
   // Ongoing drops repeat daily with no end date.
   // Three repeating dose alarms for six months, plus one alert to renew them.
   assert.equal((ics.match(/BEGIN:VEVENT/g) || []).length, 4);
@@ -121,9 +142,13 @@ test("formulary entries are complete", () => {
 
 test("malformed or oversized phone links are rejected", () => {
   const bad = [
-    "", "!!!", "x".repeat(5000),
+    "",
+    "!!!",
+    "x".repeat(5000),
     btoa(JSON.stringify({ v: 1, s: "2026-13-40", w: "08:00", b: "22:00", e: [] })),
-    btoa(JSON.stringify({ v: 1, s: "2026-11-02", w: "08:00", b: "22:00", e: [["X", "", "", "solution", 0, "OD", 1, "d", 4, 99999, 1, 0]] })),
+    btoa(
+      JSON.stringify({ v: 1, s: "2026-11-02", w: "08:00", b: "22:00", e: [["X", "", "", "solution", 0, "OD", 1, "d", 4, 99999, 1, 0]] }),
+    ),
     btoa(JSON.stringify({ v: 1, s: "2026-11-02", w: "08:00", b: "22:00", e: [["X", "", "", "solution", 0, "ZZ", 1, "o", 2, 7, 1, 0]] })),
   ].map((c) => c.replace(/=+$/, ""));
   for (const code of bad) assert.throws(() => decodeRegimen(code), code);
@@ -150,7 +175,10 @@ const raw = (entry) => Buffer.from(JSON.stringify({ v: 1, s: "2026-11-02", w: "0
 
 test("a weekly taper never uses an unsupported frequency or doubles a daily drop", () => {
   const from8 = TAPER_PRESETS[0].build(8);
-  assert.deepEqual(from8.map((x) => x.freq), [8, 6, 5, 4, 3, 2, 1]);
+  assert.deepEqual(
+    from8.map((x) => x.freq),
+    [8, 6, 5, 4, 3, 2, 1],
+  );
   assert.ok(from8.every((x) => FREQ_OPTIONS.includes(x.freq)));
   assert.deepEqual(TAPER_PRESETS[0].build(1), [{ freq: 1, days: 7 }]);
   const code = plan([s({ brand: "Pred Forte", eye: "OS", mode: "taper", steps: from8 })]);
@@ -171,17 +199,28 @@ test("an ongoing drop never finishes on the phone", () => {
   const reminders = upcomingReminders(
     { entries: e, formulary: SEED_FORMULARY, start: new Date(2026, 10, 2), days: 5000, wake: "08:00", bed: "22:00" },
     new Date(2029, 0, 1),
-    5
+    5,
   );
   assert.equal(reminders.length, 5);
 });
 
 test("bedtime after midnight lands on the next date everywhere", () => {
   const e = toEntries([s({ brand: "Xalatan", freq: 1 })]);
-  const ics = buildICS({ entries: e, formulary: SEED_FORMULARY, start: new Date(2027, 2, 12), wake: "08:00", bed: "00:30", from: new Date(2027, 2, 1) });
+  const ics = buildICS({
+    entries: e,
+    formulary: SEED_FORMULARY,
+    start: new Date(2027, 2, 12),
+    wake: "08:00",
+    bed: "00:30",
+    from: new Date(2027, 2, 1),
+  });
   assert.match(ics, /DTSTART:20270313T003000/);
   assert.doesNotMatch(ics, /DTSTART:20270312T003000/);
-  const next = upcomingReminders({ entries: e, formulary: SEED_FORMULARY, start: new Date(2027, 2, 12), days: 3, wake: "08:00", bed: "00:30" }, new Date(2027, 2, 12, 9), 1);
+  const next = upcomingReminders(
+    { entries: e, formulary: SEED_FORMULARY, start: new Date(2027, 2, 12), days: 3, wake: "08:00", bed: "00:30" },
+    new Date(2027, 2, 12, 9),
+    1,
+  );
   assert.equal(next[0].at.toString(), new Date(2027, 2, 13, 0, 30).toString());
 });
 
@@ -191,16 +230,36 @@ test("a short waking day never gives two doses at the same time", () => {
 });
 
 test("tapers and bedtime agree between the sig and the dose times", () => {
-  const x = s({ brand: "Xalatan", mode: "taper", steps: [{ freq: 2, days: 7 }, { freq: 1, days: 7 }] });
+  const x = s({
+    brand: "Xalatan",
+    mode: "taper",
+    steps: [
+      { freq: 2, days: 7 },
+      { freq: 1, days: 7 },
+    ],
+  });
   const g = doseGroups([x], SEED_FORMULARY, 10, "08:00", "22:00");
   assert.equal(fmtTime(g[0].time), "8:00 AM");
   assert.match(sigText(x, true), /once daily for 7 days/);
 });
 
 test("drops due together go solutions first and gels last", () => {
-  const e = toEntries([s({ brand: "Timoptic-XE", freq: 1 }), s({ brand: "Pred Forte", freq: 1 }), s({ brand: "Xalatan", freq: 1, mode: "duration" })]);
-  const g = doseGroups(e, SEED_FORMULARY.map((m) => ({ ...m, qhs: false })), 0, "08:00", "22:00");
-  assert.deepEqual(g[0].items.map((it) => it.entry.brand), ["Xalatan", "Pred Forte", "Timoptic-XE"]);
+  const e = toEntries([
+    s({ brand: "Timoptic-XE", freq: 1 }),
+    s({ brand: "Pred Forte", freq: 1 }),
+    s({ brand: "Xalatan", freq: 1, mode: "duration" }),
+  ]);
+  const g = doseGroups(
+    e,
+    SEED_FORMULARY.map((m) => ({ ...m, qhs: false })),
+    0,
+    "08:00",
+    "22:00",
+  );
+  assert.deepEqual(
+    g[0].items.map((it) => it.entry.brand),
+    ["Xalatan", "Pred Forte", "Timoptic-XE"],
+  );
 });
 
 test("phone links with any out-of-range value are rejected, not repaired", () => {
@@ -209,7 +268,23 @@ test("phone links with any out-of-range value are rejected, not repaired", () =>
     ["Cosopt", "", "", "solution", 0, "OD", 50, "o", 2, 7, 1, 0],
     ["Vigamox", "", "", "solution", 0, "OS", 1, "d", 3, 1e9, 1, 0],
     ["Cosopt", "", "", "solution", 0, "OD", 1, "o", 2.5, 7, 1, 0],
-    ["X", "", "", "solution", 0, "OD", 1, "t", 2, 7, 1, [[2, 300], [1, 300]]],
+    [
+      "X",
+      "",
+      "",
+      "solution",
+      0,
+      "OD",
+      1,
+      "t",
+      2,
+      7,
+      1,
+      [
+        [2, 300],
+        [1, 300],
+      ],
+    ],
   ])
     assert.throws(() => decodeRegimen(raw(entry)));
   const bidi = decodeRegimen(raw(["\u202Eabc", "", "", "solution", 0, "OD", 1, "o", 2, 7, 1, 0]));
@@ -231,17 +306,35 @@ test("pasted links are recognised even when wrapped or encoded", () => {
 
 test("safety checks", () => {
   const w = (drops, opts) => dropWarnings(drops, SEED_FORMULARY, DRUG_CLASSES, opts);
-  assert.ok(w([s({ brand: "Timoptic", eye: "OD" }), s({ brand: "Combigan", eye: "OS" })]).some((x) => /two topical beta blockers/i.test(x)));
-  assert.ok(w([s({ brand: "Alphagan-P", eye: "OU", freq: 2 })], { dob: "2020-01-01", today: new Date(2026, 10, 1) }).some((x) => /brimonidine/.test(x)));
+  assert.ok(
+    w([s({ brand: "Timoptic", eye: "OD" }), s({ brand: "Combigan", eye: "OS" })]).some((x) => /two topical beta blockers/i.test(x)),
+  );
+  assert.ok(
+    w([s({ brand: "Alphagan-P", eye: "OU", freq: 2 })], { dob: "2020-01-01", today: new Date(2026, 10, 1) }).some((x) =>
+      /brimonidine/.test(x),
+    ),
+  );
   assert.ok(w([s({ brand: "Xalatan", freq: 2 })]).some((x) => /label maximum is once/.test(x)));
   assert.ok(w([s({ brand: "Pilocarpine", freq: 4 }), s({ brand: "Atropine", freq: 3 })]).some((x) => /miotic/.test(x)));
-  assert.ok(w([s({ brand: "Durezol", freq: 4 }), s({ brand: "Nevanac", freq: 3 }), s({ brand: "Pred Forte" })]).some((x) => /an? corticosteroid/.test(x)));
+  assert.ok(
+    w([s({ brand: "Durezol", freq: 4 }), s({ brand: "Nevanac", freq: 3 }), s({ brand: "Pred Forte" })]).some((x) =>
+      /an? corticosteroid/.test(x),
+    ),
+  );
   assert.ok(w([s({ brand: "Nevanac" }), s({ brand: "Prolensa", freq: 1 })]).some((x) => /an nsaid/.test(x)));
 });
 
 test("change notes name the day a drop changes or stops", () => {
   const e = toEntries([
-    s({ brand: "Pred Forte", eye: "OS", mode: "taper", steps: [{ freq: 4, days: 7 }, { freq: 3, days: 7 }] }),
+    s({
+      brand: "Pred Forte",
+      eye: "OS",
+      mode: "taper",
+      steps: [
+        { freq: 4, days: 7 },
+        { freq: 3, days: 7 },
+      ],
+    }),
     s({ brand: "Vigamox", eye: "OS", freq: 3, mode: "duration", durationDays: 7 }),
   ]);
   const notes = changeNotes(e, new Date(2026, 10, 2), 1, 8, { thisWeek: false });
@@ -254,7 +347,14 @@ test("a warning that applies to both eyes is shown once", () => {
 });
 
 test("links carry a check code: any change is refused", () => {
-  const code = encodeRegimen({ entries: toEntries([s({ brand: "Xalatan", freq: 1 })]), formulary: SEED_FORMULARY, start: "2026-11-02", wake: "08:00", bed: "22:00", nonce: "abcd1234" });
+  const code = encodeRegimen({
+    entries: toEntries([s({ brand: "Xalatan", freq: 1 })]),
+    formulary: SEED_FORMULARY,
+    start: "2026-11-02",
+    wake: "08:00",
+    bed: "22:00",
+    nonce: "abcd1234",
+  });
   assert.doesNotThrow(() => decodeRegimen(code));
   const o = JSON.parse(Buffer.from(code, "base64url").toString());
   o.e[0][8] = 4;
@@ -292,7 +392,10 @@ test("after midnight the phone stays on the dose day", () => {
 
 test("a missed dose is not offered when the next dose of that drug is due", () => {
   const cosopt = s({ brand: "Cosopt", freq: 2 });
-  const items = [{ entry: cosopt, dose: 0, time: 480 }, { entry: cosopt, dose: 1, time: 1200 }];
+  const items = [
+    { entry: cosopt, dose: 0, time: 480 },
+    { entry: cosopt, dose: 1, time: 1200 },
+  ];
   const none = () => false;
   assert.equal(nextDose(items, none, 1230).item.time, 1200);
   assert.equal(nextDose(items, none, 1230).missed.size, 1);
@@ -312,13 +415,41 @@ test("every default formulary entry survives cleaning unchanged", async () => {
 test("a reopened plan keeps its start date and plan ID", async () => {
   const { encodeRegimen, decodeRegimen } = await import("../src/lib/share.js");
   const { SEED_FORMULARY } = await import("../src/data/formulary.js");
-  const entries = [{ brand: "Pred Forte", eye: "OD", drops: 1, mode: "taper", freq: 4, durationDays: 7, startDay: 1, steps: [{ freq: 4, days: 7 }, { freq: 2, days: 7 }] }];
-  const first = decodeRegimen(encodeRegimen({ entries, formulary: SEED_FORMULARY, start: "2026-10-20", wake: "08:00", bed: "22:00", nonce: "abc12345" }));
+  const entries = [
+    {
+      brand: "Pred Forte",
+      eye: "OD",
+      drops: 1,
+      mode: "taper",
+      freq: 4,
+      durationDays: 7,
+      startDay: 1,
+      steps: [
+        { freq: 4, days: 7 },
+        { freq: 2, days: 7 },
+      ],
+    },
+  ];
+  const first = decodeRegimen(
+    encodeRegimen({ entries, formulary: SEED_FORMULARY, start: "2026-10-20", wake: "08:00", bed: "22:00", nonce: "abc12345" }),
+  );
   const changed = first.entries.map((e) => ({ ...e, steps: [e.steps[0], { freq: 3, days: 14 }] }));
-  const again = decodeRegimen(encodeRegimen({ entries: changed, formulary: SEED_FORMULARY, start: first.start, wake: first.wake, bed: first.bed, nonce: first.nonce }));
+  const again = decodeRegimen(
+    encodeRegimen({
+      entries: changed,
+      formulary: SEED_FORMULARY,
+      start: first.start,
+      wake: first.wake,
+      bed: first.bed,
+      nonce: first.nonce,
+    }),
+  );
   assert.equal(again.nonce, "abc12345");
   assert.equal(again.start, "2026-10-20");
-  assert.deepEqual(again.entries[0].steps, [{ freq: 4, days: 7 }, { freq: 3, days: 14 }]);
+  assert.deepEqual(again.entries[0].steps, [
+    { freq: 4, days: 7 },
+    { freq: 3, days: 14 },
+  ]);
 });
 
 test("a changed plan keeps check marks, and another patient's plan starts fresh", async () => {
@@ -331,16 +462,35 @@ test("a changed plan keeps check marks, and another patient's plan starts fresh"
   const { adoptPlan, patientKey } = await import("../src/lib/patientStore.js");
   const base = { brand: "Pred Forte", eye: "OD", drops: 1, mode: "taper", freq: 4, durationDays: 7, startDay: 1 };
   const make = (steps, nonce) => {
-    const code = encodeRegimen({ entries: [{ ...base, steps }], formulary: SEED_FORMULARY, start: "2026-11-02", wake: "08:00", bed: "22:00", nonce });
+    const code = encodeRegimen({
+      entries: [{ ...base, steps }],
+      formulary: SEED_FORMULARY,
+      start: "2026-11-02",
+      wake: "08:00",
+      bed: "22:00",
+      nonce,
+    });
     return { code, plan: decodeRegimen(code) };
   };
   const ticks = { "2026-11-02": { "Pred Forte|OD|0": 1 } };
-  const a = make([{ freq: 4, days: 7 }, { freq: 2, days: 7 }], "pat00001");
+  const a = make(
+    [
+      { freq: 4, days: 7 },
+      { freq: 2, days: 7 },
+    ],
+    "pat00001",
+  );
   adoptPlan(a.code, a.plan);
   store.set(`edt.taken.${patientKey(a.plan, a.code)}`, JSON.stringify(ticks));
   store.set(`edt.alarms.${patientKey(a.plan, a.code)}`, "true");
   // Changed at follow-up with Change a plan, so the same patient code.
-  const b = make([{ freq: 4, days: 7 }, { freq: 3, days: 14 }], "pat00001");
+  const b = make(
+    [
+      { freq: 4, days: 7 },
+      { freq: 3, days: 14 },
+    ],
+    "pat00001",
+  );
   adoptPlan(b.code, b.plan);
   const kb = patientKey(b.plan, b.code);
   assert.deepEqual(JSON.parse(store.get(`edt.taken.${kb}`)), ticks);
@@ -357,14 +507,28 @@ test("the chart note holds the plan and a link that reopens it", async () => {
   const { chartNote } = await import("../src/lib/chartNote.js");
   const entries = [{ brand: "Xalatan", eye: "OU", drops: 1, mode: "ongoing", freq: 1, durationDays: 7, startDay: 1, steps: [] }];
   const code = encodeRegimen({ entries, formulary: SEED_FORMULARY, start: "2026-11-02", wake: "08:00", bed: "22:00", nonce: "chart001" });
-  const note = chartNote({ entries, formulary: SEED_FORMULARY, start: "2026-11-02", wake: "08:00", bed: "22:00", link: `https://eyedroptracker.com/#/p/${code}` });
+  const note = chartNote({
+    entries,
+    formulary: SEED_FORMULARY,
+    start: "2026-11-02",
+    wake: "08:00",
+    bed: "22:00",
+    link: `https://eyedroptracker.com/#/p/${code}`,
+  });
   assert.match(note, /Xalatan \(Latanoprost 0\.005%\): Instill 1 drop in both eyes once daily at bedtime\./);
   assert.match(note, /8:00 AM to 10:00 PM/);
   assert.equal(codeFromUrl(note), code);
 });
 
 test("a new calendar file cancels alarms the changed plan no longer has", () => {
-  const base = { formulary: SEED_FORMULARY, start: new Date(2026, 10, 2), wake: "08:00", bed: "22:00", from: new Date(2026, 10, 1), id: "abcd1234" };
+  const base = {
+    formulary: SEED_FORMULARY,
+    start: new Date(2026, 10, 2),
+    wake: "08:00",
+    bed: "22:00",
+    from: new Date(2026, 10, 1),
+    id: "abcd1234",
+  };
   const slot = (brand, freq) => ({ ...newSlot(), brand, eye: "OU", freq, mode: "ongoing" });
   const before = eventIds(buildICS({ ...base, entries: toEntries([slot("Xalatan", 1), slot("Timoptic", 2)]) }));
   const entries = toEntries([slot("Xalatan", 1)]);
@@ -378,7 +542,19 @@ test("a new calendar file cancels alarms the changed plan no longer has", () => 
 
 test("a steroid course longer than two weeks asks for a pressure check", () => {
   const w = (d) => dropWarnings([{ ...newSlot(), ...d }], SEED_FORMULARY, DRUG_CLASSES).join(" ");
-  assert.match(w({ brand: "Pred Forte", eye: "OD", mode: "taper", steps: [{ freq: 4, days: 7 }, { freq: 3, days: 7 }, { freq: 2, days: 7 }] }), /pressure check/);
+  assert.match(
+    w({
+      brand: "Pred Forte",
+      eye: "OD",
+      mode: "taper",
+      steps: [
+        { freq: 4, days: 7 },
+        { freq: 3, days: 7 },
+        { freq: 2, days: 7 },
+      ],
+    }),
+    /pressure check/,
+  );
   assert.doesNotMatch(w({ brand: "Pred Forte", eye: "OD", mode: "duration", freq: 4, durationDays: 7 }), /pressure check/);
 });
 
@@ -398,13 +574,20 @@ test("the same drug twice is flagged only when the courses overlap", () => {
 test("the chart note keeps every line short and its plan link still reads whole", async () => {
   const { chartNote } = await import("../src/lib/chartNote.js");
   const { encodeRegimen, decodeRegimen, codeFromUrl } = await import("../src/lib/share.js");
-  const entries = toEntries([s({ brand: "Xalatan", eye: "OU" }), s({ brand: "Cosopt", eye: "OD", freq: 2 }), s({ brand: "Pred Forte", eye: "OD", freq: 4, mode: "duration", durationDays: 14 })]);
+  const entries = toEntries([
+    s({ brand: "Xalatan", eye: "OU" }),
+    s({ brand: "Cosopt", eye: "OD", freq: 2 }),
+    s({ brand: "Pred Forte", eye: "OD", freq: 4, mode: "duration", durationDays: 14 }),
+  ]);
   const settings = { start: "2026-11-02", wake: "08:00", bed: "22:00" };
   const code = encodeRegimen({ entries, formulary: SEED_FORMULARY, ...settings, nonce: "abcd1234" });
   const note = chartNote({ entries, formulary: SEED_FORMULARY, ...settings, link: `https://eyedroptracker.com/#/p/${code}` });
   // No line in the link is long enough to widen the Oscar encounter page.
   const linkLines = note.split("\n").slice(note.split("\n").findIndex((l) => l.startsWith("Plan link")) + 1);
-  assert.ok(linkLines.every((l) => l.length <= 64), "link lines are short");
+  assert.ok(
+    linkLines.every((l) => l.length <= 64),
+    "link lines are short",
+  );
   assert.equal(codeFromUrl(note), code);
   // Text the clinician writes after the plan is not read as part of the link.
   assert.equal(codeFromUrl(`${note}\nRTC 6 weeks, IOP check.`), code);
@@ -414,7 +597,11 @@ test("the chart note keeps every line short and its plan link still reads whole"
 test("a plan link pasted with its line breaks turned into spaces still opens", async () => {
   const { chartNote } = await import("../src/lib/chartNote.js");
   const { encodeRegimen, codeFromUrl } = await import("../src/lib/share.js");
-  const entries = toEntries([s({ brand: "Xalatan", eye: "OU" }), s({ brand: "Cosopt", eye: "OD", freq: 2 }), s({ brand: "Vigamox", eye: "OS", freq: 4, mode: "duration", durationDays: 7 })]);
+  const entries = toEntries([
+    s({ brand: "Xalatan", eye: "OU" }),
+    s({ brand: "Cosopt", eye: "OD", freq: 2 }),
+    s({ brand: "Vigamox", eye: "OS", freq: 4, mode: "duration", durationDays: 7 }),
+  ]);
   const settings = { start: "2026-11-02", wake: "08:00", bed: "22:00" };
   const code = encodeRegimen({ entries, formulary: SEED_FORMULARY, ...settings, nonce: "spaces01" });
   const note = chartNote({ entries, formulary: SEED_FORMULARY, ...settings, link: `https://eyedroptracker.com/#/p/${code}` });
