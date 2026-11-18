@@ -1,4 +1,5 @@
 import { EYES } from "../../lib/regimen.js";
+import { plural } from "../../lib/wording.js";
 
 // Drops read from an Oscar chart note are a draft. Each one shows the
 // sentence it came from and what had to be assumed, and the clinician
@@ -102,7 +103,7 @@ export default function ImportReview({ imported, drops, setReviewed, setConfirme
         </>
       )}
       <p className="hint" role="status">
-        {left ? `${left} of ${fromChart.length} drop${fromChart.length > 1 ? "s" : ""} still to check.` : "All drops checked."}
+        {left ? `${left} of ${plural(fromChart.length, "drop")} still to check.` : "All drops checked."}
       </p>
     </section>
   );

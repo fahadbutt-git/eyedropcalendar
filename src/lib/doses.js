@@ -1,15 +1,13 @@
 // Groups each day's doses by time, shared by the phone view, printed charts,
 // calendar alarms and app notifications, so they always agree.
-import { addDays } from "./dates.js";
-import { dosesOnDay, modeOf } from "./regimen.js";
+import { addDays, parseISO, toISO } from "./dates.js";
+import { dosesOnDay, medOf, modeOf } from "./regimen.js";
 import { doseTimes } from "./times.js";
-
+import { plural } from "./wording.js";
 import { formInfo } from "../data/forms.js";
 
 // Drops given together go in this order: solutions, then suspensions and
 // emulsions, then gels and ointments, which need 10 minutes after the rest.
-
-export const medOf = (formulary, entry) => formulary.find((m) => m.brand === entry.brand);
 const bedtimeDrop = (entry, med) => !!med?.qhs && modeOf(entry) !== "taper";
 
 // [{ time, items: [{ entry, index, dose, med }] }] sorted by time. `dose`
@@ -60,7 +58,7 @@ export const reminderText = (items, eyes, generic = false) => {
     body:
       items
         .map(({ entry: e, med }) =>
-          [`${e.brand}: ${e.drops} drop${e.drops > 1 ? "s" : ""}, ${eyes[e.eye].long}.`, formInfo(med?.form).advice].filter(Boolean).join(" ")
+          [`${e.brand}: ${plural(e.drops, "drop")}, ${eyes[e.eye].long}.`, formInfo(med?.form).advice].filter(Boolean).join(" ")
         )
         .join("\n") + (items.length > 1 ? "\nWait 5 minutes between drops, in this order." : ""),
   };
@@ -101,4 +99,26 @@ export function nextDose(items, isDone, minutes) {
   const soon = open.find((it) => it.time <= minutes + SOON);
   if (soon) return { item: soon, state: "soon", missed };
   return { item: open[0] || null, state: open[0] ? "later" : "none", missed };
+}
+
+// Check marks are stored per plan and per date as { "<brand>|<eye>|<dose>": time }.
+export const doseKey = ({ entry, dose }) => `${entry.brand}|${entry.eye}|${dose}`;
+
+// How many doses were due and ticked over the last week before today, from
+// the day this phone first saw the plan, up to the course's last day.
+export function recentDoses(plan, taken, { from, today, lastDay }) {
+  const start = parseISO(plan.start);
+  let due = 0;
+  let got = 0;
+  let days = 0;
+  for (let i = Math.max(from, today - 7); i < Math.min(today, (lastDay ?? today) + 1); i++) {
+    days++;
+    const ticks = taken[toISO(addDays(start, i))] || {};
+    for (const g of doseGroups(plan.entries, plan.formulary, i, plan.wake, plan.bed))
+      for (const it of g.items) {
+        due++;
+        if (ticks[doseKey(it)]) got++;
+      }
+  }
+  return { due, got, days };
 }

@@ -14,11 +14,15 @@ export const EYES = {
   OU: { label: "Both eyes", long: "both eyes", short: "Both" },
 };
 
-let counter = 0;
+// A row id for the clinician's editing, never stored in a link.
+export const newId = () => `d${crypto.randomUUID()}`;
+
+// The formulary entry for a drop, if the clinic's list has it.
+export const medOf = (formulary, entry) => formulary.find((m) => m.brand === entry.brand);
+
 export function newSlot(eye = "OU") {
-  counter += 1;
   return {
-    id: `d${Date.now().toString(36)}${counter}`,
+    id: newId(),
     brand: "",
     eye,
     freq: 2,

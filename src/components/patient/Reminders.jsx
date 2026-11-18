@@ -4,7 +4,7 @@ import { daysBetween, parseISO } from "../../lib/dates.js";
 import { buildICS, eventIds } from "../../lib/ics.js";
 import { downloadFile } from "../../lib/download.js";
 import { APP_SCHEME, allowExactTimes, cancelReminders, isNative, onAppResume, scheduleReminders } from "../../lib/native.js";
-import { usePersistentState } from "../../lib/storage.js";
+import { usePersistentState } from "../../hooks/usePersistentState.js";
 import { Icon } from "../ui.jsx";
 import { NATIVE_APP_LIVE } from "../../config.js";
 

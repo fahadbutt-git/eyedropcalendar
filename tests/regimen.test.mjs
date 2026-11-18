@@ -10,7 +10,7 @@ import { scheduleSpan, courseLastDay } from "../src/lib/calendar.js";
 import { buildICS, eventIds } from "../src/lib/ics.js";
 import { encodeRegimen, decodeRegimen, codeFromUrl } from "../src/lib/share.js";
 import { cleanFormulary } from "../src/lib/validate.js";
-import { doseGroups, upcomingReminders, doseDayIndex, minutesInto, nextDose } from "../src/lib/doses.js";
+import { doseGroups, doseKey, upcomingReminders, doseDayIndex, minutesInto, nextDose, recentDoses } from "../src/lib/doses.js";
 import { planId } from "../src/lib/hash.js";
 import { changeNotes } from "../src/lib/changes.js";
 
@@ -426,4 +426,15 @@ test("a plan link pasted with its line breaks turned into spaces still opens", a
   assert.equal(codeFromUrl(`${lines.join(" ")} RTC 6 weeks`), code);
   // A single-line link still works.
   assert.equal(codeFromUrl(`see https://eyedroptracker.com/#/p/${code} thanks`), code);
+});
+
+test("the last week's ticks count only days the phone has seen, up to yesterday", () => {
+  const entries = toEntries([s({ brand: "Pred Forte", freq: 2 })]);
+  const plan = { entries, formulary: SEED_FORMULARY, start: "2026-11-01", wake: "08:00", bed: "22:00" };
+  const [morning] = doseGroups(entries, SEED_FORMULARY, 0, "08:00", "22:00")[0].items;
+  const taken = { "2026-11-02": { [doseKey(morning)]: 1 }, "2026-11-04": { [doseKey(morning)]: 1 } };
+  // Seen from day 1, today is day 4: days 1 to 3 (Nov 2 to 4), two doses a day.
+  assert.deepEqual(recentDoses(plan, taken, { from: 1, today: 4, lastDay: null }), { due: 6, got: 2, days: 3 });
+  // A course that ended on day 1 counts only day 1.
+  assert.deepEqual(recentDoses(plan, taken, { from: 1, today: 4, lastDay: 1 }), { due: 2, got: 1, days: 1 });
 });

@@ -1,8 +1,9 @@
 import { flushSync } from "react-dom";
 import { toISO } from "../../lib/dates.js";
 import { LU_CRITERIA, LU_NOT_MET } from "../../data/formulary.js";
-import { EYES } from "../../lib/regimen.js";
-import { Field, Icon, printSheets } from "../ui.jsx";
+import { EYES, medOf } from "../../lib/regimen.js";
+import { isSignatureImage } from "../../lib/validate.js";
+import { Field, Icon, NoDrops, printSheets } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
 import PrescriptionSheet from "./PrescriptionSheet.jsx";
 import SignaturePad from "./SignaturePad.jsx";
@@ -13,7 +14,6 @@ export const drName = (name) => {
   return !n ? "" : /^dr\.?\s/i.test(n) ? n.replace(/^dr\.?\s*/i, "Dr. ") : `Dr. ${n}`;
 };
 
-const isSignature = (v) => (typeof v === "string" && /^data:image\/png;base64,[\w+/=]+$/.test(v) && v.length < 300000 ? v : "");
 
 const REFILLS = [0, 1, 2, 3, 4, 5, 6, 11];
 // Dispense is a real quantity (such as "5 mL"), entered for each drug.
@@ -141,31 +141,21 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
   // A signature belongs to one prescription and comes off when the drops or
   // patient change. A prescriber may keep one on this computer, which is
   // placed on each prescription only when they click to use it.
-  const signature = isSignature(drawn);
-  const keptSig = prescriberConfirmed ? isSignature(savedSignature) : "";
+  const signature = isSignatureImage(drawn) ? drawn : "";
+  const keptSig = prescriberConfirmed && isSignatureImage(savedSignature) ? savedSignature : "";
   // `today` changes when the tab comes back into use, so this renders again.
   const date = rx.dateEdited ? rx.date : today && toISO(new Date());
-  if (!entries.length)
-    return (
-      <div className="card card-b empty">
-        <h2>No drops yet</h2>
-        <p className="muted">Add the patient&apos;s drops first.</p>
-        <button className="btn primary" onClick={() => go("regimen")}>
-          Add drops
-        </button>
-      </div>
-    );
+  if (!entries.length) return <NoDrops go={go} />;
 
   const optOf = (e) => ({ ...DEFAULTS, ...rx.items[keyOf(e)] });
   const setOpt = (e) => (patch) => setRx({ ...rx, items: { ...rx.items, [keyOf(e)]: { ...optOf(e), ...patch } } });
   const items = entries
     .filter((e) => optOf(e).include)
     .map((entry) => {
-      const med = formulary.find((m) => m.brand === entry.brand);
+      const med = medOf(formulary, entry);
       const opt = optOf(entry);
       return { entry, med, ...opt, lu: med?.lu?.includes(opt.lu) || (med?.lu?.length && opt.lu === LU_NOT_MET) ? opt.lu : "" };
     });
-  const medOf = (e) => formulary.find((m) => m.brand === e.brand);
 
   const missing = [
     !prescriber.name && "prescriber name",
@@ -205,7 +195,7 @@ export default function RxPage({ entries, formulary, patient, prescriber, setPre
             </Field>
             <div className="rx-items">
               {entries.map((e) => (
-                <ItemRow key={keyOf(e)} entry={e} med={medOf(e)} opt={optOf(e)} setOpt={setOpt(e)} />
+                <ItemRow key={keyOf(e)} entry={e} med={medOf(formulary, e)} opt={optOf(e)} setOpt={setOpt(e)} />
               ))}
             </div>
             <p className="hint">Untick a drug the patient already has. Pick an LU code only when the Ontario Drug Benefit applies.</p>

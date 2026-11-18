@@ -1,5 +1,6 @@
 import { toISO } from "../../lib/dates.js";
 import { newSlot } from "../../lib/regimen.js";
+import { plural } from "../../lib/wording.js";
 import { MAX_DROPS } from "../../lib/validate.js";
 import DropRow, { freshPlan } from "./DropRow.jsx";
 import MedPicker from "./MedPicker.jsx";
@@ -127,7 +128,7 @@ export default function RegimenPage({ patient, setPatient, drops, setDrops, form
               ? "Answer whether this is a new patient to continue"
               : imported && !imported.reviewed
                 ? "Confirm the drops read from Oscar to continue"
-                : `${list.length} drop${list.length > 1 ? "s" : ""}`}
+                : plural(list.length, "drop")}
         </span>
         <button className="btn primary lg" disabled={!list.length || askNew || (imported && !imported.reviewed)} onClick={() => go("schedule")}>
           Next: calendar

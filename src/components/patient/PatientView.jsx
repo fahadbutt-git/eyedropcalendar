@@ -1,48 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
-import { WEEKDAYS, addDays, daysBetween, fmtLong, fmtShort, parseISO, toISO } from "../../lib/dates.js";
+import { useNow } from "../../hooks/useNow.js";
+import { fmtWeekday, addDays, daysBetween, fmtLong, fmtShort, parseISO, toISO } from "../../lib/dates.js";
 import { courseLastDay } from "../../lib/calendar.js";
 import { changeNotes, dayName } from "../../lib/changes.js";
-import { doseDayIndex, doseGroups, medOf, minutesInto, nextDose } from "../../lib/doses.js";
-import { isNative, onAppResume } from "../../lib/native.js";
+import { doseDayIndex, doseGroups, doseKey, minutesInto, nextDose, recentDoses } from "../../lib/doses.js";
+import { isNative } from "../../lib/native.js";
 import { canSpeak, onVoicesChanged, speak, stopSpeaking } from "../../lib/speech.js";
 import { CAP_COLOURS } from "../../data/formulary.js";
 import { patientKey } from "../../lib/patientStore.js";
-import { EYES } from "../../lib/regimen.js";
+import { EYES, medOf } from "../../lib/regimen.js";
 import { fmtTime } from "../../lib/times.js";
-import { patientInstruction } from "../../lib/wording.js";
-import { usePersistentState } from "../../lib/storage.js";
+import { patientInstruction, plural } from "../../lib/wording.js";
+import { usePersistentState } from "../../hooks/usePersistentState.js";
 import { CapDot, Icon, capWords } from "../ui.jsx";
 import { formInfo } from "../../data/forms.js";
 import InstallTip from "./InstallTip.jsx";
 import KeepPlan from "./KeepPlan.jsx";
 import Reminders from "./Reminders.jsx";
 
-// Check marks are stored per plan and per date as { "<brand>|<eye>|<dose>": time }.
-const doseKey = ({ entry, dose }) => `${entry.brand}|${entry.eye}|${dose}`;
 // Five minutes between drops, ten before a gel or ointment.
 const waitFor = (it) => formInfo(it?.med?.form).wait * 60 * 1000;
 const isObject = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
-
-// The current time, refreshed every 30 seconds and whenever the phone wakes
-// the app, so "today" is always the real today.
-function useNow() {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const tick = () => setNow(new Date());
-    const timer = setInterval(tick, 30000);
-    const onVisible = () => document.visibilityState === "visible" && tick();
-    document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("focus", tick);
-    const stop = onAppResume(tick);
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("focus", tick);
-      stop();
-    };
-  }, []);
-  return now;
-}
 
 // The cap to show for a drug: the patient's own bottle when they have set
 // it, otherwise the usual colour for the drug class, shown as "usually".
@@ -66,7 +44,7 @@ function spokenDose({ entry, med, time }, when, myCaps) {
     `${when}, at ${fmtTime(time)}.`,
     `${entry.brand}.`,
     words && (c.usual ? `${words}. Check the name on the bottle.` : `The ${words.toLowerCase()}.`),
-    `${entry.drops} drop${entry.drops > 1 ? "s" : ""} in ${entry.eye === "OU" ? "both eyes" : `the ${EYES[entry.eye].long}`}.`,
+    `${plural(entry.drops, "drop")} in ${entry.eye === "OU" ? "both eyes" : `the ${EYES[entry.eye].long}`}.`,
     formInfo(med?.form).advice,
   ]
     .filter(Boolean)
@@ -111,7 +89,7 @@ function MyCap({ med, value, onChange }) {
 }
 
 function doseLabel({ entry, med }) {
-  return [`${entry.drops} drop${entry.drops > 1 ? "s" : ""}, ${EYES[entry.eye].long}.`, formInfo(med?.form).advice].filter(Boolean).join(" ");
+  return [`${plural(entry.drops, "drop")}, ${EYES[entry.eye].long}.`, formInfo(med?.form).advice].filter(Boolean).join(" ");
 }
 
 export default function PatientView({ plan: shared, code }) {
@@ -182,21 +160,13 @@ export default function PatientView({ plan: shared, code }) {
   };
 
   const upcoming = changeNotes(shared.entries, start, Math.max(1, today + 1), Math.max(1, today + 7), { thisWeek: false });
-  const counted = Math.max(0, daysBetween(start, parseISO(firstSeen)));
-  let due = 0;
-  let got = 0;
-  let daysCounted = 0;
-  for (let i = Math.max(counted, today - 7); i < Math.min(today, (lastDay ?? today) + 1); i++) {
-    daysCounted++;
-    const t = taken[toISO(addDays(start, i))] || {};
-    for (const g of doseGroups(shared.entries, shared.formulary, i, shared.wake, shared.bed))
-      for (const it of g.items) {
-        due++;
-        if (t[doseKey(it)]) got++;
-      }
-  }
+  const { due, got, days: daysCounted } = recentDoses(shared, taken, {
+    from: Math.max(0, daysBetween(start, parseISO(firstSeen))),
+    today,
+    lastDay,
+  });
 
-  const heading = day === today ? "Today" : day === today + 1 ? "Tomorrow" : day === today - 1 ? "Yesterday" : WEEKDAYS[date.getDay()];
+  const heading = day === today ? "Today" : day === today + 1 ? "Tomorrow" : day === today - 1 ? "Yesterday" : fmtWeekday(date);
 
   return (
     <div className="pt">

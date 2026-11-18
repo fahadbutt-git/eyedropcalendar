@@ -1,4 +1,4 @@
-import { WEEKDAYS, addDays, fmtShort } from "../../lib/dates.js";
+import { fmtWeekday, addDays, fmtShort } from "../../lib/dates.js";
 import { EYES, dosesOnDay } from "../../lib/regimen.js";
 import { Boxes, Chip } from "../ui.jsx";
 
@@ -25,7 +25,7 @@ export default function Checklist({ items, start, days }) {
           return (
             <tr key={day}>
               <th scope="row">
-                {WEEKDAYS[date.getDay()]} {fmtShort(date)}
+                {fmtWeekday(date)} {fmtShort(date)}
               </th>
               {items.map(({ entry, index }) => {
                 const n = dosesOnDay(entry, day);

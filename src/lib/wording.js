@@ -1,6 +1,6 @@
 // Instructions in words: the prescription sig (clinical wording) and the
 // patient's version (plain language). Eyes are always written out in full.
-import { addDays, fmtShort } from "./dates.js";
+import { addDays, fmtMedium, fmtShort } from "./dates.js";
 import { EYES, modeOf } from "./regimen.js";
 
 const DAILY = { 1: "once daily", 2: "twice daily" };
@@ -8,7 +8,8 @@ const freqDaily = (n) => DAILY[n] || `${n} times daily`;
 const freqADay = (n) => freqDaily(n).replace(" daily", " a day");
 export const freqAbbrev = (n) => ({ 1: "daily", 2: "BID", 3: "TID", 4: "QID" })[n] || `${n}x/day`;
 
-const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+// "1 drop", "2 drops"
+export const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 // Bedtime wording applies to a once-daily drop that is not part of a taper,
 // which matches when the calendar, alarms and phone place it at bedtime.
@@ -28,7 +29,7 @@ function startPhrase(d, startDate, withYear) {
   if (!(d.startDay > 1)) return "";
   const date = startDateOf(d, startDate);
   if (!date) return `Starting on day ${d.startDay}`;
-  return `Starting ${fmtShort(date)}${withYear ? `, ${date.getFullYear()}` : ""}`;
+  return `Starting ${withYear ? fmtMedium(date) : fmtShort(date)}`;
 }
 
 const where = (eye) => (eye === "OU" ? "both eyes" : `the ${EYES[eye].long}`);

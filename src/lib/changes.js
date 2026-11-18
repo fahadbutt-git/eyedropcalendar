@@ -1,10 +1,10 @@
 // Plain-language notes about when drops start, change or stop between two
 // days of a plan. Shared by the printed daily chart and the phone view.
-import { WEEKDAYS, addDays, fmtShort } from "./dates.js";
+import { fmtWeekday, addDays, fmtShort } from "./dates.js";
 import { dosesOnDay, lastDayIndex } from "./regimen.js";
 
 const timesADay = (n) => (n === 1 ? "once a day" : `${n} times a day`);
-export const dayName = (d) => `${WEEKDAYS[d.getDay()]} ${fmtShort(d)}`;
+export const dayName = (d) => `${fmtWeekday(d)} ${fmtShort(d)}`;
 
 export function changeNotes(entries, start, first, last, { thisWeek = true } = {}) {
   const notes = [];

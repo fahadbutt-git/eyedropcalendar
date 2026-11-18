@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState } from "react";
-import { PRINT_SIZES } from "./layout.js";
+import { PRINT_SIZES } from "../lib/printLayout.js";
 
 // Printable width of a letter landscape sheet inside its margins.
 const PRINT_WIDTH = "10.3in";

@@ -1,4 +1,4 @@
-import { WEEKDAYS, addDays, fmtShort } from "../../lib/dates.js";
+import { fmtWeekday, addDays, fmtShort } from "../../lib/dates.js";
 import { changeNotes } from "../../lib/changes.js";
 import { doseGroups } from "../../lib/doses.js";
 import { EYES } from "../../lib/regimen.js";
@@ -57,7 +57,7 @@ export default function DailyChart({ page, start, lastIndex }) {
               const d = addDays(start, i);
               return (
                 <th scope="col" key={i} className={i > lastIndex ? "off" : ""}>
-                  {WEEKDAYS[d.getDay()]}
+                  {fmtWeekday(d)}
                   <span>{fmtShort(d)}</span>
                 </th>
               );

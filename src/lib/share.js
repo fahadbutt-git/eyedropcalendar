@@ -18,7 +18,7 @@ const MAX_CODE = 8000;
 // so a damaged or altered link is refused instead of showing a different plan.
 const sum = (o) => planId(JSON.stringify(o));
 const NONCE = /^[a-z0-9]{4,16}$/;
-export const newNonce = () => Math.random().toString(36).slice(2, 10).padEnd(8, "0");
+export const newNonce = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => (b % 36).toString(36)).join("");
 
 export function encodeRegimen({ entries, formulary, start, wake, bed, nonce = "" }) {
   const e = entries.map((x) => {

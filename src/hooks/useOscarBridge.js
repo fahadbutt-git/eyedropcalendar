@@ -39,7 +39,7 @@ export function useOscarBridge(onImport) {
   // from it, so nothing but a well-formed plan can reach a chart.
   const addToChart = (handoff, code) =>
     new Promise((resolve) => {
-      const id = Math.random().toString(36).slice(2);
+      const id = crypto.randomUUID();
       waiting.current.set(id, resolve);
       post({ type: "addToChart", id, handoff, code });
       setTimeout(() => {

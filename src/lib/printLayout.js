@@ -1,5 +1,5 @@
 // Splits a schedule into printed pages that fit a letter landscape sheet.
-import { MONTHS, addDays, fmtShort } from "../../lib/dates.js";
+import { addDays, fmtMonth, fmtRange } from "./dates.js";
 
 // Height budget in CSS pixels (7.75 in of printable height at 96 px per inch).
 const PAGE = 745;
@@ -61,7 +61,7 @@ export function buildPages({ size, start, span, peaks, changes = [], qr = false,
 
   let pages = null;
   if (z.months && start.getDate() <= 7 && (span.months.length === 1 || span.end.getDate() >= 21)) {
-    const months = span.months.map(({ year, month }) => ({ title: `${MONTHS[month]} ${year}`, weeks: monthWeeks(year, month), month }));
+    const months = span.months.map(({ year, month }) => ({ title: fmtMonth(new Date(year, month, 1)), weeks: monthWeeks(year, month), month }));
     if (months.every((m) => m.weeks.length <= fitWeeks)) pages = months;
   }
   if (!pages) {
@@ -71,7 +71,7 @@ export function buildPages({ size, start, span, peaks, changes = [], qr = false,
     for (let i = 0; i < weeks.length; i += perPage) {
       const chunk = weeks.slice(i, i + perPage);
       const last = chunk.at(-1)[6];
-      pages.push({ title: `${fmtShort(chunk[0][0])} to ${fmtShort(last)}, ${last.getFullYear()}`, weeks: chunk, month: null });
+      pages.push({ title: fmtRange(chunk[0][0], last), weeks: chunk, month: null });
     }
   }
 

@@ -1,6 +1,7 @@
 // Small shared pieces of interface.
 import { useEffect, useId, useState } from "react";
 import { CAP_COLOURS } from "../data/formulary.js";
+import { plural } from "../lib/wording.js";
 
 export function Field({ label, optional, hint, children }) {
   return (
@@ -66,7 +67,7 @@ export const Chip = ({ n, style }) => (
 
 // One tick box per dose.
 export const Boxes = ({ n }) => (
-  <span className="boxes" role="img" aria-label={`${n} dose${n > 1 ? "s" : ""}`}>
+  <span className="boxes" role="img" aria-label={plural(n, "dose")}>
     {Array.from({ length: n }, (_, k) => (
       <i key={k} />
     ))}
@@ -147,6 +148,19 @@ export const Icon = {
     </>
   ),
 };
+
+// The calendar and prescription steps before any drop is added.
+export function NoDrops({ go }) {
+  return (
+    <div className="empty">
+      <h1>No drops yet</h1>
+      <p>Add the patient&apos;s drops first.</p>
+      <button className="btn primary" onClick={() => go("regimen")}>
+        Add drops
+      </button>
+    </div>
+  );
+}
 
 // Shows the matching print sheets while the print dialog is open.
 export function printSheets(kind) {

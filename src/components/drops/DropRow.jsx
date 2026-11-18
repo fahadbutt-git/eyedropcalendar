@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { addDays, fmtShort } from "../../lib/dates.js";
-import { FREQ_OPTIONS, TAPER_PRESETS } from "../../lib/regimen.js";
+import { addDays, fmtMedium } from "../../lib/dates.js";
+import { FREQ_OPTIONS, TAPER_PRESETS, medOf } from "../../lib/regimen.js";
 import { sigText } from "../../lib/wording.js";
 import { CapDot, Choice, NumberInput } from "../ui.jsx";
 import MedPicker from "./MedPicker.jsx";
@@ -26,7 +26,7 @@ export const freshPlan = (m) => ({ freq: m?.freq ?? 2, drops: 1, mode: "ongoing"
 
 export default function DropRow({ index, drop, formulary, startDate, update, remove }) {
   const [changing, setChanging] = useState(false);
-  const med = formulary.find((m) => m.brand === drop.brand);
+  const med = medOf(formulary, drop);
   const n = index + 1;
   const name = drop.brand;
 
@@ -52,7 +52,7 @@ export default function DropRow({ index, drop, formulary, startDate, update, rem
                 // plan is never silently dropped. An ongoing drop takes the new
                 // drug's usual frequency.
                 if (brand !== name)
-                  update(drop.mode === "ongoing" ? { brand, freq: formulary.find((m) => m.brand === brand)?.freq ?? drop.freq } : { brand });
+                  update(drop.mode === "ongoing" ? { brand, freq: medOf(formulary, { brand })?.freq ?? drop.freq } : { brand });
               }}
               onCancel={() => setChanging(false)}
             />
@@ -114,7 +114,7 @@ export default function DropRow({ index, drop, formulary, startDate, update, rem
               days after the calendar starts
               {startDate && (
                 <b className="mono">
-                  First dose {fmtShort(addDays(startDate, delay))}, {addDays(startDate, delay).getFullYear()}
+                  First dose {fmtMedium(addDays(startDate, delay))}
                 </b>
               )}
             </span>

@@ -1,59 +1,27 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSheetMeasure } from "./useSheetMeasure.js";
-import { addDays, fmtLong, fmtShort, isValidISO, parseISO } from "../../lib/dates.js";
+import { useMemo, useRef, useState } from "react";
+import { CAP_COLOURS } from "../../data/formulary.js";
+import { useQrCode } from "../../hooks/useQrCode.js";
+import { useSheetMeasure } from "../../hooks/useSheetMeasure.js";
 import { scheduleSpan } from "../../lib/calendar.js";
-import { dosesOnDay, modeOf } from "../../lib/regimen.js";
 import { chartNote } from "../../lib/chartNote.js";
-import AddToChart from "./AddToChart.jsx";
+import { addDays, fmtLong, fmtMedium, fmtRange, isValidISO, parseISO } from "../../lib/dates.js";
+import { PRINT_SIZES, buildPages, checklistPageCount } from "../../lib/printLayout.js";
+import { dosesOnDay, medOf, modeOf } from "../../lib/regimen.js";
 import { codeFromUrl, encodeRegimen, patientLink } from "../../lib/share.js";
 import { isClockTime } from "../../lib/times.js";
-import { CopyButton, Field, Icon, capTint, chipStyle, printSheets } from "../ui.jsx";
+import { CopyButton, Field, Icon, NoDrops, capTint, chipStyle, printSheets } from "../ui.jsx";
 import Warnings from "../Warnings.jsx";
-import { PRINT_SIZES, buildPages, checklistPageCount } from "./layout.js";
-import { CAP_COLOURS } from "../../data/formulary.js";
-
-// Checklist rows that fit on a page at each print size.
-import Legend from "./Legend.jsx";
+import AddToChart from "./AddToChart.jsx";
 import CalendarGrid from "./CalendarGrid.jsx";
-import DailyChart, { chartPages } from "./DailyChart.jsx";
 import Checklist from "./Checklist.jsx";
-
+import DailyChart, { chartPages } from "./DailyChart.jsx";
+import Legend from "./Legend.jsx";
 
 export const PAGE_TYPES = [
   ["calendar", "Month calendar", "A tick box for each dose on a calendar page"],
   ["chart", "Daily chart", "One page a week, a row for each time of day"],
   ["checklist", "Checklist", "A plain table, one row per day"],
 ];
-
-// Medium error correction survives a creased or smudged page. A very long
-// plan falls back to low correction, and if it still does not fit the QR is
-// left off and the clinician is told to share the link instead. If the QR
-// library itself cannot load, the clinician is told that instead ("load").
-function useQrCode(text, enabled) {
-  const [src, setSrc] = useState("");
-  const [failed, setFailed] = useState("");
-  useEffect(() => {
-    let live = true;
-    if (!enabled || !text) {
-      setSrc("");
-      setFailed("");
-      return;
-    }
-    import("qrcode")
-      .catch(() => Promise.reject(new Error("load")))
-      .then((QR) =>
-        QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "M" })
-          .catch(() => QR.toDataURL(text, { margin: 0, width: 320, errorCorrectionLevel: "L" }))
-          .catch(() => Promise.reject(new Error("long")))
-      )
-      .then((url) => live && (setSrc(url), setFailed("")))
-      .catch((e) => live && (setSrc(""), setFailed(e?.message === "load" ? "load" : "long")));
-    return () => {
-      live = false;
-    };
-  }, [text, enabled]);
-  return [src, failed];
-}
 
 // Start date and dose times only change when the new value is complete and
 // valid, so clearing a field can never break the page.
@@ -76,7 +44,7 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
     <aside className="sched-aside no-print" aria-label="Calendar settings">
       <Field label="Start date">
         <input className="input mono" type="date" value={startText} aria-invalid={startText !== s.start} onChange={(e) => setStart(e.target.value)} />
-        {startText !== s.start && <span className="num-error">Incomplete date. Still using {fmtShort(parseISO(s.start))}, {s.start.slice(0, 4)}.</span>}
+        {startText !== s.start && <span className="num-error">Incomplete date. Still using {fmtMedium(parseISO(s.start))}.</span>}
       </Field>
       {restarts && (
         <p className="notice warn small" role="status">
@@ -160,7 +128,7 @@ function Settings({ s, setSettings, span, sheetCount, count, link, note, qr, add
         </p>
       )}
       <p className="hint mono">
-        {fmtShort(parseISO(s.start))} to {fmtShort(span.end)}, {span.end.getFullYear()} · {span.days} days
+        {fmtRange(parseISO(s.start), span.end)} · {span.days} days
       </p>
       <div className="link-box">
         <h2 className="field-label">Patient phone reminders</h2>
@@ -195,7 +163,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
   const span = scheduleSpan(entries, s.months, start);
   const size = s.size;
   const items = entries.map((entry, index) => {
-    const med = formulary.find((m) => m.brand === entry.brand);
+    const med = medOf(formulary, entry);
     const coloured = s.capColours ? med : null;
     return { entry, index, med, chip: chipStyle(coloured), tint: capTint(coloured), capName: CAP_COLOURS[med?.cap]?.label || "" };
   });
@@ -207,16 +175,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
   const sheetsRef = useRef(null);
   const measured = useSheetMeasure(sheetsRef, size, [entries, formulary, size, s.start, s.wake, s.bed, s.qr, qr, patient.name, patient.dob]);
 
-  if (!entries.length)
-    return (
-      <div className="empty">
-        <h1>No drops yet</h1>
-        <p>Add the patient&apos;s drops first.</p>
-        <button className="btn primary" onClick={() => go("regimen")}>
-          Add drops
-        </button>
-      </div>
-    );
+  if (!entries.length) return <NoDrops go={go} />;
 
   const peaks = entries.map((e) => Math.max(...Array.from({ length: span.days }, (_, i) => dosesOnDay(e, i))));
   const changes = entries.map((e) => e.mode !== "ongoing" || e.startDay > 1);
@@ -245,9 +204,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
           <div className="who">
             {patient.name && <div className="who-name">{patient.name}</div>}
             {dob && (
-              <div className="mono">
-                Born {fmtShort(dob)}, {dob.getFullYear()}
-              </div>
+              <div className="mono">Born {fmtMedium(dob)}</div>
             )}
           </div>
           {withQr && (
@@ -268,7 +225,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
       </div>
     );
   };
-  const range = `${fmtShort(start)} to ${fmtShort(span.end)}, ${span.end.getFullYear()}`;
+  const range = fmtRange(start, span.end);
   const legend = <Legend items={items} start={start} wake={s.wake} bed={s.bed} />;
   const compact = <Legend compact items={items} />;
 
@@ -322,7 +279,7 @@ export default function SchedulePage({ entries, formulary, patient, settings: s,
           <section className="sheet" key={`chart-${p.first}-${p.part}`}>
             {header(
               `Daily chart, week ${p.week} of ${Math.ceil(span.days / 7)}${p.part ? ", continued" : ""}`,
-              `${fmtShort(addDays(start, p.first))} to ${fmtShort(addDays(start, p.first + 6))}, ${addDays(start, p.first + 6).getFullYear()}`
+              fmtRange(addDays(start, p.first), addDays(start, p.first + 6))
             )}
             <DailyChart page={p} start={start} lastIndex={span.days - 1} />
             <p className="chart-foot">Tick each box when you use the drop. Wait 5 minutes between drops, in the order shown.</p>

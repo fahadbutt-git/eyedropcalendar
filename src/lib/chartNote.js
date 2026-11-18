@@ -1,7 +1,7 @@
 // Plain text for the clinic's chart note: the plan in prescription wording
 // and the patient's plan link, so it can be reopened at the next visit.
 import { addDays, fmtLong, parseISO } from "./dates.js";
-import { lastDayIndex } from "./regimen.js";
+import { lastDayIndex, medOf } from "./regimen.js";
 import { fmtTime } from "./times.js";
 import { sigText } from "./wording.js";
 import { TERMS_VERSION } from "../config.js";
@@ -14,7 +14,7 @@ const minutes = (hhmm) => {
 export function chartNote({ entries, formulary, start, wake, bed, link }) {
   const startDate = parseISO(start);
   const lines = entries.map((e, i) => {
-    const med = formulary.find((m) => m.brand === e.brand);
+    const med = medOf(formulary, e);
     const name = med?.generic ? `${e.brand} (${med.generic})` : e.brand;
     return `${i + 1}. ${name}: ${sigText(e, !!med?.qhs, startDate)}`;
   });

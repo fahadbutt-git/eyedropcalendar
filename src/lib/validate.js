@@ -12,8 +12,12 @@ const MAX_DAYS = 365;
 
 // Text is trimmed, limited in length, and stripped of control and invisible
 // formatting characters (such as right-to-left overrides).
-const text = (v, max = 120) =>
+export const cleanText = (v, max = 120) =>
   typeof v === "string" ? v.replace(/[\p{Cc}\p{Cf}]/gu, "").trim().slice(0, max) : "";
+const text = cleanText;
+
+// A drawn signature: a PNG data URL of a sensible size.
+export const isSignatureImage = (v) => typeof v === "string" && v.length < 300000 && /^data:image\/png;base64,[\w+/=]+$/.test(v);
 const oneOf = (v, list, fallback) => (list.includes(v) ? v : fallback);
 const intIn = (v, min, max, fallback) => (Number.isInteger(v) && v >= min && v <= max ? v : fallback);
 const has = (obj, key) => typeof key === "string" && Object.hasOwn(obj, key);
