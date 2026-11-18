@@ -1,6 +1,6 @@
 # Changelog
 
-Notable changes, newest first. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The website deploys from `main` continuously. The Oscar extension and the phone app are versioned and tagged (`extension-v0.6.4`, `v2.1.0`).
+Notable changes, newest first. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). The website deploys from `main` continuously. Oscar extension releases are tagged from 0.6.4 on (`extension-v0.6.4`). Earlier versions are described here and in the commit history.
 
 ## Unreleased
 
@@ -13,10 +13,12 @@ Notable changes, newest first. The format follows [Keep a Changelog](https://kee
 
 ### Fixed
 
+- Browser suites wait for the exact page a click opens, so a page opened at the same moment is never mistaken for it.
 - When a tab left idle for 30 minutes is reopened, the patient is cleared and the notice saying so now shows.
 
 ### Added
 
+- A demos page with two screen recordings (https://fahadbutt-git.github.io/eyedropcalendar/demos/), linked from the README.
 - A website walkthrough suite (`tests/site.e2e.mjs`) that uses every function of the site in Chrome, run with the extension suites by `npm run test:browser`.
 - A prescriber can choose to keep a drawn signature in the browser and place it on later prescriptions with one click.
 

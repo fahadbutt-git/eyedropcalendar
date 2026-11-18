@@ -22,7 +22,7 @@ for (const dir of dirs.sort()) {
   parts.push(`${id} (${pkg.license || "unknown"})\n${pkg.homepage || ""}\n\n${text}`);
 }
 const head = `Eye Drop Tracker
-Copyright 2026 Yusuf Ahmed and Fahad Butt. Licensed under the Apache License 2.0.
+Copyright 2026 Fahad Butt and Yusuf Ahmed. Licensed under the Apache License 2.0.
 Source: https://github.com/fahadbutt-git/eyedropcalendar
 
 Eye Drop Tracker includes the following open source software and typefaces.

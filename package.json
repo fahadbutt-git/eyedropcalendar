@@ -52,6 +52,7 @@
   },
   "license": "Apache-2.0",
   "description": "Eye drop calendars, prescriptions and reminders for eye care teams and their patients.",
+  "author": "Fahad Butt and Yusuf Ahmed",
   "repository": {
     "type": "git",
     "url": "https://github.com/fahadbutt-git/eyedropcalendar"

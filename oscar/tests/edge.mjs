@@ -12,7 +12,19 @@
 // summary is printed at the end, and the run exits non-zero if any failed.
 import assert from "node:assert/strict";
 import { encodeRegimen } from "../../src/lib/share.js";
-import { OSCAR, SITE, launch, ok, openPanel as runPanel, panelOf, panelText, scenarios, signIn, standin } from "./harness.mjs";
+import {
+  OSCAR,
+  SITE,
+  launch,
+  ok,
+  openFromSchedule,
+  openPanel as runPanel,
+  panelOf,
+  panelText,
+  scenarios,
+  signIn,
+  standin,
+} from "./harness.mjs";
 
 const saved = () => standin("saved");
 await standin("reset");
@@ -33,9 +45,7 @@ async function encounter(opened, id) {
 }
 // Oscar's own way: a pop-up window from the schedule.
 async function encounterFromSchedule(opened, name) {
-  await schedule.bringToFront();
-  const [popup] = await Promise.all([context.waitForEvent("page"), schedule.click(`text=${name}`)]);
-  await popup.waitForLoadState();
+  const popup = await openFromSchedule(context, schedule, name);
   opened.push(popup);
   return popup;
 }

@@ -64,6 +64,41 @@ export const openPanel = (worker, page, selection = "") =>
     { url: page.url(), selection },
   );
 
+// The page a click opens, matched by its address, so a page another step
+// opens at the same moment is never taken for it.
+export function pageOpenedBy(context, action, addressPart) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      context.off("page", check);
+      reject(new Error(`No page opened for ${addressPart}`));
+    }, 30000);
+    async function check(page) {
+      // A pop-up starts blank and then loads its address.
+      const ours = await page
+        .waitForURL((u) => u.href.includes(addressPart), { timeout: 15000 })
+        .then(
+          () => true,
+          () => false,
+        );
+      if (!ours) return;
+      await page.waitForLoadState();
+      clearTimeout(timer);
+      context.off("page", check);
+      resolve(page);
+    }
+    context.on("page", check);
+    action().catch(reject);
+  });
+}
+
+// Opens a patient from the Oscar schedule, as Oscar does, in a pop-up window.
+export async function openFromSchedule(context, schedule, name, modifiers) {
+  await schedule.bringToFront();
+  const link = schedule.locator(`text=${name}`);
+  const href = await link.getAttribute("href");
+  return pageOpenedBy(context, () => link.click(modifiers ? { modifiers } : {}), href);
+}
+
 export const panelOf = (page) => page.locator("#edt-oscar-panel");
 export const panelText = (page) =>
   page.evaluate(() => document.getElementById("edt-oscar-panel")?.shadowRoot.querySelector("aside").innerText ?? "");

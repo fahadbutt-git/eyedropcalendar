@@ -5,7 +5,7 @@
 //
 // Run with `npm run test:browser`, which starts the stand-in Oscar and the site.
 import assert from "node:assert/strict";
-import { OSCAR, launch, ok, panelOf, panelText, scenarios, signIn, standin } from "./harness.mjs";
+import { OSCAR, launch, ok, openFromSchedule, pageOpenedBy, panelOf, panelText, scenarios, signIn, standin } from "./harness.mjs";
 
 await standin("reset");
 const { scenario, finish } = scenarios();
@@ -17,12 +17,7 @@ const EYEFORM = (id, kai) =>
   `${OSCAR}/eyeform/eyeform.jsp?reason=Progress+Note&appointment_no=&demographic_no=${id}${kai ? "&variant=kai" : ""}`;
 // Oscar's own way: a pop-up window from the schedule.
 async function fromSchedule(opened, name, modifier) {
-  await schedule.bringToFront();
-  const [page] = await Promise.all([
-    context.waitForEvent("page"),
-    schedule.click(`text=${name}`, modifier ? { modifiers: [modifier] } : {}),
-  ]);
-  await page.waitForLoadState();
+  const page = await openFromSchedule(context, schedule, name, modifier && [modifier]);
   opened.push(page);
   return page;
 }
@@ -38,8 +33,10 @@ const found = async (page) => (await panelOf(page).locator(".drops > li strong")
 async function clickLauncher(page) {
   await page.locator("#edt-oscar-launcher button").waitFor({ timeout: 10000 });
   await page.locator("#edt-oscar-launcher button").click();
+  // The panel draws its Open button first and enables it once the patient
+  // is read, so wait for that before waiting for the reading to finish.
+  await panelOf(page).locator('[data-act="open"]:not([disabled])').waitFor({ timeout: 15000 });
   await panelOf(page).locator("text=Reading the chart").waitFor({ state: "detached", timeout: 15000 });
-  await panelOf(page).locator('[data-act="open"]').waitFor();
 }
 const sourceLabel = (page) =>
   panelOf(page)
@@ -181,8 +178,7 @@ await scenario(
     const popup = await fromSchedule(opened, "KAIFORM, Casey");
     // Ctrl+click opens the chart's address in a new tab.
     const href = await schedule.locator("text=KAIFORM, Casey").getAttribute("href");
-    const [ctrl] = await Promise.all([context.waitForEvent("page"), schedule.evaluate((h) => window.open(h, "_blank"), href)]);
-    await ctrl.waitForLoadState();
+    const ctrl = await pageOpenedBy(context, () => schedule.evaluate((h) => window.open(h, "_blank"), href), href);
     opened.push(ctrl);
     const tab = await inTab(opened, EYEFORM(12, true));
     for (const [name, page] of [
@@ -191,7 +187,7 @@ await scenario(
       ["tab", tab],
     ]) {
       await clickLauncher(page);
-      assert.deepEqual(await found(page), ["Xalatan"], name);
+      assert.deepEqual(await found(page), ["Xalatan"], `${name}: ${(await panelText(page)).slice(0, 400)}`);
       ok(`${name}: button shown, Xalatan read`);
     }
     // Add from the tab's plan: only the tab's Plan box gets it.

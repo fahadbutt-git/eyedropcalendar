@@ -4,4 +4,4 @@ This project follows the [Contributor Covenant](https://www.contributor-covenant
 
 In short: be respectful and constructive, assume good faith, and keep discussion about the work. Harassment, personal attacks and sharing anyone's private information, including patient information, are not tolerated.
 
-Report a concern to eyedroptracker@gmail.com. Reports are read by the maintainers, Yusuf Ahmed and Fahad Butt, and kept confidential.
+Report a concern to eyedroptracker@gmail.com. Reports are read by the maintainers, Fahad Butt and Yusuf Ahmed, and kept confidential.

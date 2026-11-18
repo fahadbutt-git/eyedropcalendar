@@ -1,6 +1,6 @@
 # Clinical safety case and intended use
 
-Eye Drop Tracker. Version 1.2, 6 November 2026. Owners: Yusuf Ahmed and Fahad Butt. Clinical safety lead: to be named, who signs off each release.
+Eye Drop Tracker. Version 1.2, 6 November 2026. Owners: Fahad Butt and Yusuf Ahmed. Clinical safety lead: to be named, who signs off each release.
 
 ## Intended use
 

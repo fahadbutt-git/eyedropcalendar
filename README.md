@@ -2,9 +2,19 @@
 
 Eye care teams use this free, open-source tool to turn a drop regimen into a printed calendar, a prescription and phone reminders, all from one entry.
 
-[eyedroptracker.com](https://eyedroptracker.com) · Apache 2.0 · Yusuf Ahmed and Fahad Butt
+[eyedroptracker.com](https://eyedroptracker.com) · Apache 2.0 · Fahad Butt and Yusuf Ahmed
 
 Adherence to glaucoma and post-operative drops is poor, and complex regimens (several drops, different eyes, tapers) are a common source of error. The prescriber enters the regimen once. The patient gets a calendar with a tick box for every dose, a prescription with the sig written out in full, and a phone view with a daily checklist and reminders.
+
+## Demos
+
+Screen recordings of a real browser with made-up patients, on the [demos page](https://fahadbutt-git.github.io/eyedropcalendar/demos/).
+
+| [![Setup and a first visit](docs/media/oscar-setup-and-first-visit.jpg)](https://fahadbutt-git.github.io/eyedropcalendar/demos/#v1) | [![The Eye Form, windows and complex charts](docs/media/eye-form-windows-and-complex-charts.jpg)](https://fahadbutt-git.github.io/eyedropcalendar/demos/#v2) |
+| --- | --- |
+| **Setup and a first visit** (3:57). Installing the extension, reading a note, checking the drops, printing, and adding the plan to the chart. | **The Eye Form, windows and complex charts** (4:27). Five eye conditions, years of notes, pop-ups and tabs, and the next visit. |
+
+To try the extension yourself without a clinic, run the stand-in Oscar (`npm run oscar:standin`) and follow [docs/OSCAR.md](docs/OSCAR.md).
 
 ## What is in this repository
 

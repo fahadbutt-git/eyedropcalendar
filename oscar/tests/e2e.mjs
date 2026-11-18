@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { codeFromUrl } from "../../src/lib/share.js";
-import { OSCAR, launch, openPanel as runPanel, signIn, standin } from "./harness.mjs";
+import { OSCAR, launch, openFromSchedule, openPanel as runPanel, signIn, standin } from "./harness.mjs";
 
 await standin("reset");
 const shots = process.argv[2];
@@ -22,11 +22,7 @@ const openPanel = (page, selection) => runPanel(worker, page, selection);
 
 // Sign in to Oscar and open the first patient's encounter.
 const schedule = await signIn(await context.newPage());
-const encounterOf = async (name) => {
-  const [popup] = await Promise.all([context.waitForEvent("page"), schedule.click(`text=${name}`)]);
-  await popup.waitForLoadState();
-  return popup;
-};
+const encounterOf = (name) => openFromSchedule(context, schedule, name);
 let enc = await encounterOf("SAMPLE, Alex");
 assert.match(enc.url(), /casemgmt\/forward\.jsp\?action=view&demographicNo=1/);
 const isPopup = (page) =>
