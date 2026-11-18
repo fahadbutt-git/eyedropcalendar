@@ -1,0 +1,24 @@
+name: Formulary correction
+description: A drug, dose, cap colour or LU code that is wrong or missing
+labels: [formulary]
+body:
+  - type: input
+    id: drug
+    attributes:
+      label: Drug
+      placeholder: Brand and generic name
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: What should change
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: Product monograph, ODB formulary or other reference
+    validations:
+      required: true

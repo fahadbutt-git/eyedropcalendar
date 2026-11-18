@@ -104,7 +104,7 @@ The browser suites need Chromium once: `npx playwright install chromium`.
 
 - **Unit tests** (`tests/`) cover dosing, tapers, wording, dose times, alarms, links, validation, safety checks and the note reader.
 - **Browser suites** (`oscar/tests/`) run the built extension in Chrome against the stand-in Oscar: the full visit end to end, 18 security and privacy checks, 21 clinic edge cases, the ophthalmology Eye Form and window types, a differing Oscar build, and the address lock.
-- **CI** (`.github/workflows/ci.yml`) runs lint, formatting, unit tests and the browser suites on every push to `main` and every pull request.
+- **CI** (`.github/workflows/ci.yml`) runs lint, formatting, unit tests and the build on every push to `main` and every pull request. It also runs the browser suites without blocking, since Chrome on GitHub's runners loses track of new tabs. Run `npm run test:oscar` locally before each release.
 
 Only made-up patients are used in tests and development. Never develop against a live chart.
 
@@ -125,6 +125,9 @@ Only made-up patients are used in tests and development. Never develop against a
 | [docs/reader-accuracy.md](docs/reader-accuracy.md) | How well the note reader reads real-world notes |
 | [docs/legal/](docs/legal/) | Privacy impact assessment, clinical safety case, legal register |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branches, commits and code conventions |
+| [CHANGELOG.md](CHANGELOG.md) | What changed in each release |
+| [SECURITY.md](SECURITY.md) | How to report a vulnerability |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | How we work together |
 
 ## Clinical disclaimer
 

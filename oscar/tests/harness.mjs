@@ -24,12 +24,14 @@ export const ok = (what) => console.log(`ok    ${what}`);
 // service worker ready. `acceptTerms` agrees to the site's terms once.
 export async function launch(name, { acceptTerms = true, viewport = { width: 1360, height: 860 } } = {}) {
   const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), `edt-${name}-`)), {
-    headless: true,
+    // EDT_HEADED=1 runs a visible Chrome, for CI under a virtual display.
+    headless: !process.env.EDT_HEADED,
     channel: "chromium",
     viewport,
     args: [`--disable-extensions-except=${EXTENSION}`, `--load-extension=${EXTENSION}`],
   });
   const worker = context.serviceWorkers()[0] || (await context.waitForEvent("serviceworker"));
+  if (process.env.EDT_TEST_DEBUG) debug(context, worker);
   if (acceptTerms) {
     const site = await context.newPage();
     await site.goto(SITE);
@@ -92,4 +94,22 @@ export function scenarios() {
     process.exit(failed.length ? 1 : 0);
   }
   return { scenario, finish };
+}
+
+// EDT_TEST_DEBUG=1 logs every page, page error, crash and worker message.
+function debug(context, worker) {
+  const t0 = Date.now();
+  const log = (...a) => console.log(`[debug +${((Date.now() - t0) / 1000).toFixed(1)}s]`, ...a);
+  const watch = (p) => {
+    log("page", p.url());
+    p.on("console", (m) => m.type() === "error" && log("console error", p.url(), m.text()));
+    p.on("pageerror", (e) => log("page error", p.url(), e.message));
+    p.on("crash", () => log("crash", p.url()));
+    p.on("close", () => log("closed", p.url()));
+  };
+  context.pages().forEach(watch);
+  context.on("page", watch);
+  context.on("serviceworker", (w) => log("service worker started", w.url()));
+  worker.on("console", (m) => log("worker", m.type(), m.text()));
+  worker.on("close", () => log("service worker stopped"));
 }

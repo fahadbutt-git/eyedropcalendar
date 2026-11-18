@@ -1,0 +1,36 @@
+name: Bug report
+description: Something works differently from how it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Use made-up patients only. Never include real patient details or screenshots of a real chart.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what you saw instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Website, clinician side
+        - Website, patient phone view
+        - Phone app (iOS or Android)
+        - Oscar extension
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser or device, and version
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Add Xalatan, both eyes, once daily
+        2. ...
