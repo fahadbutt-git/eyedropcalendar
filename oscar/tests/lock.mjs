@@ -1,40 +1,23 @@
 // A copy of the extension locked to another clinic's Oscar must never offer,
-// ask for or show the Eye drops button on this Oscar. Build it first with:
-//   EDT_LOCK_TEST=1 npm run ext:build -- --dev --oscar=https://other-clinic.example.com
+// ask for or show the Eye drops button on this Oscar. `npm run test:oscar`
+// builds that copy for this suite.
 import assert from "node:assert/strict";
-import { readFileSync, mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { chromium } from "playwright";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { EXTENSION, launch, openPanel, signIn, standin } from "./harness.mjs";
 
-const ext = join(dirname(fileURLToPath(import.meta.url)), "extension/dist");
-const OSCAR = "http://localhost:8080/oscar";
-const manifest = JSON.parse(readFileSync(join(ext, "manifest.json"), "utf8"));
+const manifest = JSON.parse(readFileSync(join(EXTENSION, "manifest.json"), "utf8"));
 assert.deepEqual(manifest.optional_host_permissions, ["https://other-clinic.example.com/*"], "only the named clinic can be asked for");
 
-await fetch(`${OSCAR}/__standin/reset`);
-const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), "edt-lock-")), {
-  headless: true,
-  channel: "chromium",
-  args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
-});
-const worker = context.serviceWorkers()[0] || (await context.waitForEvent("serviceworker"));
-const oscar = await context.newPage();
-await oscar.goto(`${OSCAR}/index.jsp`);
-await oscar.fill('input[name="username"]', "oscardoc");
-await oscar.fill('input[name="password"]', "mac2002");
-await oscar.fill('input[name="pin"]', "1117");
-await oscar.click("button");
+await standin("reset");
+const { context, worker } = await launch("lock", { acceptTerms: false });
+const oscar = await signIn(await context.newPage());
 const [enc] = await Promise.all([context.waitForEvent("page"), oscar.click("text=SAMPLE, Alex")]);
 await enc.waitForLoadState();
 await enc.waitForTimeout(1500);
 assert.equal(await enc.locator("#edt-oscar-launcher").count(), 0, "no button on an Oscar the copy is not locked to");
 
-await worker.evaluate(async (url) => {
-  const tab = (await chrome.tabs.query({})).find((t) => t.url === url);
-  await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["panel.js"] });
-}, enc.url());
+await openPanel(worker, enc);
 const panel = enc.locator("#edt-oscar-panel");
 await panel.locator('[data-act="open"]').waitFor();
 await enc.waitForTimeout(800);

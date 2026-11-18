@@ -6,25 +6,24 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/licenses.mjs && vite build",
-    "lint": "eslint .",
     "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "node --test tests/*.test.mjs",
-    "app:sync": "node scripts/version.mjs && vite build && cap sync",
-    "app:android": "npm run app:sync && cap open android",
-    "app:ios": "npm run app:sync && cap open ios",
-    "app:version": "node scripts/version.mjs",
-    "app:icons": "node scripts/icons.cjs",
-    "app:screens": "node scripts/store-screens.mjs",
+    "test:oscar": "node scripts/test-oscar.mjs",
+    "check": "npm run lint && npm run format:check && npm test && npm run test:oscar",
     "ext:build": "node scripts/extension.mjs",
+    "oscar:standin": "node oscar/standin/server.mjs",
     "reader:bench": "node scripts/reader-bench.mjs",
     "reader:spelling": "node scripts/spelling-bench.mjs",
     "reader:score": "node scripts/reader-score.mjs tests/fixtures/independent-notes-1.json && node scripts/reader-score.mjs tests/fixtures/independent-notes-2.json && node scripts/reader-score.mjs tests/fixtures/independent-notes-3.json",
-    "oscar:standin": "node oscar/standin/server.mjs",
-    "oscar:e2e": "node oscar/e2e.mjs",
-    "oscar:resilience": "node oscar/resilience.mjs",
-    "oscar:edge": "node oscar/edge.mjs",
-    "oscar:eyeform": "node oscar/eyeform.mjs",
-    "oscar:lock": "EDT_LOCK_TEST=1 node scripts/extension.mjs --dev --oscar=https://other-clinic.example.com && node oscar/lock.mjs && node scripts/extension.mjs --dev"
+    "app:version": "node scripts/version.mjs",
+    "app:sync": "node scripts/version.mjs && vite build && cap sync",
+    "app:android": "npm run app:sync && cap open android",
+    "app:ios": "npm run app:sync && cap open ios",
+    "app:icons": "node scripts/icons.cjs",
+    "app:screens": "node scripts/store-screens.mjs"
   },
   "dependencies": {
     "@capacitor-community/text-to-speech": "6.1.0",
@@ -48,6 +47,7 @@
     "eslint-plugin-react-refresh": "^0.4.18",
     "globals": "^15.14.0",
     "playwright": "1.63.0",
+    "prettier": "^3.3.3",
     "vite": "^6.1.0"
   },
   "license": "Apache-2.0",
@@ -56,5 +56,8 @@
     "type": "git",
     "url": "https://github.com/fahadbutt-git/eyedropcalendar"
   },
-  "extensionVersion": "0.6.4"
+  "extensionVersion": "0.6.4",
+  "engines": {
+    "node": ">=22"
+  }
 }

@@ -12,11 +12,9 @@ import { decodeRegimen } from "../../../src/lib/share.js";
 import { chartNote } from "../../../src/lib/chartNote.js";
 
 // Fixed at build time (scripts/extension.mjs), never a setting.
-// eslint-disable-next-line no-undef
 const SITE = __EDT_SITE__;
 // The only Oscar addresses the Eye drops button may be allowed on. Empty in
 // the general build, so it can never ask for access to any site.
-// eslint-disable-next-line no-undef
 const OSCARS = __EDT_OSCARS__;
 const PLAN_TTL = 2 * 60 * 60 * 1000;
 const key = (id) => `handoff:${id}`;

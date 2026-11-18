@@ -3,59 +3,14 @@
 // a tab, Ctrl+click). Added after the first clinic install on 10 November
 // 2026, where the clinic charts in a customised Eye Form.
 //
-//   npm run ext:build -- --dev
-//   npm run oscar:standin            (port 8080, restart it first)
-//   npm run build && npm run preview (port 4173)
-//   node oscar/eyeform.mjs
-import { TERMS_VERSION } from "../src/config.js";
-import { chromium } from "playwright";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+// Run with `npm run test:oscar`, which starts the stand-in Oscar and the site.
 import assert from "node:assert/strict";
+import { OSCAR, launch, ok, panelOf, panelText, scenarios, signIn, standin } from "./harness.mjs";
 
-const ext = join(dirname(fileURLToPath(import.meta.url)), "extension/dist");
-const OSCAR = "http://localhost:8080/oscar";
-const SITE = "http://localhost:4173/";
-const standin = async (route) => (await fetch(`${OSCAR}/__standin/${route}`)).json();
 await standin("reset");
-
-const ok = (what) => console.log(`ok    ${what}`);
-const results = [];
-async function scenario(name, fn) {
-  const opened = [];
-  try {
-    await fn(opened);
-    results.push({ name, pass: true });
-    console.log(`PASS  ${name}`);
-  } catch (e) {
-    results.push({ name, pass: false, why: e.message.split("\n")[0] });
-    console.log(`FAIL  ${name}\n      ${e.message.split("\n").slice(0, 4).join("\n      ")}`);
-  } finally {
-    for (const p of opened) await p.close().catch(() => {});
-    await standin("reset").catch(() => {});
-  }
-}
-
-const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), "edt-eyeform-")), {
-  headless: true,
-  channel: "chromium",
-  viewport: { width: 1360, height: 860 },
-  args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
-});
-const worker = context.serviceWorkers()[0] || (await context.waitForEvent("serviceworker"));
-const schedule = await context.newPage();
-await schedule.goto(`${OSCAR}/index.jsp`);
-await schedule.fill('input[name="username"]', "oscardoc");
-await schedule.fill('input[name="password"]', "mac2002");
-await schedule.fill('input[name="pin"]', "1117");
-await schedule.click("button");
-await schedule.waitForURL(/providercontrol/);
-const site = await context.newPage();
-await site.goto(SITE);
-await site.evaluate((v) => localStorage.setItem("edt.terms", JSON.stringify(v)), TERMS_VERSION);
-await site.close();
+const { scenario, finish } = scenarios();
+const { context, worker } = await launch("eyeform");
+const schedule = await signIn(await context.newPage());
 
 let seq = 0;
 const EYEFORM = (id, kai) => `${OSCAR}/eyeform/eyeform.jsp?reason=Progress+Note&appointment_no=&demographic_no=${id}${kai ? "&variant=kai" : ""}`;
@@ -74,8 +29,6 @@ async function inTab(opened, url) {
   await page.goto(`${url}&t=${++seq}`);
   return page;
 }
-const panelOf = (page) => page.locator("#edt-oscar-panel");
-const panelText = (page) => page.evaluate(() => document.getElementById("edt-oscar-panel")?.shadowRoot.querySelector("aside").innerText ?? "");
 const found = async (page) => (await panelOf(page).locator(".drops > li strong").allTextContents()).sort();
 // The clinician's way in: the Eye drops button on the page.
 async function clickLauncher(page) {
@@ -233,7 +186,4 @@ await scenario("6. Eye Form opened before the panel, then the clinician selects 
 });
 
 await context.close();
-const failed = results.filter((r) => !r.pass);
-console.log(`\n${results.length - failed.length} of ${results.length} Eye Form and window scenarios passed.`);
-for (const f of failed) console.log(`  failed: ${f.name}\n          ${f.why}`);
-process.exit(failed.length ? 1 : 0);
+finish("Eye Form and window scenarios");

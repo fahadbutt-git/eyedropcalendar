@@ -1,55 +1,22 @@
 // Privacy and abuse tests for the Oscar extension and Eye Drop Tracker, run
 // in Chrome with the built extension against the stand-in Oscar.
 //
-//   npm run ext:build -- --dev
-//   npm run oscar:standin            (port 8080, restart it first so no notes are saved)
-//   npm run build && npm run preview (port 4173)
-//   node oscar/security.mjs
+// Run with `npm run test:oscar`, which starts the stand-in Oscar and the site.
 //
 // Each check prints a line. Any failure stops the run with an error.
-import { TERMS_VERSION } from "../src/config.js";
-import { chromium } from "playwright";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
+import { OSCAR, SITE, launch, ok, openPanel as runPanel, signIn, standin } from "./harness.mjs";
 
-const ext = join(dirname(fileURLToPath(import.meta.url)), "extension/dist");
-const OSCAR = "http://localhost:8080/oscar";
-await fetch(`${OSCAR}/__standin/reset`);
-const SITE = "http://localhost:4173/";
-const ok = (what) => console.log(`ok  ${what}`);
-
-const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), "edt-sec-")), {
-  headless: true,
-  channel: "chromium",
-  viewport: { width: 1360, height: 860 },
-  args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
-});
-const worker = context.serviceWorkers()[0] || (await context.waitForEvent("serviceworker"));
+await standin("reset");
+const { context, worker } = await launch("security");
 const extensionId = new URL(worker.url()).host;
+const openPanel = (page) => runPanel(worker, page);
 
 // Every request the browser makes, to check where data goes.
 const requests = [];
 context.on("request", (r) => requests.push(r.url()));
 
-const oscar = await context.newPage();
-await oscar.goto(`${OSCAR}/index.jsp`);
-await oscar.fill('input[name="username"]', "oscardoc");
-await oscar.fill('input[name="password"]', "mac2002");
-await oscar.fill('input[name="pin"]', "1117");
-await oscar.click("button");
-const site = await context.newPage();
-await site.goto(SITE);
-await site.evaluate((v) => localStorage.setItem("edt.terms", JSON.stringify(v)), TERMS_VERSION);
-await site.close();
-
-const openPanel = (page) =>
-  worker.evaluate(async (url) => {
-    const tab = (await chrome.tabs.query({})).find((t) => t.url === url);
-    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["panel.js"] });
-  }, page.url());
+const oscar = await signIn(await context.newPage());
 const session = () => worker.evaluate(() => chrome.storage.session.get(null));
 
 // 1. Markup in Oscar's data never runs, in the panel or in Eye Drop Tracker.
@@ -73,7 +40,7 @@ const direct = await oscar.evaluate(async (id) => {
   try {
     await chrome.runtime.sendMessage(id, { type: "pending" });
     return "answered";
-  } catch (e) {
+  } catch {
     return "refused";
   }
 }, extensionId);
@@ -221,12 +188,12 @@ assert.equal(await fuzz.evaluate(() => ({}).polluted), undefined, "prototype pol
 const shown = await fuzz.locator(".import-list > li").count();
 assert.ok(shown <= 12, `${shown} drops shown`);
 const name = await fuzz.getByLabel("Patient name").inputValue();
-assert.ok(name.length <= 160 && !/[\u0000‮]/.test(name), "name not cleaned");
+assert.ok(name.length <= 160 && !/[\p{Cc}\p{Cf}]/u.test(name), "name not cleaned");
 assert.equal(await fuzz.getByLabel("Date of birth").inputValue(), "");
 assert.ok((await fuzz.getByLabel("Health card number").inputValue()).length <= 20, "health card not cut down");
 assert.equal(await fuzz.getByLabel("Address").inputValue(), "", "an address that is not text is dropped");
 const rxer = JSON.parse(await fuzz.evaluate(() => localStorage.getItem("edt.prescriber.v1")));
-assert.ok(rxer.name.length <= 160 && !/\u0000/.test(rxer.name) && rxer.license === "" && !("signature" in rxer), "prescriber not cleaned");
+assert.ok(rxer.name.length <= 160 && !/\p{Cc}/u.test(rxer.name) && rxer.license === "" && !("signature" in rxer), "prescriber not cleaned");
 const longest = await fuzz.evaluate(() => Math.max(...[...document.querySelectorAll(".import-list li li")].map((li) => li.textContent.length)));
 assert.ok(longest <= 300);
 ok("malformed imports are cut down: at most 12 drops, clean short text, no prototype pollution, no signature");

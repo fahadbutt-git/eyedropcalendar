@@ -6,68 +6,22 @@
 // patient, never lose the clinician's typing, never show a blank or
 // misleading state.
 //
-//   npm run ext:build -- --dev
-//   npm run oscar:standin            (port 8080, restart it first)
-//   npm run build && npm run preview (port 4173)
-//   node oscar/edge.mjs
+// Run with `npm run test:oscar`, which starts the stand-in Oscar and the site.
 //
 // Each scenario runs on its own, so one failure does not stop the others. A
 // summary is printed at the end, and the run exits non-zero if any failed.
-import { TERMS_VERSION } from "../src/config.js";
-import { encodeRegimen } from "../src/lib/share.js";
-import { chromium } from "playwright";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
+import { encodeRegimen } from "../../src/lib/share.js";
+import { OSCAR, SITE, launch, ok, openPanel as runPanel, panelOf, panelText, scenarios, signIn, standin } from "./harness.mjs";
 
-const ext = join(dirname(fileURLToPath(import.meta.url)), "extension/dist");
-const OSCAR = "http://localhost:8080/oscar";
-const SITE = "http://localhost:4173/";
-const standin = async (route) => (await fetch(`${OSCAR}/__standin/${route}`)).json();
 const saved = () => standin("saved");
 await standin("reset");
-
-const ok = (what) => console.log(`ok    ${what}`);
-const results = [];
-async function scenario(name, fn) {
-  const opened = [];
-  try {
-    await fn(opened);
-    results.push({ name, pass: true });
-    console.log(`PASS  ${name}`);
-  } catch (e) {
-    results.push({ name, pass: false, why: e.message.split("\n")[0] });
-    console.log(`FAIL  ${name}\n      ${e.message.split("\n").slice(0, 3).join("\n      ")}`);
-  } finally {
-    for (const p of opened) await p.close().catch(() => {});
-    await standin("reset").catch(() => {});
-  }
-}
-
-const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), "edt-edge-")), {
-  headless: true,
-  channel: "chromium",
-  viewport: { width: 1360, height: 860 },
-  args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
-});
-const worker = context.serviceWorkers()[0] || (await context.waitForEvent("serviceworker"));
-
+const { scenario, finish } = scenarios();
+const { context, worker } = await launch("edge");
+const openPanel = (page) => runPanel(worker, page);
 const schedule = await context.newPage();
-async function login() {
-  await schedule.goto(`${OSCAR}/index.jsp`);
-  await schedule.fill('input[name="username"]', "oscardoc");
-  await schedule.fill('input[name="password"]', "mac2002");
-  await schedule.fill('input[name="pin"]', "1117");
-  await schedule.click("button");
-  await schedule.waitForURL(/providercontrol/);
-}
+const login = () => signIn(schedule);
 await login();
-const site = await context.newPage();
-await site.goto(SITE);
-await site.evaluate((v) => localStorage.setItem("edt.terms", JSON.stringify(v)), TERMS_VERSION);
-await site.close();
 
 // Each Oscar page gets its own address, so the worker finds the right tab.
 let seq = 0;
@@ -86,13 +40,6 @@ async function encounterFromSchedule(opened, name) {
   return popup;
 }
 const tabIdOf = (page) => worker.evaluate(async (url) => (await chrome.tabs.query({})).find((t) => t.url === url)?.id, page.url());
-const openPanel = (page) =>
-  worker.evaluate(async (url) => {
-    const tab = (await chrome.tabs.query({})).find((t) => t.url === url);
-    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["panel.js"] });
-  }, page.url());
-const panelOf = (page) => page.locator("#edt-oscar-panel");
-const panelText = (page) => page.evaluate(() => document.getElementById("edt-oscar-panel")?.shadowRoot.querySelector("aside").innerText ?? "");
 const noteOf = (page) => page.locator('textarea[name="caseNote_note"]').inputValue();
 const plans = (text) => (text.match(/Eye drop plan/g) || []).length;
 
@@ -569,11 +516,4 @@ await scenario("16. Oscar hangs while saving a separate note: the clinician gets
 });
 
 await context.close();
-const failed = results.filter((r) => !r.pass);
-console.log(`\n${results.length - failed.length} passed, ${failed.length} failed`);
-for (const f of failed) console.log(`  FAIL ${f.name}: ${f.why}`);
-if (failed.length) {
-  console.log("Edge cases: some checks failed");
-  process.exit(1);
-}
-console.log("Edge cases: all checks passed");
+finish("Edge cases");

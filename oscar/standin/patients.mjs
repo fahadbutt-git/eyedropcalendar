@@ -112,7 +112,7 @@ RTC 1 week with IOP.`,
     notes: [],
     rx: [],
   },
-  // Edge-case tests (oscar/edge.mjs) from here on. Add new patients below,
+  // Edge-case tests (oscar/tests/edge.mjs) from here on. Add new patients below,
   // never above, since the other suites rely on the ids and names above.
   {
     // Accents, an apostrophe and hyphens in a long name.

@@ -1,48 +1,27 @@
 // End-to-end check of the Oscar extension against the stand-in Oscar.
 //
-//   npm run ext:build -- --dev
-//   npm run oscar:standin            (port 8080)
-//   npm run build && npm run preview (port 4173)
-//   node oscar/e2e.mjs [screenshot folder]
+// Run with `npm run test:oscar`, which starts the stand-in Oscar and the site.
 //
 // Opens a made-up patient's encounter in a pop-up window, as Oscar does,
 // reads the drops, opens them in Eye Drop Tracker, checks the review gate,
 // adds the chart note back, reopens the plan at the next visit, and reads a
 // note that is still being typed.
-import { TERMS_VERSION } from "../src/config.js";
-import { chromium } from "playwright";
-import { mkdtempSync, mkdirSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
-import { codeFromUrl } from "../src/lib/share.js";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { codeFromUrl } from "../../src/lib/share.js";
+import { OSCAR, launch, openPanel as runPanel, signIn, standin } from "./harness.mjs";
 
-const ext = join(dirname(fileURLToPath(import.meta.url)), "extension/dist");
-const OSCAR = "http://localhost:8080/oscar";
-await fetch(`${OSCAR}/__standin/reset`);
-const SITE = "http://localhost:4173/";
+await standin("reset");
 const shots = process.argv[2];
 if (shots) mkdirSync(shots, { recursive: true });
 const shot = (page, name) => shots && page.screenshot({ path: join(shots, `${name}.png`) });
 
-const context = await chromium.launchPersistentContext(mkdtempSync(join(tmpdir(), "edt-ext-")), {
-  headless: true,
-  // Chrome's full headless mode, which loads extensions.
-  channel: "chromium",
-  viewport: { width: 1360, height: 860 },
-  args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
-});
-const worker = context.serviceWorkers()[0] || (await context.waitForEvent("serviceworker"));
+const { context, worker } = await launch("e2e");
+const openPanel = (page, selection) => runPanel(worker, page, selection);
 
 // Sign in to Oscar and open the first patient's encounter.
-const oscar = await context.newPage();
-await oscar.goto(`${OSCAR}/index.jsp`);
-await oscar.fill('input[name="username"]', "oscardoc");
-await oscar.fill('input[name="password"]', "mac2002");
-await oscar.fill('input[name="pin"]', "1117");
-await oscar.click("button");
-const schedule = oscar;
+const schedule = await signIn(await context.newPage());
 const encounterOf = async (name) => {
   const [popup] = await Promise.all([context.waitForEvent("page"), schedule.click(`text=${name}`)]);
   await popup.waitForLoadState();
@@ -50,24 +29,6 @@ const encounterOf = async (name) => {
 };
 let enc = await encounterOf("SAMPLE, Alex");
 assert.match(enc.url(), /casemgmt\/forward\.jsp\?action=view&demographicNo=1/);
-
-// The site's terms are accepted once for this browser.
-const site = await context.newPage();
-await site.goto(SITE);
-await site.evaluate((v) => localStorage.setItem("edt.terms", JSON.stringify(v)), TERMS_VERSION);
-await site.close();
-
-// What the toolbar button, the shortcut and the right-click menu do: hand
-// over any selected text, then run the panel in the encounter's tab.
-const openPanel = (page, selection = "") =>
-  worker.evaluate(
-    async ({ url, selection }) => {
-      const tab = (await chrome.tabs.query({})).find((t) => t.url === url);
-      await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: (t) => (window.__edtSelection = t), args: [selection] });
-      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["panel.js"] });
-    },
-    { url: page.url(), selection }
-  );
 const isPopup = (page) =>
   worker.evaluate(async (url) => {
     const tab = (await chrome.tabs.query({})).find((t) => t.url === url);
