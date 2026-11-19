@@ -234,6 +234,7 @@ dialog.modal .card-b { display: grid; gap: 14px; }
 .rx-print { min-width: 0; display: grid; gap: 24px; align-content: start; }
 .rx-prescriber { max-width: 8.5in; width: 100%; }
 .ph { color: #767676; font-weight: 400; font-style: italic; }
+.print-only { display: none; }
 .rx-prescriber .card-b { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
 .rx-prescriber .card-b > .field:last-child { grid-column: 1 / -1; }
 
@@ -471,6 +472,9 @@ html.patient.large-text { font-size: 125%; }
 @media print {
   html, body { background: #fff; font-size: 100%; }
   .no-print, .topbar, .site-foot, .skip { display: none !important; }
+  .print-only { display: inline-block; }
+  .ph-line { display: inline-block; min-width: 14em; height: 1.4em; border-bottom: 1px solid #000; vertical-align: bottom; }
+  .ph-name { font-size: 7.5pt; font-weight: 400; color: #555; margin-right: 0.4em; }
   main { padding: 0; max-width: none; }
   .sched-layout, .rx-layout { display: block; }
   .sched-print { display: block; }

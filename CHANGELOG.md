@@ -18,6 +18,8 @@ Notable changes, newest first. The format follows [Keep a Changelog](https://kee
 
 ### Added
 
+- Prescription dispense starts at 1 for each drug.
+- An incomplete prescription can print with blanks to fill in by hand. Missing details print as named blank lines, and an unconfirmed prescriber prints blank.
 - A demos page with two screen recordings (https://fahadbutt-git.github.io/eyedropcalendar/demos/), linked from the README.
 - A website walkthrough suite (`tests/site.e2e.mjs`) that uses every function of the site in Chrome, run with the extension suites by `npm run test:browser`.
 - A prescriber can choose to keep a drawn signature in the browser and place it on later prescriptions with one click.

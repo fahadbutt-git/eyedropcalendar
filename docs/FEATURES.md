@@ -32,6 +32,7 @@ What the website and phone app do, for clinicians, patients and reviewers.
 - Patient's address and healthcare number appear only when entered
 - Leave off any drug the patient already has
 
+- Dispense starts at 1, and a prescription missing details can still print, with blank lines to fill in by hand
 ## Phone
 
 - Opens from the QR code with no account

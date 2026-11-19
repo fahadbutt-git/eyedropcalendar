@@ -89,6 +89,7 @@ await shot(tracker, "3-added");
 await tracker.locator("button.step", { hasText: "Prescription" }).click();
 await tracker.locator(".prescriber-check button").first().click();
 const pad = tracker.locator(".sig-pad canvas");
+await pad.scrollIntoViewIfNeeded();
 const box = await pad.boundingBox();
 await tracker.mouse.move(box.x + 20, box.y + 40);
 await tracker.mouse.down();

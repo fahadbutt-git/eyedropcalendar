@@ -90,6 +90,10 @@ ok(`calendar, daily chart and checklist (${pagesAfter} pages), large print, QR c
 await page.getByRole("button", { name: "Next: prescription" }).click();
 const rxPrint = page.getByRole("button", { name: "Print prescription" });
 assert.ok(await rxPrint.isDisabled(), "prints without prescriber details");
+for (const box of await page.getByLabel("Dispense").all()) assert.equal(await box.inputValue(), "1", "dispense starts at 1");
+const blanks = page.getByRole("button", { name: "Print with blanks to fill in by hand" });
+assert.ok(!(await blanks.isDisabled()), "can print with blanks to fill in by hand");
+ok("dispense starts at 1, and an incomplete prescription can print with blanks");
 await page.getByLabel("Prescriber name and credentials, after Dr.").fill("Jane Smith, MD FRCSC");
 await page.getByLabel("CPSO number").fill("12345");
 await page.getByLabel("Practice street address").fill("2 Clinic Road");
@@ -102,10 +106,12 @@ assert.match(sheet, /0000000001/, "health card on the prescription");
 assert.match(sheet, /right eye/i);
 assert.doesNotMatch(sheet, /\b(OD|OS|OU)\b/, "eyes are written out on the prescription");
 assert.ok(!(await rxPrint.isDisabled()), "prints once everything is filled in");
+assert.equal(await blanks.count(), 0, "the blanks option goes once nothing is missing");
 ok("prescription with the full sig, eyes written out, prescriber and patient details");
 
 // Signature drawn for one prescription, and kept only when asked
 const pad = page.locator(".sig-pad canvas");
+await pad.scrollIntoViewIfNeeded();
 const b = await pad.boundingBox();
 await page.mouse.move(b.x + 30, b.y + 40);
 await page.mouse.down();

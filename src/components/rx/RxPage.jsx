@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { flushSync } from "react-dom";
 import { toISO } from "../../lib/dates.js";
 import { LU_CRITERIA, LU_NOT_MET } from "../../data/formulary.js";
@@ -15,8 +16,9 @@ export const drName = (name) => {
 };
 
 const REFILLS = [0, 1, 2, 3, 4, 5, 6, 11];
-// Dispense is a real quantity (such as "5 mL"), entered for each drug.
-const DEFAULTS = { include: true, disp: "", refills: 0, lu: "" };
+// Dispense starts at one bottle and can be changed to any quantity (such as "5 mL").
+const DEFAULTS = { include: true, disp: "1", refills: 0, lu: "" };
+const NO_PRESCRIBER = { name: "", license: "", clinic: "", street: "", city: "", phone: "", fax: "" };
 // Choices are stored by the drop's own id, so changing its eye keeps them.
 const keyOf = (e) => e.id;
 
@@ -184,6 +186,8 @@ export default function RxPage({
   const keptSig = prescriberConfirmed && isSignatureImage(savedSignature) ? savedSignature : "";
   // `today` changes when the tab comes back into use, so this renders again.
   const date = rx.dateEdited ? rx.date : today && toISO(new Date());
+  // Printing with blanks leaves what is missing as lines to write by hand.
+  const [withBlanks, setWithBlanks] = useState(false);
   if (!entries.length) return <NoDrops go={go} />;
 
   const optOf = (e) => ({ ...DEFAULTS, ...rx.items[keyOf(e)] });
@@ -206,9 +210,13 @@ export default function RxPage({
     !date && "prescription date",
   ].filter(Boolean);
   // Until the date is changed by hand, the prescription is dated the day it prints.
-  const print = () => {
-    if (!rx.dateEdited) flushSync(() => setToday(toISO(new Date())));
+  const print = (blanks = false) => {
+    flushSync(() => {
+      if (!rx.dateEdited) setToday(toISO(new Date()));
+      setWithBlanks(blanks);
+    });
     printSheets("rx");
+    setWithBlanks(false);
   };
   const saved = !!(prescriber.name || "").trim() && !!(prescriber.license || "").trim();
   const why = !items.length
@@ -269,7 +277,7 @@ export default function RxPage({
           <div className="notice warn small">Still needed: {missing.join(", ")}. Prescriber details are under the preview.</div>
         )}
         {saved && !prescriberConfirmed && <PrescriberCheck prescriber={prescriber} confirm={confirmPrescriber} />}
-        <button className="btn primary lg" onClick={print} disabled={!!why} aria-describedby={why ? "rx-print-why" : undefined}>
+        <button className="btn primary lg" onClick={() => print()} disabled={!!why} aria-describedby={why ? "rx-print-why" : undefined}>
           {Icon.print} Print prescription
         </button>
         {why && (
@@ -277,11 +285,22 @@ export default function RxPage({
             {why}
           </p>
         )}
+        {why && items.length > 0 && (
+          <>
+            <button className="btn" onClick={() => print(true)}>
+              {Icon.print} Print with blanks to fill in by hand
+            </button>
+            <p className="hint">
+              Anything not entered prints as a blank line.{" "}
+              {!prescriberConfirmed && "The prescriber's details print blank until confirmed above."}
+            </p>
+          </>
+        )}
       </aside>
       <div className="rx-print">
         <PrescriptionSheet
           items={items}
-          prescriber={{ ...prescriber, name: drName(prescriber.name) }}
+          prescriber={withBlanks && !prescriberConfirmed ? NO_PRESCRIBER : { ...prescriber, name: drName(prescriber.name) }}
           patient={patient}
           date={date}
           notes={rx.notes}

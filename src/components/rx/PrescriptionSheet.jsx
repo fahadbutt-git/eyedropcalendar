@@ -2,13 +2,22 @@ import { fmtLong, parseISO } from "../../lib/dates.js";
 import { LU_NOT_MET } from "../../data/formulary.js";
 import { sigText } from "../../lib/wording.js";
 
-// Missing details show as grey placeholders on screen and print blank.
-const Missing = ({ children }) => <span className="ph no-print">{children}</span>;
+// Missing details show as grey placeholders on screen and print as blank
+// lines to fill in by hand, named unless a heading already names them.
+const Missing = ({ children, named = true }) => (
+  <>
+    <span className="ph no-print">{children}</span>
+    <span className="print-only">
+      {named && <span className="ph-name">{children}</span>}
+      <span className="ph-line" aria-hidden="true" />
+    </span>
+  </>
+);
 
 const Line = ({ label, children, wide }) => (
   <div style={wide ? { gridColumn: "1 / -1" } : undefined}>
     <span className="lbl">{label}</span>
-    {children || <Missing>Not entered</Missing>}
+    {children || <Missing named={false}>Not entered</Missing>}
   </div>
 );
 
@@ -59,7 +68,7 @@ export default function PrescriptionSheet({ items, prescriber, patient, date, no
           </div>
           <div className="meta">
             <span>
-              <b>Disp:</b> {disp || <Missing>quantity</Missing>}
+              <b>Disp:</b> {disp || <Missing named={false}>quantity</Missing>}
             </span>
             <span>
               <b>Refills:</b> {refills || "none"}
