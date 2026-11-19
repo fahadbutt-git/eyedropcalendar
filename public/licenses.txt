@@ -578,7 +578,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ========================================================================
 
-react@19.2.4 (MIT)
+react@19.3.1 (MIT)
 https://react.dev/
 
 MIT License
@@ -605,7 +605,7 @@ SOFTWARE.
 
 ========================================================================
 
-react-dom@19.2.4 (MIT)
+react-dom@19.3.1 (MIT)
 https://react.dev/
 
 MIT License
@@ -680,7 +680,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ========================================================================
 
-scheduler@0.27.0 (MIT)
+scheduler@0.28.0 (MIT)
 https://react.dev/
 
 MIT License
